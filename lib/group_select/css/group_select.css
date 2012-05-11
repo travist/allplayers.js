@@ -1,8 +1,8 @@
-.group-navigator {
+.group-select {
   width: 450px;
 }
 
-.group-navigator .chzn-choices .search-field input {
+.group-select .chzn-choices .search-field input {
   height: inherit;
   font-size: inherit;
 }
