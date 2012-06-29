@@ -57,47 +57,21 @@ allplayers.group.prototype.set = function(object) {
   /** A {@link allplayers.location} object. */
   this.location = object.location || this.location || new allplayers.location();
 
-  /** The group activity level */
-  this.activity_level = object.activity_level || this.activity_level || 0;
-
-  /** List in directory. */
-  this.list_in_directory = object.list_in_directory || this.list_in_directory || 0;
-
-  /** If the group is active. */
-  this.active = object.active || this.active || false;
-
-  /** Registration fee's enabled */
-  this.registration_fees_enabled = object.registration_fees_enabled || this.registration_fees_enabled || '';
-
-  /** Approved for payment */
-  this.approved_for_payment = object.approved_for_payment || this.approved_for_payment || '';
-
-  /** Accept AMEX credit cards */
-  this.accept_amex = object.accept_amex || this.accept_amex || '';
-
-  /** Primary Color */
-  this.primary_color = object.primary_color || this.primary_color || '';
-
-  /** Secondary Color */
-  this.secondary_color = object.secondary_color || this.secondary_color || '';
-
-  /** The node status */
-  this.node_status = object.node_status || this.node_status || 0;
-
-  /** The group logo URL */
-  this.logo = object.logo || this.logo || '';
-
-  /** The Group URI */
-  this.uri = object.uri || this.uri || '';
-
-  /** The Group URL */
-  this.url = object.url || this.url || '';
-
-  /** Array of groups above */
-  this.groups_above_uuid = object.groups_above_uuid || this.groups_above_uuid || [];
-
-  /** The search parameter for this group. */
-  this.search = object.search || this.search || '';
+  // Set the values for this entity.
+  this.setValues({
+    activity_level: 0,
+    list_in_directory: 0,
+    active: false,
+    registration_fees_enabled: '',
+    approved_for_payment: '',
+    accept_amex: '',
+    primary_color: '',
+    secondary_color: '',
+    node_status: 0,
+    logo: '',
+    url: '',
+    groups_above_uuid: []
+  }, object);
 };
 
 /**
@@ -120,8 +94,7 @@ allplayers.group.prototype.get = function() {
     logo: this.logo,
     uri: this.uri,
     url: this.url,
-    groups_above_uuid: this.groups_above_uuid,
-    search: this.search
+    groups_above_uuid: this.groups_above_uuid
   });
 };
 

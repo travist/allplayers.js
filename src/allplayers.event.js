@@ -54,52 +54,15 @@ allplayers.event.prototype.set = function(object) {
   /** Set the id based on the uuid of the object. */
   this.id = this.id || object.uuid || object.id || '';
 
-  /** Set to TRUE if this is an all day event */
-  this.allDay = object.allDay || this.allDay || false;
-
-  /** An array of group UUID's that have this Event. */
-  this.gids = object.gids || this.gids || [];
-
-  /** The description for this event. */
-  this.description = object.description || this.description || '';
-
-  /** An array of resource UUID's that are associated with this Event.*/
-  this.resources = object.resources || this.resources || [];
-
-  /**
-    * An associative array of competitor information, where the key is the
-    * UUID of the competitor and each entry contains a label and score like
-    * the following.
-    *
-    * <pre><code>
-    *   var competitors = {
-    *     '123456789' => {
-    *       'label':'Competitor 1',
-    *       'score':5
-    *     },
-    *     '232342342' => {
-    *       'label':'Competitor 2',
-    *       'score':10
-    *     }
-    *   };
-    * </code></pre>
-    */
-  this.competitors = object.competitors || this.competitors || {};
-
-  /**
-    * <p>The category of this event.</p>
-    * <ul>
-    * <li>Game</li>
-    * <li>Meeting</li>
-    * <li>Other</li>
-    * <li>Party</li>
-    * <li>Practice</li>
-    * <li>Scrimmage</li>
-    * </ul>
-    * <p><em>Game</em> and <em>Scrimmage</em> categories require competitors
-    * array to be passed and will override the title.</p>
-    */
-  this.category = object.category || this.category || 'Other';
+  // Set the values for this entity.
+  this.setValues({
+    allDay: false,
+    gids: [],
+    description: '',
+    resources: [],
+    competitors: {},
+    category: 'Other'
+  }, object);
 
   /** The date-time object */
   this.date = new allplayers.date(object.start, object.end);

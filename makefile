@@ -21,25 +21,18 @@
 # Create the list of files
 files =	src/allplayers.date.js\
 	src/allplayers.event.js\
-	src/allplayers.event.api.js\
 	src/allplayers.group.js\
-	src/allplayers.group.api.js\
 	src/allplayers.location.js\
 	src/allplayers.calendar.js
 
 docfiles = drupal.api.js/src/drupal.api.js\
 	drupal.api.js/src/drupal.system.js\
-	drupal.api.js/src/drupal.system.api.js\
 	drupal.api.js/src/drupal.entity.js\
 	drupal.api.js/src/drupal.node.js\
-	drupal.api.js/src/drupal.node.api.js\
 	drupal.api.js/src/drupal.user.js\
-	drupal.api.js/src/drupal.user.api.js\
 	src/allplayers.date.js\
 	src/allplayers.event.js\
-	src/allplayers.event.api.js\
 	src/allplayers.group.js\
-	src/allplayers.group.api.js\
 	src/allplayers.location.js\
 	src/allplayers.calendar.js
 

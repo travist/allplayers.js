@@ -197,31 +197,19 @@ ul.inheritsList
 	
 	<li><a href="../symbols/allplayers.event.html">allplayers.event</a></li>
 	
-	<li><a href="../symbols/allplayers.event.api.html">allplayers.event.api</a></li>
-	
 	<li><a href="../symbols/allplayers.group.html">allplayers.group</a></li>
-	
-	<li><a href="../symbols/allplayers.group.api.html">allplayers.group.api</a></li>
 	
 	<li><a href="../symbols/allplayers.location.html">allplayers.location</a></li>
 	
 	<li><a href="../symbols/Date.html">Date</a></li>
 	
-	<li><a href="../symbols/drupal.api.html">drupal.api</a></li>
-	
 	<li><a href="../symbols/drupal.entity.html">drupal.entity</a></li>
 	
 	<li><a href="../symbols/drupal.node.html">drupal.node</a></li>
 	
-	<li><a href="../symbols/drupal.node.api.html">drupal.node.api</a></li>
-	
 	<li><a href="../symbols/drupal.system.html">drupal.system</a></li>
 	
-	<li><a href="../symbols/drupal.system.api.html">drupal.system.api</a></li>
-	
 	<li><a href="../symbols/drupal.user.html">drupal.user</a></li>
-	
-	<li><a href="../symbols/drupal.user.api.html">drupal.user.api</a></li>
 	
 </ul>
 <hr />
@@ -239,10 +227,10 @@ ul.inheritsList
 			<p class="description">
 				
 				<br />Extends
-					<a href="../symbols/drupal.node.html">drupal.node</a>.<br />
+					<a href="../symbols/drupal.entity.html">drupal.entity</a>.<br />
 				
 			
-				The event class to govern all functionality that events have.
+				The AllPlayers event class
 				
 				
 					<br /><i>Defined in: </i> <a href="../symbols/src/src_allplayers.event.js.html">allplayers.event.js</a>.
@@ -264,7 +252,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#constructor">allplayers.event</a></b>(object, callback)
+								<b><a href="../symbols/allplayers.event.html#constructor">allplayers.event</a></b>(object, callback, options)
 							</div>
 							<div class="description"></div>
 						</td>
@@ -291,31 +279,19 @@ ul.inheritsList
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#allDay">allDay</a></b>
+								<b><a href="../symbols/allplayers.event.html#api">api</a></b>
 								</div>
-								<div class="description">Set to TRUE if this is an all day event</div>
+								<div class="description">Set the api to the drupal.node.api.</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#category">category</a></b>
+								allplayers.event.<b><a href="../symbols/allplayers.event.html#.api">api</a></b>
 								</div>
-								<div class="description"><p>The category of this event.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#competitors">competitors</a></b>
-								</div>
-								<div class="description">An associative array of competitor information, where the key is the
-UUID of the competitor and each entry contains a label and score like
-the following.</div>
+								<div class="description">Declare the event api.</div>
 							</td>
 						</tr>
 					
@@ -325,7 +301,7 @@ the following.</div>
 								<div class="fixedFont">
 								<b><a href="../symbols/allplayers.event.html#constructor">constructor</a></b>
 								</div>
-								<div class="description">Reset the constructor</div>
+								<div class="description">Reset the constructor.</div>
 							</td>
 						</tr>
 					
@@ -343,9 +319,9 @@ the following.</div>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#description">description</a></b>
+								<b><a href="../symbols/allplayers.event.html#entityName">entityName</a></b>
 								</div>
-								<div class="description">The description for this event.</div>
+								<div class="description">The name of this entity.</div>
 							</td>
 						</tr>
 					
@@ -353,19 +329,9 @@ the following.</div>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#gids">gids</a></b>
+								<b><a href="../symbols/allplayers.event.html#id">id</a></b>
 								</div>
-								<div class="description">An array of group UUID's that have this Event.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont">
-								<b><a href="../symbols/allplayers.event.html#resources">resources</a></b>
-								</div>
-								<div class="description">An array of resource UUID's that are associated with this Event.</div>
+								<div class="description">Set the id based on the uuid of the object.</div>
 							</td>
 						</tr>
 					
@@ -375,7 +341,7 @@ the following.</div>
 				
 				
 				<dl class="inheritsList">
-				<dt>Fields borrowed from class <a href="../symbols/drupal.node.html">drupal.node</a>: </dt><dd><a href="../symbols/drupal.node.html#status">status</a>, <a href="../symbols/drupal.node.html#title">title</a>, <a href="../symbols/drupal.node.html#type">type</a>, <a href="../symbols/drupal.node.html#uid">uid</a></dd><dt>Fields borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#api">api</a>, <a href="../symbols/drupal.entity.html#id">id</a></dd>
+				
 				</dl>
 				
 			
@@ -397,18 +363,27 @@ the following.</div>
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/allplayers.event.html#getObject">getObject</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/allplayers.event.html#get">get</a></b>()
 								</div>
-								<div class="description"></div>
+								<div class="description">Returns the object to send to Services.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">allplayers.event.<b><a href="../symbols/allplayers.event.html#.index">index</a></b>(query, callback, options)
+								</div>
+								<div class="description">Returns an index of events.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/allplayers.event.html#update">update</a></b>(object)
+								<div class="fixedFont"><b><a href="../symbols/allplayers.event.html#set">set</a></b>(object)
 								</div>
-								<div class="description">Override the update routine.</div>
+								<div class="description">Sets the object.</div>
 							</td>
 						</tr>
 					
@@ -418,7 +393,7 @@ the following.</div>
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/drupal.node.html">drupal.node</a>: </dt><dd><a href="../symbols/drupal.node.html#setQuery">setQuery</a></dd><dt>Methods borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#get">get</a>, <a href="../symbols/drupal.entity.html#getQuery">getQuery</a>, <a href="../symbols/drupal.entity.html#remove">remove</a>, <a href="../symbols/drupal.entity.html#save">save</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#clear">clear</a>, <a href="../symbols/drupal.entity.html#getPOST">getPOST</a>, <a href="../symbols/drupal.entity.html#getQuery">getQuery</a>, <a href="../symbols/drupal.entity.html#load">load</a>, <a href="../symbols/drupal.entity.html#remove">remove</a>, <a href="../symbols/drupal.entity.html#retrieve">retrieve</a>, <a href="../symbols/drupal.entity.html#save">save</a>, <a href="../symbols/drupal.entity.html#setValues">setValues</a>, <a href="../symbols/drupal.entity.html#store">store</a>, <a href="../symbols/drupal.entity.html#update">update</a></dd>
 				</dl>
 				
 			
@@ -433,7 +408,7 @@ the following.</div>
 				</div>
 				
 				<div class="fixedFont">
-						<b>allplayers.event</b>(object, callback)
+						<b>allplayers.event</b>(object, callback, options)
 				</div>
 				
 				<div class="description">
@@ -452,7 +427,7 @@ the following.</div>
 								<span class="light fixedFont">{object}</span>  <b>object</b>
 								
 							</dt>
-								<dd>The event information.</dd>
+								<dd>The node object.</dd>
 						
 							<dt>
 								<span class="light fixedFont">{function}</span>  <b>callback</b>
@@ -460,6 +435,12 @@ the following.</div>
 							</dt>
 								<dd>The function to be called once the node has
 been retrieved from the server.</dd>
+						
+							<dt>
+								<span class="light fixedFont">{object}</span>  <b>options</b>
+								
+							</dt>
+								<dd>Options used to govern functionality.</dd>
 						
 						</dl>
 					
@@ -479,15 +460,15 @@ been retrieved from the server.</dd>
 					Field Detail
 				</div>
 				
-					<a name="allDay"> </a>
+					<a name="api"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>allDay</b>
+					<b>api</b>
 					
 					</div>
 					<div class="description">
-						Set to TRUE if this is an all day event
+						Set the api to the drupal.node.api.
 						
 						
 					</div>
@@ -501,62 +482,15 @@ been retrieved from the server.</dd>
 
 					<hr />
 				
-					<a name="category"> </a>
-					<div class="fixedFont">
+					<a name=".api"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>category</b>
-					
-					</div>
-					<div class="description">
-						<p>The category of this event.</p>
-<ul>
-<li>Game</li>
-<li>Meeting</li>
-<li>Other</li>
-<li>Party</li>
-<li>Practice</li>
-<li>Scrimmage</li>
-</ul>
-<p><em>Game</em> and <em>Scrimmage</em> categories require competitors
-array to be passed and will override the title.</p>
-						
-						
-					</div>
-					
-					
-
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="competitors"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>competitors</b>
+					<span class="light">allplayers.event.</span><b>api</b>
 					
 					</div>
 					<div class="description">
-						An associative array of competitor information, where the key is the
-UUID of the competitor and each entry contains a label and score like
-the following.
-
-<pre><code>
-  var competitors = {
-    '123456789' => {
-      'label':'Competitor 1',
-      'score':5
-    },
-    '232342342' => {
-      'label':'Competitor 2',
-      'score':10
-    }
-  };
-</code></pre>
+						Declare the event api.
 						
 						
 					</div>
@@ -578,7 +512,7 @@ the following.
 					
 					</div>
 					<div class="description">
-						Reset the constructor
+						Reset the constructor.
 						
 						
 					</div>
@@ -614,15 +548,15 @@ the following.
 
 					<hr />
 				
-					<a name="description"> </a>
+					<a name="entityName"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>description</b>
+					<b>entityName</b>
 					
 					</div>
 					<div class="description">
-						The description for this event.
+						The name of this entity.
 						
 						
 					</div>
@@ -636,37 +570,15 @@ the following.
 
 					<hr />
 				
-					<a name="gids"> </a>
+					<a name="id"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>gids</b>
+					<b>id</b>
 					
 					</div>
 					<div class="description">
-						An array of group UUID's that have this Event.
-						
-						
-					</div>
-					
-					
-
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="resources"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>resources</b>
-					
-					</div>
-					<div class="description">
-						An array of resource UUID's that are associated with this Event.
+						Set the id based on the uuid of the object.
 						
 						
 					</div>
@@ -688,15 +600,15 @@ the following.
 					Method Detail
 				</div>
 				
-					<a name="getObject"> </a>
+					<a name="get"> </a>
 					<div class="fixedFont">
 					
 					<span class="light">{object}</span>
-					<b>getObject</b>()
+					<b>get</b>()
 					
 					</div>
 					<div class="description">
-						
+						Returns the object to send to Services.
 						
 						
 					</div>
@@ -711,31 +623,72 @@ the following.
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd><span class="light fixedFont">{object}</span> The JSON object to send to the Services endpoint.</dd>
+								<dd><span class="light fixedFont">{object}</span> The object to send to the Services endpoint.</dd>
 							
 							</dl>
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">See:</dt>
-							
-								<dd><a href="../symbols/drupal.entity.html#getObject">drupal.entity#getObject</a></dd>
-							
-							</dl>
 						
 
 					<hr />
 				
-					<a name="update"> </a>
-					<div class="fixedFont">
+					<a name=".index"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>update</b>(object)
+					<span class="light">allplayers.event.</span><b>index</b>(query, callback, options)
 					
 					</div>
 					<div class="description">
-						Override the update routine.
+						Returns an index of events.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{object}</span> <b>query</b>
+									
+								</dt>
+								<dd>The query parameters.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{function}</span> <b>callback</b>
+									
+								</dt>
+								<dd>The callback function.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{object}</span> <b>options</b>
+									
+								</dt>
+								<dd>Options used to govern functionality.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="set"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>set</b>(object)
+					
+					</div>
+					<div class="description">
+						Sets the object.
 						
 						
 					</div>
@@ -750,7 +703,7 @@ the following.
 									<span class="light fixedFont">{object}</span> <b>object</b>
 									
 								</dt>
-								<dd>The node object to update.</dd>
+								<dd>The object which contains the data.</dd>
 							
 							</dl>
 						
@@ -775,7 +728,7 @@ the following.
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu May 24 2012 15:52:18 GMT-0500 (CDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Fri Jun 29 2012 16:13:39 GMT-0500 (CDT)
 		</div>
 	</body>
 </html>

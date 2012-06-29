@@ -30,27 +30,15 @@ allplayers.location.prototype.constructor = allplayers.location;
  */
 allplayers.location.prototype.set = function(object) {
   drupal.entity.prototype.set.call(this, object);
-
-  /** Street Address. */
-  this.street = this.street || '';
-
-  /** City */
-  this.city = this.city || '';
-
-  /** State / Province */
-  this.state = this.state || '';
-
-  /** Postal Code */
-  this.zip = this.zip || '';
-
-  /** Country */
-  this.country = this.country || '';
-
-  /** Latitude */
-  this.latitude = this.latitude || '';
-
-  /** Longitude */
-  this.longitude = this.longitude || '';
+  this.setValues({
+    street: 0,
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
+    latitude: '',
+    longitude: ''
+  }, object);
 };
 
 /**
