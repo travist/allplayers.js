@@ -3,20 +3,21 @@
   <head>
     <title>AllPlayers API Unit Tests</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel='stylesheet' type='text/css' href='http://code.jquery.com/qunit/qunit-git.css' />
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css" type="text/css" media="all" />
-    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
-    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js'></script>
-    <script type='text/javascript' src='http://code.jquery.com/qunit/qunit-git.js'></script>
-    <script type='text/javascript' src='src/drupal.api.js'></script>
-    <script type='text/javascript' src='src/drupal.system.js'></script>
-    <script type='text/javascript' src='src/drupal.system.api.js'></script>
-    <script type='text/javascript' src='src/drupal.entity.js'></script>
-    <script type='text/javascript' src='src/drupal.node.js'></script>
-    <script type='text/javascript' src='src/drupal.node.api.js'></script>
-    <script type='text/javascript' src='src/drupal.user.js'></script>
-    <script type='text/javascript' src='src/drupal.user.api.js'></script>
+    <link rel='stylesheet' type='text/css' href='tests/qunit-1.5.0.css' />
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/themes/base/jquery-ui.css" type="text/css" media="all" />
+    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.js'></script>
+    <script type='text/javascript' src='tests/qunit-1.5.0.js'></script>
 
+    <!-- Include the drupal.api.js files. -->
+    <script type='text/javascript' src='lib/json2.js'></script>
+    <script type='text/javascript' src='src/drupal.api.js'></script>
+    <script type='text/javascript' src='src/drupal.entity.js'></script>
+    <script type='text/javascript' src='src/drupal.system.js'></script>
+    <script type='text/javascript' src='src/drupal.node.js'></script>
+    <script type='text/javascript' src='src/drupal.user.js'></script>
+
+    <!-- Include the tests. -->
     <script type='text/javascript' src='tests/drupal.system.test.js'></script>
     <script type='text/javascript' src='tests/drupal.node.test.js'></script>
     <script type='text/javascript' src='tests/drupal.user.test.js'></script>
@@ -81,7 +82,7 @@
       <label for="username">Admin Username</label>
       <input type="text" id="username" value="" size="15" maxlength="60"><br/>
       <label for="password">Admin Password</label>
-      <input type="password" id="password" name="pass" size="15" maxlength="60"><br/>
+      <input type="password" id="password" name="pass" size="15" maxlength="60" value=""><br/>
       <input type="submit" id="submit" name="op" value="Run Tests">
     </form>
     <h1 id="qunit-header">QUnit example</h1>

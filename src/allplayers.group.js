@@ -4,101 +4,125 @@ var allplayers = allplayers || {};
 /**
  * @constructor
  * @extends drupal.entity
- * @class The group class to govern all functionality that groups have.
+ * @class The AllPlayers event class
  *
- * @param {object} object The group information.
- * @param {function} callback The function to call when this group is retrieved.
+ * @param {object} object The node object.
+ * @param {function} callback The function to be called once the node has
+ * been retrieved from the server.
+ * @param {object} options Options used to govern functionality.
  */
-allplayers.group = function(object, callback) {
-
-  // Only continue if the object is valid.
-  if (object) {
-
-    /** A {@link allplayers.location} object. */
-    this.location = this.location || new allplayers.location();
-
-    /** The group activity level */
-    this.activity_level = this.activity_level || 0;
-
-    /** List in directory. */
-    this.list_in_directory = this.list_in_directory || 0;
-
-    /** If the group is active. */
-    this.active = this.active || false;
-
-    /** Registration fee's enabled */
-    this.registration_fees_enabled = this.registration_fees_enabled || '';
-
-    /** Approved for payment */
-    this.approved_for_payment = this.approved_for_payment || '';
-
-    /** Accept AMEX credit cards */
-    this.accept_amex = this.accept_amex || '';
-
-    /** Primary Color */
-    this.primary_color = this.primary_color || '';
-
-    /** Secondary Color */
-    this.secondary_color = this.secondary_color || '';
-
-    /** The node status */
-    this.node_status = this.node_status || 0;
-
-    /** The group logo URL */
-    this.logo = this.logo || '';
-
-    /** The Group URI */
-    this.uri = this.uri || '';
-
-    /** The Group URL */
-    this.url = this.url || '';
-
-    /** Array of groups above */
-    this.groups_above_uuid = this.groups_above_uuid || [];
-
-    /** The search parameter for this group. */
-    this.search = this.search || '';
-
-    /** The groups api. */
-    this.api = this.api || new allplayers.group.api();
-  }
-
-  // Derive from drupal.node.
-  drupal.node.call(this, object, callback);
+allplayers.group = function(object, callback, options) {
+  drupal.node.call(this, object, callback, options);
 };
 
-/** Derive from drupal.node. */
+/** Derive from node. */
 allplayers.group.prototype = new drupal.node();
 
 /** Reset the constructor. */
 allplayers.group.prototype.constructor = allplayers.group;
 
+/** Declare the event api. */
+allplayers.group.api = jQuery.extend(new drupal.api(), {
+  resource: 'groups'
+});
+
 /**
- * Override the update routine.
+ * Returns an index of groups.
  *
- * @param {object} object The node object to update.
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
  */
-allplayers.group.prototype.update = function(object) {
-
-  drupal.node.prototype.update.call(this, object);
-
-  // Make sure to user the uuid over the nid.
-  if (object) {
-    this.id = object.uuid || this.id;
-  }
+allplayers.group.index = function(query, callback, options) {
+  drupal.entity.index(allplayers.group, query, callback, options);
 };
 
 /**
- * Adds a key value pair to the query object.
+ * Sets the object.
  *
- * @param {object} query The query object.
- * @param {string} field The field to set.
- * @param {string} value The value of the field to set.
+ * @param {object} object The object which contains the data.
  */
-allplayers.group.prototype.setQuery = function(query, field, value) {
+allplayers.group.prototype.set = function(object) {
+  drupal.node.prototype.set.call(this, object);
 
-  // Set the value of this query.
-  query[field] = value;
+  /** The name of this entity. */
+  this.entityName = 'group';
+
+  /** Set the api. */
+  this.api = allplayers.group.api;
+
+  /** Set the id based on the uuid of the object. */
+  this.id = this.id || object.uuid || object.id || '';
+
+  /** A {@link allplayers.location} object. */
+  this.location = object.location || this.location || new allplayers.location();
+
+  /** The group activity level */
+  this.activity_level = object.activity_level || this.activity_level || 0;
+
+  /** List in directory. */
+  this.list_in_directory = object.list_in_directory || this.list_in_directory || 0;
+
+  /** If the group is active. */
+  this.active = object.active || this.active || false;
+
+  /** Registration fee's enabled */
+  this.registration_fees_enabled = object.registration_fees_enabled || this.registration_fees_enabled || '';
+
+  /** Approved for payment */
+  this.approved_for_payment = object.approved_for_payment || this.approved_for_payment || '';
+
+  /** Accept AMEX credit cards */
+  this.accept_amex = object.accept_amex || this.accept_amex || '';
+
+  /** Primary Color */
+  this.primary_color = object.primary_color || this.primary_color || '';
+
+  /** Secondary Color */
+  this.secondary_color = object.secondary_color || this.secondary_color || '';
+
+  /** The node status */
+  this.node_status = object.node_status || this.node_status || 0;
+
+  /** The group logo URL */
+  this.logo = object.logo || this.logo || '';
+
+  /** The Group URI */
+  this.uri = object.uri || this.uri || '';
+
+  /** The Group URL */
+  this.url = object.url || this.url || '';
+
+  /** Array of groups above */
+  this.groups_above_uuid = object.groups_above_uuid || this.groups_above_uuid || [];
+
+  /** The search parameter for this group. */
+  this.search = object.search || this.search || '';
+};
+
+/**
+ * Returns the object to send to Services.
+ *
+ * @return {object} The object to send to the Services endpoint.
+ */
+allplayers.group.prototype.get = function() {
+  return jQuery.extend(drupal.node.prototype.get.call(this), {
+    location: this.location.get(),
+    activity_level: this.activity_level,
+    list_in_directory: this.list_in_directory,
+    active: this.active,
+    registration_fees_enabled: this.registration_fees_enabled,
+    approved_for_payment: this.approved_for_payment,
+    accept_amex: this.accept_amex,
+    primary_color: this.primary_color,
+    secondary_color: this.secondary_color,
+    node_status: this.node_status,
+    logo: this.logo,
+    uri: this.uri,
+    url: this.url,
+    groups_above_uuid: this.groups_above_uuid,
+    search: this.search
+  });
 };
 
 /**
@@ -118,7 +142,7 @@ allplayers.group.prototype.setQuery = function(query, field, value) {
 allplayers.group.prototype.getEvents = function(params, callback) {
 
   // Get the events within this group.
-  this.api.getItems(this, 'events', params, function(events) {
+  this.api.get(this, 'events', params, function(events) {
 
     // Iterate through the events and create an event object out of them.
     var i = events.length;
@@ -148,7 +172,7 @@ allplayers.group.prototype.getEvents = function(params, callback) {
 allplayers.group.prototype.getUpcomingEvents = function(params, callback) {
 
   // Get the events within this group.
-  this.api.getItems(this, 'events/upcoming', params, function(events) {
+  this.api.get(this, 'events/upcoming', params, function(events) {
 
     // Iterate through the events and create an event object out of them.
     var i = events.length;
@@ -170,5 +194,5 @@ allplayers.group.prototype.getUpcomingEvents = function(params, callback) {
 allplayers.group.prototype.getGroupTree = function(depth, callback) {
 
   // Get the subgroups tree.
-  this.api.getItems(this, 'subgroups/tree', {depth: depth}, callback);
+  this.api.get(this, 'subgroups/tree', {depth: depth}, callback);
 };

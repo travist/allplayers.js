@@ -6,21 +6,25 @@
 #
 
 # Create the list of files
-files =	src/drupal.api.js\
-	src/drupal.system.js\
-	src/drupal.system.api.js\
+lintfiles = src/drupal.api.js\
 	src/drupal.entity.js\
+	src/drupal.system.js\
 	src/drupal.node.js\
-	src/drupal.node.api.js\
-	src/drupal.user.js\
-	src/drupal.user.api.js
+	src/drupal.user.js
+
+files =	lib/json2.js\
+	src/drupal.api.js\
+	src/drupal.entity.js\
+	src/drupal.system.js\
+	src/drupal.node.js\
+	src/drupal.user.js
 
 .DEFAULT_GOAL := all
 
 all: jslint js jsdoc
 
 # Perform a jsLint on all the files.
-jslint: ${files}
+jslint: ${lintfiles}
 	gjslint $^
 
 # Create an aggregated js file and a compressed js file.

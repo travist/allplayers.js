@@ -9,30 +9,10 @@ var drupal = drupal || {};
  * @param {object} object The node object.
  * @param {function} callback The function to be called once the node has
  * been retrieved from the server.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.node = function(object, callback) {
-
-  // Only continue if the object is valid.
-  if (object) {
-
-    /** The title for this node. */
-    this.title = this.title || '';
-
-    /** The type of node we are dealing with. */
-    this.type = this.type || '';
-
-    /** The status of this node. */
-    this.status = this.status || 0;
-
-    /** The user who created this node */
-    this.uid = this.uid || 0;
-
-    // Declare the api.
-    this.api = this.api || new drupal.node.api();
-  }
-
-  // Call the base class.
-  drupal.entity.call(this, object, callback);
+drupal.node = function(object, callback, options) {
+  drupal.entity.call(this, object, callback, options);
 };
 
 /** Derive from entity. */
@@ -41,32 +21,50 @@ drupal.node.prototype = new drupal.entity();
 /** Reset the constructor. */
 drupal.node.prototype.constructor = drupal.node;
 
+/** Declare the node api. */
+drupal.node.api = jQuery.extend(new drupal.api(), {
+  resource: 'node'
+});
+
 /**
- * Override the update routine.
+ * Returns an index of nodes.
  *
- * @param {object} object The node object to update.
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.node.prototype.update = function(object) {
-
-  drupal.entity.prototype.update.call(this, object);
-
-  // Make sure to also set the ID the same as nid.
-  if (object) {
-    this.id = object.nid || this.id;
-  }
+drupal.node.index = function(query, callback, options) {
+  drupal.entity.index(drupal.node, query, callback, options);
 };
 
 /**
- * Override the setQuery method of the entity.
+ * Sets the object.
  *
- * @param {object} query The query object.
- * @param {string} field The field to set.
- * @param {string} value The value of the field to set.
+ * @param {object} object The object which contains the data.
  */
-drupal.node.prototype.setQuery = function(query, field, value) {
+drupal.node.prototype.set = function(object) {
+  drupal.entity.prototype.set.call(this, object);
 
-  // The node object sets parameters like ?parameters[field]=value...
-  query['parameters[' + field + ']'] = value;
+  /** The name of this entity. */
+  this.entityName = 'node';
+
+  /** Set the api to the drupal.node.api. */
+  this.api = drupal.node.api;
+
+  /** Set the ID based on the nid. */
+  this.id = object.nid || this.id || 0;
+
+  /** The title for this node. */
+  this.title = object.title || this.title || '';
+
+  /** The type of node we are dealing with. */
+  this.type = object.type || this.type || '';
+
+  /** The status of this node. */
+  this.status = object.status || this.status || 0;
+
+  /** The user who created this node */
+  this.uid = object.uid || this.uid || 0;
 };
 
 /**
@@ -74,11 +72,26 @@ drupal.node.prototype.setQuery = function(query, field, value) {
  *
  * @return {object} The object to send to the Services endpoint.
  */
-drupal.node.prototype.getObject = function() {
-  return jQuery.extend(drupal.entity.prototype.getObject.call(this), {
+drupal.node.prototype.get = function() {
+  return jQuery.extend(drupal.entity.prototype.get.call(this), {
     title: this.title,
     type: this.type,
     status: this.status,
     uid: this.uid
   });
+};
+
+/**
+ * Override the getQuery method of the entity.
+ *
+ * @param {object} query The query variables.
+ * @return {object} The query variables.
+ */
+drupal.node.prototype.getQuery = function(query) {
+  query = drupal.entity.prototype.getQuery.call(this, query);
+  if (query.type) {
+    query['parameters[type]'] = query.type;
+    delete query.type;
+  }
+  return query;
 };

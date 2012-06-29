@@ -1,235 +1,711 @@
+/*
+    json2.js
+    2011-10-19
+
+    Public Domain.
+
+    NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+
+    See http://www.JSON.org/js.html
+
+
+    This code should be minified before deployment.
+    See http://javascript.crockford.com/jsmin.html
+
+    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO
+    NOT CONTROL.
+
+
+    This file creates a global JSON object containing two methods: stringify
+    and parse.
+
+        JSON.stringify(value, replacer, space)
+            value       any JavaScript value, usually an object or array.
+
+            replacer    an optional parameter that determines how object
+                        values are stringified for objects. It can be a
+                        function or an array of strings.
+
+            space       an optional parameter that specifies the indentation
+                        of nested structures. If it is omitted, the text will
+                        be packed without extra whitespace. If it is a number,
+                        it will specify the number of spaces to indent at each
+                        level. If it is a string (such as '\t' or '&nbsp;'),
+                        it contains the characters used to indent at each level.
+
+            This method produces a JSON text from a JavaScript value.
+
+            When an object value is found, if the object contains a toJSON
+            method, its toJSON method will be called and the result will be
+            stringified. A toJSON method does not serialize: it returns the
+            value represented by the name/value pair that should be serialized,
+            or undefined if nothing should be serialized. The toJSON method
+            will be passed the key associated with the value, and this will be
+            bound to the value
+
+            For example, this would serialize Dates as ISO strings.
+
+                Date.prototype.toJSON = function (key) {
+                    function f(n) {
+                        // Format integers to have at least two digits.
+                        return n < 10 ? '0' + n : n;
+                    }
+
+                    return this.getUTCFullYear()   + '-' +
+                         f(this.getUTCMonth() + 1) + '-' +
+                         f(this.getUTCDate())      + 'T' +
+                         f(this.getUTCHours())     + ':' +
+                         f(this.getUTCMinutes())   + ':' +
+                         f(this.getUTCSeconds())   + 'Z';
+                };
+
+            You can provide an optional replacer method. It will be passed the
+            key and value of each member, with this bound to the containing
+            object. The value that is returned from your method will be
+            serialized. If your method returns undefined, then the member will
+            be excluded from the serialization.
+
+            If the replacer parameter is an array of strings, then it will be
+            used to select the members to be serialized. It filters the results
+            such that only members with keys listed in the replacer array are
+            stringified.
+
+            Values that do not have JSON representations, such as undefined or
+            functions, will not be serialized. Such values in objects will be
+            dropped; in arrays they will be replaced with null. You can use
+            a replacer function to replace those with JSON values.
+            JSON.stringify(undefined) returns undefined.
+
+            The optional space parameter produces a stringification of the
+            value that is filled with line breaks and indentation to make it
+            easier to read.
+
+            If the space parameter is a non-empty string, then that string will
+            be used for indentation. If the space parameter is a number, then
+            the indentation will be that many spaces.
+
+            Example:
+
+            text = JSON.stringify(['e', {pluribus: 'unum'}]);
+            // text is '["e",{"pluribus":"unum"}]'
+
+
+            text = JSON.stringify(['e', {pluribus: 'unum'}], null, '\t');
+            // text is '[\n\t"e",\n\t{\n\t\t"pluribus": "unum"\n\t}\n]'
+
+            text = JSON.stringify([new Date()], function (key, value) {
+                return this[key] instanceof Date ?
+                    'Date(' + this[key] + ')' : value;
+            });
+            // text is '["Date(---current time---)"]'
+
+
+        JSON.parse(text, reviver)
+            This method parses a JSON text to produce an object or array.
+            It can throw a SyntaxError exception.
+
+            The optional reviver parameter is a function that can filter and
+            transform the results. It receives each of the keys and values,
+            and its return value is used instead of the original value.
+            If it returns what it received, then the structure is not modified.
+            If it returns undefined then the member is deleted.
+
+            Example:
+
+            // Parse the text. Values that look like ISO date strings will
+            // be converted to Date objects.
+
+            myData = JSON.parse(text, function (key, value) {
+                var a;
+                if (typeof value === 'string') {
+                    a =
+/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
+                    if (a) {
+                        return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
+                            +a[5], +a[6]));
+                    }
+                }
+                return value;
+            });
+
+            myData = JSON.parse('["Date(09/09/2001)"]', function (key, value) {
+                var d;
+                if (typeof value === 'string' &&
+                        value.slice(0, 5) === 'Date(' &&
+                        value.slice(-1) === ')') {
+                    d = new Date(value.slice(5, -1));
+                    if (d) {
+                        return d;
+                    }
+                }
+                return value;
+            });
+
+
+    This is a reference implementation. You are free to copy, modify, or
+    redistribute.
+*/
+
+/*jslint evil: true, regexp: true */
+
+/*members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
+    call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
+    getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
+    lastIndex, length, parse, prototype, push, replace, slice, stringify,
+    test, toJSON, toString, valueOf
+*/
+
+
+// Create a JSON object only if one does not already exist. We create the
+// methods in a closure to avoid creating global variables.
+
+var JSON;
+if (!JSON) {
+    JSON = {};
+}
+
+(function () {
+    'use strict';
+
+    function f(n) {
+        // Format integers to have at least two digits.
+        return n < 10 ? '0' + n : n;
+    }
+
+    if (typeof Date.prototype.toJSON !== 'function') {
+
+        Date.prototype.toJSON = function (key) {
+
+            return isFinite(this.valueOf())
+                ? this.getUTCFullYear()     + '-' +
+                    f(this.getUTCMonth() + 1) + '-' +
+                    f(this.getUTCDate())      + 'T' +
+                    f(this.getUTCHours())     + ':' +
+                    f(this.getUTCMinutes())   + ':' +
+                    f(this.getUTCSeconds())   + 'Z'
+                : null;
+        };
+
+        String.prototype.toJSON      =
+            Number.prototype.toJSON  =
+            Boolean.prototype.toJSON = function (key) {
+                return this.valueOf();
+            };
+    }
+
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+        gap,
+        indent,
+        meta = {    // table of character substitutions
+            '\b': '\\b',
+            '\t': '\\t',
+            '\n': '\\n',
+            '\f': '\\f',
+            '\r': '\\r',
+            '"' : '\\"',
+            '\\': '\\\\'
+        },
+        rep;
+
+
+    function quote(string) {
+
+// If the string contains no control characters, no quote characters, and no
+// backslash characters, then we can safely slap some quotes around it.
+// Otherwise we must also replace the offending characters with safe escape
+// sequences.
+
+        escapable.lastIndex = 0;
+        return escapable.test(string) ? '"' + string.replace(escapable, function (a) {
+            var c = meta[a];
+            return typeof c === 'string'
+                ? c
+                : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+        }) + '"' : '"' + string + '"';
+    }
+
+
+    function str(key, holder) {
+
+// Produce a string from holder[key].
+
+        var i,          // The loop counter.
+            k,          // The member key.
+            v,          // The member value.
+            length,
+            mind = gap,
+            partial,
+            value = holder[key];
+
+// If the value has a toJSON method, call it to obtain a replacement value.
+
+        if (value && typeof value === 'object' &&
+                typeof value.toJSON === 'function') {
+            value = value.toJSON(key);
+        }
+
+// If we were called with a replacer function, then call the replacer to
+// obtain a replacement value.
+
+        if (typeof rep === 'function') {
+            value = rep.call(holder, key, value);
+        }
+
+// What happens next depends on the value's type.
+
+        switch (typeof value) {
+        case 'string':
+            return quote(value);
+
+        case 'number':
+
+// JSON numbers must be finite. Encode non-finite numbers as null.
+
+            return isFinite(value) ? String(value) : 'null';
+
+        case 'boolean':
+        case 'null':
+
+// If the value is a boolean or null, convert it to a string. Note:
+// typeof null does not produce 'null'. The case is included here in
+// the remote chance that this gets fixed someday.
+
+            return String(value);
+
+// If the type is 'object', we might be dealing with an object or an array or
+// null.
+
+        case 'object':
+
+// Due to a specification blunder in ECMAScript, typeof null is 'object',
+// so watch out for that case.
+
+            if (!value) {
+                return 'null';
+            }
+
+// Make an array to hold the partial results of stringifying this object value.
+
+            gap += indent;
+            partial = [];
+
+// Is the value an array?
+
+            if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+// The value is an array. Stringify every element. Use null as a placeholder
+// for non-JSON values.
+
+                length = value.length;
+                for (i = 0; i < length; i += 1) {
+                    partial[i] = str(i, value) || 'null';
+                }
+
+// Join all of the elements together, separated with commas, and wrap them in
+// brackets.
+
+                v = partial.length === 0
+                    ? '[]'
+                    : gap
+                    ? '[\n' + gap + partial.join(',\n' + gap) + '\n' + mind + ']'
+                    : '[' + partial.join(',') + ']';
+                gap = mind;
+                return v;
+            }
+
+// If the replacer is an array, use it to select the members to be stringified.
+
+            if (rep && typeof rep === 'object') {
+                length = rep.length;
+                for (i = 0; i < length; i += 1) {
+                    if (typeof rep[i] === 'string') {
+                        k = rep[i];
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            } else {
+
+// Otherwise, iterate through all of the keys in the object.
+
+                for (k in value) {
+                    if (Object.prototype.hasOwnProperty.call(value, k)) {
+                        v = str(k, value);
+                        if (v) {
+                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
+                        }
+                    }
+                }
+            }
+
+// Join all of the member texts together, separated with commas,
+// and wrap them in braces.
+
+            v = partial.length === 0
+                ? '{}'
+                : gap
+                ? '{\n' + gap + partial.join(',\n' + gap) + '\n' + mind + '}'
+                : '{' + partial.join(',') + '}';
+            gap = mind;
+            return v;
+        }
+    }
+
+// If the JSON object does not yet have a stringify method, give it one.
+
+    if (typeof JSON.stringify !== 'function') {
+        JSON.stringify = function (value, replacer, space) {
+
+// The stringify method takes a value and an optional replacer, and an optional
+// space parameter, and returns a JSON text. The replacer can be a function
+// that can replace values, or an array of strings that will select the keys.
+// A default replacer method can be provided. Use of the space parameter can
+// produce text that is more easily readable.
+
+            var i;
+            gap = '';
+            indent = '';
+
+// If the space parameter is a number, make an indent string containing that
+// many spaces.
+
+            if (typeof space === 'number') {
+                for (i = 0; i < space; i += 1) {
+                    indent += ' ';
+                }
+
+// If the space parameter is a string, it will be used as the indent string.
+
+            } else if (typeof space === 'string') {
+                indent = space;
+            }
+
+// If there is a replacer, it must be a function or an array.
+// Otherwise, throw an error.
+
+            rep = replacer;
+            if (replacer && typeof replacer !== 'function' &&
+                    (typeof replacer !== 'object' ||
+                    typeof replacer.length !== 'number')) {
+                throw new Error('JSON.stringify');
+            }
+
+// Make a fake root object containing our value under the key of ''.
+// Return the result of stringifying the value.
+
+            return str('', {'': value});
+        };
+    }
+
+
+// If the JSON object does not yet have a parse method, give it one.
+
+    if (typeof JSON.parse !== 'function') {
+        JSON.parse = function (text, reviver) {
+
+// The parse method takes a text and an optional reviver function, and returns
+// a JavaScript value if the text is a valid JSON text.
+
+            var j;
+
+            function walk(holder, key) {
+
+// The walk method is used to recursively walk the resulting structure so
+// that modifications can be made.
+
+                var k, v, value = holder[key];
+                if (value && typeof value === 'object') {
+                    for (k in value) {
+                        if (Object.prototype.hasOwnProperty.call(value, k)) {
+                            v = walk(value, k);
+                            if (v !== undefined) {
+                                value[k] = v;
+                            } else {
+                                delete value[k];
+                            }
+                        }
+                    }
+                }
+                return reviver.call(holder, key, value);
+            }
+
+
+// Parsing happens in four stages. In the first stage, we replace certain
+// Unicode characters with escape sequences. JavaScript handles many characters
+// incorrectly, either silently deleting them, or treating them as line endings.
+
+            text = String(text);
+            cx.lastIndex = 0;
+            if (cx.test(text)) {
+                text = text.replace(cx, function (a) {
+                    return '\\u' +
+                        ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+                });
+            }
+
+// In the second stage, we run the text against regular expressions that look
+// for non-JSON patterns. We are especially concerned with '()' and 'new'
+// because they can cause invocation, and '=' because it can cause mutation.
+// But just to be safe, we want to reject all unexpected forms.
+
+// We split the second stage into 4 regexp operations in order to work around
+// crippling inefficiencies in IE's and Safari's regexp engines. First we
+// replace the JSON backslash pairs with '@' (a non-JSON character). Second, we
+// replace all simple value tokens with ']' characters. Third, we delete all
+// open brackets that follow a colon or comma or that begin the text. Finally,
+// we look to see that the remaining characters are only whitespace or ']' or
+// ',' or ':' or '{' or '}'. If that is so, then the text is safe for eval.
+
+            if (/^[\],:{}\s]*$/
+                    .test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@')
+                        .replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
+                        .replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
+
+// In the third stage we use the eval function to compile the text into a
+// JavaScript structure. The '{' operator is subject to a syntactic ambiguity
+// in JavaScript: it can begin a block or an object literal. We wrap the text
+// in parens to eliminate the ambiguity.
+
+                j = eval('(' + text + ')');
+
+// In the optional fourth stage, we recursively walk the new structure, passing
+// each name/value pair to a reviver function for possible transformation.
+
+                return typeof reviver === 'function'
+                    ? walk({'': j}, '')
+                    : j;
+            }
+
+// If the text is not JSON parseable, then a SyntaxError is thrown.
+
+            throw new SyntaxError('JSON.parse');
+        };
+    }
+}());
 /** The drupal namespace. */
 var drupal = drupal || {};
 
 /**
- * @constructor
- * @class The base Drupal API class.
+ * The Drupal API class.  This is a static class helper
+ * to assist in communication between javascript and
+ * a Drupal CMS backend.
+ *
+ * @return {object} The API object.
  */
 drupal.api = function() {
+  return {
 
-  /** The Services API endpoint */
-  this.endpoint = drupal.endpoint || this.endpoint || '';
+    /** The resource within this endpoint */
+    resource: '',
 
-  /** The resource within this endpoint */
-  this.resource = this.resource || '';
-};
+    /** See if we are dealing with jQuery Mobile applications. */
+    isMobile: jQuery.hasOwnProperty('mobile'),
 
-/**
- * Helper function to get the Services URL for this resource.
- *
- * @param {object} object The object involved with in this request.
- * @return {string} The path to the API endpoint.
- */
-drupal.api.prototype.getURL = function(object) {
-  var path = this.endpoint;
-  path += this.resource ? ('/' + this.resource) : '';
-  path += (object && object.id) ? ('/' + object.id) : '';
-  return path;
-};
+    /**
+     * The Services API endpoint
+     *
+     * @this {object} The drupal.api object.
+     * @return {string} The services endpoint.
+     **/
+    endpoint: function() {
+      return drupal.endpoint || '';
+    },
 
-/**
- * API function to act as a generic request for all Service calls.
- *
- * @param {string} url The URL where the request will go.
- * @param {string} dataType The type of request.  json or jsonp.
- * @param {string} type The type of HTTP request.  GET, POST, PUT, etc.
- * @param {object} data The data to send to the server.
- * @param {function} callback The function callback.
- */
-drupal.api.prototype.call = function(url, dataType, type, data, callback) {
-  var request = {
-    url: url,
-    dataType: dataType,
-    type: type,
-    success: function(data, textStatus) {
-      if (textStatus == 'success') {
-        callback(data);
+    /**
+     * Helper function to get the Services URL for this resource.
+     *
+     * @this {object} The drupal.api object.
+     * @param {object} object The object involved with in this request.
+     * @return {string} The path to the API endpoint.
+     */
+    getURL: function(entity) {
+      // If the entity has a valid URI, then use that...
+      if (entity && entity.uri) {
+        return entity.uri;
       }
       else {
-        console.log('Error: ' + textStatus);
+
+        // Otherwise, build our best guess for the URI of this entity.
+        var path = this.endpoint();
+        path += this.resource ? ('/' + this.resource) : '';
+        path += (entity && entity.id) ? ('/' + entity.id) : '';
+        return path;
       }
     },
-    error: function(xhr, ajaxOptions, thrownError) {
-      console.log(xhr.responseText);
-      callback(null);
+
+    /**
+     * Called when we are loading or not.
+     *
+     * @param {boolean} loading If this api is loading something.
+     * @this Points to the drupal.api object.
+     */
+    loading: function(loading) {
+      if (this.isMobile) {
+        if (loading) {
+          jQuery.mobile.showPageLoadingMsg();
+        }
+        else {
+          jQuery.mobile.hidePageLoadingMsg();
+        }
+      }
+    },
+
+    /**
+     * API function to act as a generic request for all Service calls.
+     *
+     * @this {object} The drupal.api object.
+     * @param {string} url The URL where the request will go.
+     * @param {string} dataType The type of request.  json or jsonp.
+     * @param {string} type The type of HTTP request.  GET, POST, PUT, etc.
+     * @param {object} data The data to send to the server.
+     * @param {function} callback The function callback.
+     */
+    call: function(url, dataType, type, data, callback) {
+      var request = {
+        url: url,
+        dataType: dataType,
+        type: type,
+        success: (function(api) {
+          return function(data, textStatus) {
+            api.loading(false);
+            if (textStatus == 'success') {
+              if (callback) {
+                callback(data);
+              }
+            }
+            else {
+              console.log('Error: ' + textStatus);
+            }
+          };
+        })(this),
+        error: (function(api) {
+          return function(xhr, ajaxOptions, thrownError) {
+            api.loading(false);
+            console.log(xhr.responseText);
+            if (callback) {
+              callback(null);
+            }
+          };
+        })(this)
+      };
+
+      if (data) {
+        request['data'] = data;
+      }
+
+      // Show a loading cursor.
+      this.loading(true);
+
+      // Make the request.
+      jQuery.ajax(request);
+    },
+
+    /**
+     * API function to get any results from the drupal API.
+     *
+     * Return the object.
+     *
+     *  drupal.api.get(entity, function(object) {
+     *    console.log(object);
+     *  });
+     *
+     * Return a list of events within an entity.
+     *
+     *  drupal.api.get(entity, 'events', function(events) {
+     *    console.log(events);
+     *  });
+     *
+     * Return a list of nodes with type='page'.
+     *
+     *  drupal.api.get({}, {type:'page'}, function(object) {
+     *
+     *  });
+     *
+     * Return a list of events provided a query within a node.
+     *
+     *  drupal.api.get(entity, 'events', {month: 6}, functoin(events) {
+     *    console.log(events);
+     *  });
+     *
+     *
+     * @this {object} The drupal.api object.
+     * @param {object} object The object of the item we are getting..
+     * @param {string} endpoint An additional endpoint to add onto the resource.
+     * @param {object} query key-value pairs to add to the query of the URL.
+     * @param {function} callback The callback function.
+     */
+    get: function(object, endpoint, query, callback) {
+
+      // Normalize the arguments based on the different schemes of calling this.
+      var type = (typeof endpoint);
+      if (type === 'object') {
+        callback = query;
+        query = endpoint;
+        endpoint = '';
+      }
+      else if (type === 'function') {
+        callback = endpoint;
+        endpoint = '';
+      }
+
+      // Get the url for this object.
+      var url = this.getURL(object);
+      url += (endpoint) ? ('/' + endpoint) : '';
+      url += '.jsonp';
+      url += query ? ('?' + decodeURIComponent(jQuery.param(query, true))) : '';
+      this.call(url, 'jsonp', 'GET', null, callback);
+    },
+
+    /**
+     * API function to perform an action.
+     *
+     * @this {object} The drupal.api object.
+     * @param {string} action The action to perform.
+     * @param {object} object The entity object to set.
+     * @param {function} callback The callback function.
+     */
+    execute: function(action, object, callback) {
+      var url = this.getURL(object) + '/' + action;
+      this.call(url, 'json', 'POST', object, callback);
+    },
+
+    /**
+     * API function to save the value of an object using Services.
+     *
+     * @this {object} The drupal.api object.
+     * @param {object} object The entity object to set.  If the object does not
+     * have an ID, then this will create a new entity, otherwise, it will simply
+     * update the existing resource.
+     *
+     * @param {function} callback The callback function.
+     *
+     */
+    save: function(object, callback) {
+      var type = object.id ? 'PUT' : 'POST';
+      this.call(this.getURL(object), 'json', type, object, callback);
+    },
+
+    /**
+     * API function to remove an object on the server.
+     *
+     * @this {object} The drupal.api object.
+     * @param {object} object The entity object to delete.
+     * @param {function} callback The callback function.
+     */
+    remove: function(object, callback) {
+      this.call(this.getURL(object), 'json', 'DELETE', null, callback);
     }
   };
-
-  if (data) {
-    request['data'] = data;
-  }
-
-  // Make the request.
-  jQuery.ajax(request);
-};
-
-/**
- * API function to get any results from the drupal API.
- *
- * @param {object} object The object of the item we are getting..
- * @param {object} query key-value pairs to add to the query of the URL.
- * @param {function} callback The callback function.
- */
-drupal.api.prototype.get = function(object, query, callback) {
-  var url = this.getURL(object);
-  url += '.jsonp';
-  url += query ? ('?' + decodeURIComponent(jQuery.param(query, true))) : '';
-  this.call(url, 'jsonp', 'GET', null, callback);
-};
-
-/**
- * API function to get a type of object within an object.
- *
- * @param {object} object The object of the item we are getting..
- * @param {string} type The type of object you wish to get within this object.
- * @param {object} query key-value pairs to add to the query of the URL.
- * @param {function} callback The callback function.
- */
-drupal.api.prototype.getItems = function(object, type, query, callback) {
-  var url = this.getURL(object) + '/' + type;
-  url += '.jsonp';
-  url += query ? ('?' + decodeURIComponent(jQuery.param(query, true))) : '';
-  this.call(url, 'jsonp', 'GET', null, callback);
-};
-
-/**
- * API function to perform an action.
- *
- * @param {string} action The action to perform.
- * @param {object} object The entity object to set.
- * @param {function} callback The callback function.
- */
-drupal.api.prototype.execute = function(action, object, callback) {
-  var url = this.getURL(object) + '/' + action;
-  this.call(url, 'json', 'POST', object, callback);
-};
-
-/**
- * API function to save the value of an object using Services.
- *
- * @param {object} object The entity object to set.  If the object does not
- * have an ID, then this will create a new entity, otherwise, it will simply
- * update the existing resource.
- *
- * @param {function} callback The callback function.
- *
- **/
-drupal.api.prototype.save = function(object, callback) {
-  var type = object.id ? 'PUT' : 'POST';
-  this.call(this.getURL(object), 'json', type, object, callback);
-};
-
-/**
- * API function to remove an object on the server.
- *
- * @param {object} object The entity object to delete.
- * @param {function} callback The callback function.
- */
-drupal.api.prototype.remove = function(object, callback) {
-  this.call(this.getURL(object), 'json', 'DELETE', null, callback);
 };
 // The drupal namespace.
 var drupal = drupal || {};
 
-/**
- * @constructor
- * @class The system class
- *
- * @param {function} callback The function to be called once the system has
- * connected.
- */
-drupal.system = function(callback) {
-
-  /** The current user. */
-  this.user = this.user || null;
-
-  // Declare the api.
-  this.api = this.api || new drupal.system.api();
-
-  // If the callback is set, then connect.
-  if (callback) {
-
-    // Connect to the server.
-    this.connect(callback);
-  }
-};
-
-/**
- * Connect to the server.
- *
- * @param {function} callback The callback function.
- */
-drupal.system.prototype.connect = function(callback) {
-
-  // Connect to the server.
-  var _this = this;
-  this.api.execute('connect', null, function(object) {
-
-    // Set the user object, session id, and return this server.
-    _this.user = new drupal.user(object.user);
-    _this.user.sessid = object.sessid;
-    callback(_this);
-  });
-};
-
-/**
- * Get a variable from the server.
- *
- * @param {string} name The variable you wish to retrieve.
- * @param {string} def The default value of the variable.
- * @param {function} callback The callback function.
- */
-drupal.system.prototype.get_variable = function(name, def, callback) {
-  this.api.execute('get_variable', {name: name, 'default': def}, callback);
-};
-
-/**
- * Set a variable on the server.
- *
- * @param {string} name The variable you wish to set.
- * @param {string} value The value of the variable.
- * @param {function} callback The callback function.
- */
-drupal.system.prototype.set_variable = function(name, value, callback) {
-  this.api.execute('set_variable', {name: name, value: value}, callback);
-};
-
-/**
- * Delete a variable on the server.
- *
- * @param {string} name The variable you wish to set.
- * @param {function} callback The callback function.
- */
-drupal.system.prototype.del_variable = function(name, callback) {
-  this.api.execute('del_variable', {name: name}, callback);
-};
-// The drupal namespace.
-var drupal = drupal || {};
-
-/** The drupal.user namespace */
-drupal.system = drupal.system || {};
-
-/**
- * @constructor
- * @extends drupal.api
- * @class The Drupal System Services class.
- */
-drupal.system.api = function() {
-
-  // Set the resource
-  this.resource = this.resource || 'system';
-
-  // Call the drupal.api constructor.
-  drupal.api.call(this);
-};
-
-/** Derive from drupal.api. */
-drupal.system.api.prototype = new drupal.api();
-
-/** Reset the constructor. */
-drupal.system.api.prototype.constructor = drupal.system.api;
-// The drupal namespace.
-var drupal = drupal || {};
+/** Determine if we have storage. */
+drupal.hasStorage = (typeof(Storage) !== 'undefined');
+drupal.hasStorage &= (typeof(JSON) !== 'undefined');
 
 /**
  * @constructor
@@ -238,67 +714,236 @@ var drupal = drupal || {};
  *
  * @param {object} object The entity object.
  * @param {function} callback The callback function to get the object.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.entity = function(object, callback) {
+drupal.entity = function(object, callback, options) {
 
-  // Only continue if the object is valid.
+  // Set the options.
+  this.options = jQuery.extend({
+    store: true,
+    expires: 3600
+  }, (typeof options === 'undefined') ? {} : options);
+
+  // If the object is valid, then set it...
   if (object) {
+    this.set(object);
+  }
 
-    /** The unique identifier for this entity. */
-    this.id = this.id || '';
+  // If the callback is valid, then load it...
+  if (callback) {
+    this.load(callback);
+  }
+};
 
-    /** The API for this entity */
-    this.api = this.api || null;
+/**
+ * Returns an index of entities.
+ *
+ * @param {object} object The object to create for each entity.
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
+ */
+drupal.entity.index = function(object, query, callback, options) {
 
-    // If object is a string, assume it is a UUID and get it.
-    this.update(object);
+  // Set the default options.
+  options = jQuery.extend({
+    store: false
+  }, options || {});
 
-    // If they provide a callback, call it now.
+  // Don't require a query...
+  if (typeof query === 'function') {
+    callback = query;
+    query = {};
+  }
+
+  // Get the list of entities.
+  var instance = new object({});
+  instance.api.get({}, instance.getQuery(query), function(entities) {
+    var i = entities.length;
+    while (i--) {
+      entities[i] = new object(entities[i], null, options);
+      entities[i].store();
+    }
     if (callback) {
+      callback(entities);
+    }
+  });
+};
 
-      // Get the object from the server.
-      this.get(callback);
+/**
+ * Update an object.
+ *
+ * @param {object} object The object which contains the data.
+ * @param {function} callback The function to call when it is done updating.
+ */
+drupal.entity.prototype.update = function(object, callback) {
+
+  // Set the object.
+  if (object) {
+    this.set(object);
+  }
+
+  // Now store the object.
+  this.store();
+
+  // Now callback that this object has been updated.
+  if (callback) {
+    callback.call(this, this);
+  }
+};
+
+/**
+ * Stores the object in local storage.
+ */
+drupal.entity.prototype.store = function() {
+  if (this.id && this.options.store && drupal.hasStorage) {
+
+    // Get the object.
+    var object = this.get();
+
+    // Get the key for this object.
+    var key = this.entityName + '-' + this.id;
+
+    // Set an expiration date for this object.
+    object.expires = (this.options.expires * 1000) + (new Date()).getTime();
+
+    // Store this object in localStorage.
+    localStorage.setItem(key, JSON.stringify(object));
+  }
+};
+
+/**
+ * Retrieves an object from local storage.
+ *
+ * @return {object} The object in local storage.
+ */
+drupal.entity.prototype.retrieve = function() {
+  var object = null, key = '', value = '';
+  if (this.id && this.options.store && drupal.hasStorage) {
+
+    // Get the key for this object.
+    var key = this.entityName + '-' + this.id;
+
+    // Get it out of localStorage.
+    if (object = JSON.parse(localStorage.getItem(key))) {
+
+      // Make sure this object hasn't expired.
+      if ((new Date()).getTime() > object.expires) {
+
+        // Clear it if it has.
+        localStorage.removeItem(key);
+      }
+      else {
+
+        // Set the object if it was retrieved.
+        this.set(object);
+      }
+    }
+  }
+  return object;
+};
+
+/**
+ * Clears an item out of local storage.
+ */
+drupal.entity.prototype.clear = function() {
+  if (this.id && drupal.hasStorage) {
+    var object = this.get(), key = '';
+    for (var prop in object) {
+      key = this.entityName + '-' + this.id + '-' + prop;
+      localStorage.removeItem(key);
     }
   }
 };
 
 /**
- * Get's an object from the drupal API.
+ * Sets the object.
+ *
+ * @param {object} object The object which contains the data.
+ */
+drupal.entity.prototype.set = function(object) {
+
+  /** The API for this entity */
+  this.api = this.api || null;
+
+  /** The ID of this entity. */
+  this.id = object.id || this.id || '';
+
+  /** The uri of this entity. */
+  this.uri = object.uri || this.uri || '';
+
+  /** The name of this entity. */
+  this.entityName = 'entity';
+};
+
+/**
+ * Returns the object in JSON form.
+ *
+ * @return {object} The object representation of this entity.
+ */
+drupal.entity.prototype.get = function() {
+  return {
+    id: this.id,
+    uri: this.uri
+  };
+};
+
+/**
+ * Gets a POST object.
+ *
+ * @return {object} The filtered object.
+ */
+drupal.entity.prototype.getPOST = function() {
+  var object = this.get();
+  if (!object.id) {
+    delete object.id;
+  }
+  return object;
+};
+
+/**
+ * Gets the query variables.
+ *
+ * @param {object} query The query variables.
+ * @return {object} The query variables.
+ */
+drupal.entity.prototype.getQuery = function(query) {
+  return query || {};
+};
+
+/**
+ * Loads and object using the drupal.api.
  *
  * @param {function} callback The callback function when the object is
  * retrieved.
  */
-drupal.entity.prototype.get = function(callback) {
+drupal.entity.prototype.load = function(callback) {
 
-  // If the API exists, then we need to get the object.
-  if (this.api) {
+  // If this isn't a valid object, then return null...
+  if (!this.id) {
+    callback(null);
+  }
+
+  // Declare the object to load...
+  var object = null;
+  if (object = this.retrieve()) {
+    this.update(object, callback);
+  }
+  else if (this.api) {
 
     // Call the API.
-    var _this = this;
-    this.api.get(this.getObject(), this.getQuery(), function(object) {
+    this.api.get(this.get(), {}, (function(entity) {
+      return function(object) {
 
-      if (!object) {
-        callback(null);
-      }
-      else if (object[0]) {
-
-        var i = object.length;
-        while (i--) {
-          object[i] = new _this.constructor(object[i]);
+        // If no object is returned, then return null.
+        if (!object) {
+          callback(null);
         }
 
-        // Callback a list of objects.
-        callback(object);
-      }
-      else {
-        // Update the object, then call the callback.
-        _this.update(object);
-
-        if (callback) {
-          callback(_this);
-        }
-      }
-    });
+        // Update the object.
+        entity.update(object, callback);
+      };
+    })(this));
   }
 };
 
@@ -309,20 +954,15 @@ drupal.entity.prototype.get = function(callback) {
  */
 drupal.entity.prototype.save = function(callback) {
 
-  // If the API exists, then we can save this object.
+  // Check to see if the api is valid.
   if (this.api) {
 
-    // Call the API.
-    var _this = this;
-    this.api.save(this.getObject(), function(object) {
-
-      // Update the object, then call the callback.
-      _this.update(object);
-
-      if (callback) {
-        callback(_this);
-      }
-    });
+    // Call the api.
+    this.api.save(this.getPOST(), (function(entity) {
+      return function(object) {
+        entity.update(object, callback);
+      };
+    })(this));
   }
 };
 
@@ -337,90 +977,181 @@ drupal.entity.prototype.remove = function(callback) {
   if (this.id) {
 
     // Call the API.
-    this.api.remove(this.getObject(), callback);
+    this.api.remove(this.get(), callback);
+    this.clear();
   }
 };
+// The drupal namespace.
+var drupal = drupal || {};
 
-/**
- * Adds a key value pair to the query object.
+/*!
+ * Modified from...
  *
- * @param {object} query The query object.
- * @param {string} field The field to set.
- * @param {string} value The value of the field to set.
- */
-drupal.entity.prototype.setQuery = function(query, field, value) {
-
-  // Set the value of this query.
-  query[field] = value;
-};
-
-/**
- * Returns the search query.
+ * jQuery Cookie Plugin
+ * https://github.com/carhartl/jquery-cookie
  *
- * @return {object} The query to pass to the server.
+ * Copyright 2011, Klaus Hartl
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://www.opensource.org/licenses/mit-license.php
+ * http://www.opensource.org/licenses/GPL-2.0
  */
-drupal.entity.prototype.getQuery = function() {
+/**
+ * Add a way to store cookies.
+ *
+ * @param {string} key The key for the cookie.
+ * @param {string} value The value of the cookie.
+ * @param {object} options The options for the cookie storage.
+ * @return {string} The results of the storage.
+ */
+drupal.cookie = function(key, value, options) {
 
-  var query = {};
+  // key and at least value given, set cookie...
+  if (arguments.length > 1 &&
+     (!/Object/.test(Object.prototype.toString.call(value)) ||
+      value === null ||
+      value === undefined)) {
+    options = $.extend({}, options);
 
-  // We only need to provide a search query if there is no ID.
-  if (!this.id) {
-
-    // Iterate through all of our fields.
-    for (var field in this) {
-
-      // Make sure that this property exists, is set, and is not an object.
-      if (this.hasOwnProperty(field) &&
-          this[field] &&
-          (typeof this[field] != 'object')) {
-
-        // Add this as a query parameter.
-        this.setQuery(query, field, this[field]);
-      }
+    if (value === null || value === undefined) {
+      options.expires = -1;
     }
-  }
 
-  // Return the params.
-  return query;
-};
-
-/**
- * Update the entity data.
- *
- * @param {object} object The entity information.
- */
-drupal.entity.prototype.update = function(object) {
-
-  // Update the object.
-  if (object) {
-
-    // Update the params.
-    for (var param in object) {
-
-      // Check to make sure that this param is within object scope.
-      if (object.hasOwnProperty(param) && this.hasOwnProperty(param)) {
-
-        // Check to see if this object has an update function.
-        if (this[param].update) {
-          this[param].update(object[param]);
-        }
-        else {
-          this[param] = object[param];
-        }
-      }
+    if (typeof options.expires === 'number') {
+      var days = options.expires, t = options.expires = new Date();
+      t.setDate(t.getDate() + days);
     }
+
+    value = String(value);
+
+    // use expires attribute, max-age is not supported by IE
+    return (document.cookie = [encodeURIComponent(key), '=',
+    options.raw ? value : encodeURIComponent(value),
+    options.expires ? '; expires=' + options.expires.toUTCString() : '',
+    options.path ? '; path=' + options.path : '',
+    options.domain ? '; domain=' + options.domain : '',
+    options.secure ? '; secure' : ''].join(''));
   }
+
+  // key and possibly options given, get cookie...
+  options = value || {};
+  var decode = options.raw ? function(s) {
+    return s;
+  } : decodeURIComponent;
+
+  var pairs = document.cookie.split('; ');
+  for (var i = 0, pair; pair = pairs[i] && pairs[i].split('='); i++) {
+    if (decode(pair[0]) === key)
+      return decode(pair[1] || '');
+  }
+  return null;
 };
 
 /**
- * Returns the object to send during PUT's and POST's during a save or add.
+ * @constructor
+ * @class The system class
  *
- * @return {object} The JSON object to send to the Services endpoint.
+ * @param {function} callback The function to be called once the system has
+ * connected.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.entity.prototype.getObject = function() {
-  return {
-    id: this.id
-  };
+drupal.system = function(callback, options) {
+  drupal.entity.call(this, {}, callback, options);
+};
+
+/** Derive from entity. */
+drupal.system.prototype = new drupal.entity();
+
+/** Reset the constructor. */
+drupal.system.prototype.constructor = drupal.system;
+
+/** Declare the system api. */
+drupal.system.api = jQuery.extend(new drupal.api(), {
+  resource: 'system'
+});
+
+/**
+ * Sets the object.
+ *
+ * @param {object} object The object which contains the data.
+ */
+drupal.system.prototype.set = function(object) {
+  drupal.entity.prototype.set.call(this, object);
+
+  /** The name of this entity. */
+  this.entityName = 'system';
+
+  /** Set the api. */
+  this.api = drupal.system.api;
+
+  /** Set current user. */
+  this.user = new drupal.user(object.user);
+  this.user.setSession(object.session_name, object.sessid);
+};
+
+/**
+ * Returns the object.
+ *
+ * @return {object} The object to send to the Services endpoint.
+ */
+drupal.system.prototype.get = function() {
+  return jQuery.extend(drupal.entity.prototype.get.call(this), {
+    user: this.user.get()
+  });
+};
+
+/**
+ * Loads the server.
+ *
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.load = function(callback) {
+
+  // Connect to the server.
+  this.api.execute('connect', null, (function(system) {
+    return function(object) {
+      system.update(object, callback);
+    };
+  })(this));
+};
+
+/**
+ * Get a variable from the server.
+ *
+ * @param {string} name The variable you wish to retrieve.
+ * @param {string} def The default value of the variable.
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.get_variable = function(name, def, callback) {
+  this.api.execute('get_variable', {
+    name: name,
+    'default': def
+  }, callback);
+};
+
+/**
+ * Set a variable on the server.
+ *
+ * @param {string} name The variable you wish to set.
+ * @param {string} value The value of the variable.
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.set_variable = function(name, value, callback) {
+  this.api.execute('set_variable', {
+    name: name,
+    value: value
+  }, callback);
+};
+
+/**
+ * Delete a variable on the server.
+ *
+ * @param {string} name The variable you wish to set.
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.del_variable = function(name, callback) {
+  this.api.execute('del_variable', {
+    name: name
+  }, callback);
 };
 // The drupal namespace.
 var drupal = drupal || {};
@@ -433,30 +1164,10 @@ var drupal = drupal || {};
  * @param {object} object The node object.
  * @param {function} callback The function to be called once the node has
  * been retrieved from the server.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.node = function(object, callback) {
-
-  // Only continue if the object is valid.
-  if (object) {
-
-    /** The title for this node. */
-    this.title = this.title || '';
-
-    /** The type of node we are dealing with. */
-    this.type = this.type || '';
-
-    /** The status of this node. */
-    this.status = this.status || 0;
-
-    /** The user who created this node */
-    this.uid = this.uid || 0;
-
-    // Declare the api.
-    this.api = this.api || new drupal.node.api();
-  }
-
-  // Call the base class.
-  drupal.entity.call(this, object, callback);
+drupal.node = function(object, callback, options) {
+  drupal.entity.call(this, object, callback, options);
 };
 
 /** Derive from entity. */
@@ -465,32 +1176,50 @@ drupal.node.prototype = new drupal.entity();
 /** Reset the constructor. */
 drupal.node.prototype.constructor = drupal.node;
 
+/** Declare the node api. */
+drupal.node.api = jQuery.extend(new drupal.api(), {
+  resource: 'node'
+});
+
 /**
- * Override the update routine.
+ * Returns an index of nodes.
  *
- * @param {object} object The node object to update.
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.node.prototype.update = function(object) {
-
-  drupal.entity.prototype.update.call(this, object);
-
-  // Make sure to also set the ID the same as nid.
-  if (object) {
-    this.id = object.nid || this.id;
-  }
+drupal.node.index = function(query, callback, options) {
+  drupal.entity.index(drupal.node, query, callback, options);
 };
 
 /**
- * Override the setQuery method of the entity.
+ * Sets the object.
  *
- * @param {object} query The query object.
- * @param {string} field The field to set.
- * @param {string} value The value of the field to set.
+ * @param {object} object The object which contains the data.
  */
-drupal.node.prototype.setQuery = function(query, field, value) {
+drupal.node.prototype.set = function(object) {
+  drupal.entity.prototype.set.call(this, object);
 
-  // The node object sets parameters like ?parameters[field]=value...
-  query['parameters[' + field + ']'] = value;
+  /** The name of this entity. */
+  this.entityName = 'node';
+
+  /** Set the api to the drupal.node.api. */
+  this.api = drupal.node.api;
+
+  /** Set the ID based on the nid. */
+  this.id = object.nid || this.id || 0;
+
+  /** The title for this node. */
+  this.title = object.title || this.title || '';
+
+  /** The type of node we are dealing with. */
+  this.type = object.type || this.type || '';
+
+  /** The status of this node. */
+  this.status = object.status || this.status || 0;
+
+  /** The user who created this node */
+  this.uid = object.uid || this.uid || 0;
 };
 
 /**
@@ -498,41 +1227,34 @@ drupal.node.prototype.setQuery = function(query, field, value) {
  *
  * @return {object} The object to send to the Services endpoint.
  */
-drupal.node.prototype.getObject = function() {
-  return jQuery.extend(drupal.entity.prototype.getObject.call(this), {
+drupal.node.prototype.get = function() {
+  return jQuery.extend(drupal.entity.prototype.get.call(this), {
     title: this.title,
     type: this.type,
     status: this.status,
     uid: this.uid
   });
 };
-// The drupal namespace.
-var drupal = drupal || {};
-
-/** The drupal.node namespace */
-drupal.node = drupal.node || {};
 
 /**
- * @constructor
- * @extends drupal.api
- * @class The Drupal Node Services class.
+ * Override the getQuery method of the entity.
+ *
+ * @param {object} query The query variables.
+ * @return {object} The query variables.
  */
-drupal.node.api = function() {
-
-  // Set the resource
-  this.resource = this.resource || 'node';
-
-  // Call the drupal.api constructor.
-  drupal.api.call(this);
+drupal.node.prototype.getQuery = function(query) {
+  query = drupal.entity.prototype.getQuery.call(this, query);
+  if (query.type) {
+    query['parameters[type]'] = query.type;
+    delete query.type;
+  }
+  return query;
 };
-
-/** Derive from drupal.api. */
-drupal.node.api.prototype = new drupal.api();
-
-/** Reset the constructor. */
-drupal.node.api.prototype.constructor = drupal.node.api;
 // The drupal namespace.
 var drupal = drupal || {};
+
+/** The current logged in user. */
+drupal.current_user = null;
 
 /**
  * @constructor
@@ -542,36 +1264,10 @@ var drupal = drupal || {};
  * @param {object} object The user object.
  * @param {function} callback The function to be called once the user has
  * been retrieved from the server.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.user = function(object, callback) {
-
-  // Only continue if the object is valid.
-  if (object) {
-
-    /** The name for this user. */
-    this.name = this.name || '';
-
-    /** The email address of our user. */
-    this.mail = this.mail || '';
-
-    /** The password of the user. */
-    this.pass = this.pass || '';
-
-    /** The status of the user. */
-    this.status = this.status || 1;
-
-    /** The session ID of the user. */
-    this.sessid = this.sessid || '';
-
-    /** The session name of the user */
-    this.session_name = this.session_name || '';
-
-    // Declare the api.
-    this.api = this.api || new drupal.user.api();
-  }
-
-  // Call the base class.
-  drupal.entity.call(this, object, callback);
+drupal.user = function(object, callback, options) {
+  drupal.entity.call(this, object, callback, options);
 };
 
 /** Derive from drupal.entity. */
@@ -580,31 +1276,102 @@ drupal.user.prototype = new drupal.entity();
 /** Reset the constructor. */
 drupal.user.prototype.constructor = drupal.user;
 
+/** Declare the user api. */
+drupal.user.api = jQuery.extend(new drupal.api(), {
+  resource: 'user'
+});
+
+/**
+ * Returns an index of users.
+ *
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
+ */
+drupal.user.index = function(query, callback, options) {
+  drupal.entity.index(drupal.user, query, callback, options);
+};
+
+/**
+ * Sets the object.
+ *
+ * @param {object} object The object which contains the data.
+ */
+drupal.user.prototype.set = function(object) {
+  drupal.entity.prototype.set.call(this, object);
+
+  /** The name of this entity. */
+  this.entityName = 'user';
+
+  /** Set the api. */
+  this.api = drupal.user.api;
+
+  /** Set the ID based on the uid. */
+  this.id = object.uid || this.id || 0;
+
+  /** The name for this user. */
+  this.name = object.name || this.name || '';
+
+  /** The email address of our user. */
+  this.mail = object.mail || this.mail || '';
+
+  /** The password of the user. */
+  this.pass = object.pass || this.pass || '';
+
+  /** The status of the user. */
+  this.status = object.status || this.status || 1;
+};
+
+/**
+ * Sets a user session.
+ *
+ * @param {string} name The name of the session.
+ * @param {string} sessid The session ID.
+ */
+drupal.user.prototype.setSession = function(name, sessid) {
+
+  /** Set the session id for this user. */
+  this.sessid = sessid;
+
+  // Only set the session name if this user is valid and has a session name.
+  if (this.id && name) {
+
+    /** Set the session name for this user. */
+    this.session_name = name;
+
+    /** Now store this in a cookie for further authentication. */
+    drupal.cookie(name, sessid);
+
+    // Now store this user as the 'current' user.
+    drupal.current_user = this;
+  }
+};
+
 /**
  * Login a user.
  *
  * @param {function} callback The callback function.
  */
 drupal.user.prototype.login = function(callback) {
+  if (this.api) {
+    this.api.execute('login', {
+      username: this.name,
+      password: this.pass
+    }, (function(user) {
+      return function(object) {
 
-  // Setup the POST data for the login of this user.
-  var object = {
-    username: this.name,
-    password: this.pass
-  };
+        // Update this object.
+        user.update(object.user);
 
-  // Execute the login.
-  var _this = this;
-  this.api.execute('login', object, function(user) {
+        // Set the session.
+        user.setSession(object.session_name, object.sessid);
 
-    // Set the session ID and session name.
-    _this.sessid = user.sessid;
-    _this.session_name = user.session_name;
-
-    // Update this object.
-    _this.update(user.user);
-    callback(_this);
-  });
+        if (callback) {
+          callback.call(user, user);
+        }
+      };
+    })(this));
+  }
 };
 
 /**
@@ -613,15 +1380,13 @@ drupal.user.prototype.login = function(callback) {
  * @param {function} callback The callback function.
  */
 drupal.user.prototype.register = function(callback) {
-
-  // Execute the register.
-  var _this = this;
-  this.api.execute('register', this.getObject(), function(user) {
-
-    // Now update the object.
-    _this.update(user);
-    callback(_this);
-  });
+  if (this.api) {
+    this.api.execute('register', this.getPOST(), (function(user) {
+      return function(object) {
+        user.update(object, callback);
+      };
+    })(this));
+  }
 };
 
 /**
@@ -630,24 +1395,22 @@ drupal.user.prototype.register = function(callback) {
  * @param {function} callback The callback function.
  */
 drupal.user.prototype.logout = function(callback) {
-
-  // Execute the logout.
-  this.api.execute('logout', null, callback);
+  if (this.api) {
+    this.api.execute('logout', null, callback);
+  }
 };
 
 /**
- * Override the update routine.
+ * Gets a POST object.
  *
- * @param {object} object The object to update.
+ * @return {object} The filtered object.
  */
-drupal.user.prototype.update = function(object) {
+drupal.user.prototype.getPOST = function() {
 
-  drupal.entity.prototype.update.call(this, object);
-
-  // Make sure to also set the ID the same as uid.
-  if (object) {
-    this.id = object.uid || this.id;
-  }
+  // Add the password to POST's only.
+  var post = drupal.entity.prototype.getPOST.call(this);
+  post.pass = this.pass;
+  return post;
 };
 
 /**
@@ -655,36 +1418,10 @@ drupal.user.prototype.update = function(object) {
  *
  * @return {object} The object to send to the Services endpoint.
  */
-drupal.user.prototype.getObject = function() {
-  return jQuery.extend(drupal.entity.prototype.getObject.call(this), {
+drupal.user.prototype.get = function() {
+  return jQuery.extend(drupal.entity.prototype.get.call(this), {
     name: this.name,
     mail: this.mail,
-    pass: this.pass,
     status: this.status
   });
 };
-// The drupal namespace.
-var drupal = drupal || {};
-
-/** The drupal.user namespace */
-drupal.user = drupal.user || {};
-
-/**
- * @constructor
- * @extends drupal.api
- * @class The Drupal User Services class.
- */
-drupal.user.api = function() {
-
-  // Set the resource
-  this.resource = 'user';
-
-  // Call the drupal.api constructor.
-  drupal.api.call(this);
-};
-
-/** Derive from drupal.api. */
-drupal.user.api.prototype = new drupal.api();
-
-/** Reset the constructor. */
-drupal.user.api.prototype.constructor = drupal.user.api;

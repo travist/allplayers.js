@@ -1,6 +1,9 @@
 // The drupal namespace.
 var drupal = drupal || {};
 
+/** The current logged in user. */
+drupal.current_user = null;
+
 /**
  * @constructor
  * @extends drupal.entity
@@ -9,36 +12,10 @@ var drupal = drupal || {};
  * @param {object} object The user object.
  * @param {function} callback The function to be called once the user has
  * been retrieved from the server.
+ * @param {object} options Options used to govern functionality.
  */
-drupal.user = function(object, callback) {
-
-  // Only continue if the object is valid.
-  if (object) {
-
-    /** The name for this user. */
-    this.name = this.name || '';
-
-    /** The email address of our user. */
-    this.mail = this.mail || '';
-
-    /** The password of the user. */
-    this.pass = this.pass || '';
-
-    /** The status of the user. */
-    this.status = this.status || 1;
-
-    /** The session ID of the user. */
-    this.sessid = this.sessid || '';
-
-    /** The session name of the user */
-    this.session_name = this.session_name || '';
-
-    // Declare the api.
-    this.api = this.api || new drupal.user.api();
-  }
-
-  // Call the base class.
-  drupal.entity.call(this, object, callback);
+drupal.user = function(object, callback, options) {
+  drupal.entity.call(this, object, callback, options);
 };
 
 /** Derive from drupal.entity. */
@@ -47,31 +24,102 @@ drupal.user.prototype = new drupal.entity();
 /** Reset the constructor. */
 drupal.user.prototype.constructor = drupal.user;
 
+/** Declare the user api. */
+drupal.user.api = jQuery.extend(new drupal.api(), {
+  resource: 'user'
+});
+
+/**
+ * Returns an index of users.
+ *
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
+ */
+drupal.user.index = function(query, callback, options) {
+  drupal.entity.index(drupal.user, query, callback, options);
+};
+
+/**
+ * Sets the object.
+ *
+ * @param {object} object The object which contains the data.
+ */
+drupal.user.prototype.set = function(object) {
+  drupal.entity.prototype.set.call(this, object);
+
+  /** The name of this entity. */
+  this.entityName = 'user';
+
+  /** Set the api. */
+  this.api = drupal.user.api;
+
+  /** Set the ID based on the uid. */
+  this.id = object.uid || this.id || 0;
+
+  /** The name for this user. */
+  this.name = object.name || this.name || '';
+
+  /** The email address of our user. */
+  this.mail = object.mail || this.mail || '';
+
+  /** The password of the user. */
+  this.pass = object.pass || this.pass || '';
+
+  /** The status of the user. */
+  this.status = object.status || this.status || 1;
+};
+
+/**
+ * Sets a user session.
+ *
+ * @param {string} name The name of the session.
+ * @param {string} sessid The session ID.
+ */
+drupal.user.prototype.setSession = function(name, sessid) {
+
+  /** Set the session id for this user. */
+  this.sessid = sessid;
+
+  // Only set the session name if this user is valid and has a session name.
+  if (this.id && name) {
+
+    /** Set the session name for this user. */
+    this.session_name = name;
+
+    /** Now store this in a cookie for further authentication. */
+    drupal.cookie(name, sessid);
+
+    // Now store this user as the 'current' user.
+    drupal.current_user = this;
+  }
+};
+
 /**
  * Login a user.
  *
  * @param {function} callback The callback function.
  */
 drupal.user.prototype.login = function(callback) {
+  if (this.api) {
+    this.api.execute('login', {
+      username: this.name,
+      password: this.pass
+    }, (function(user) {
+      return function(object) {
 
-  // Setup the POST data for the login of this user.
-  var object = {
-    username: this.name,
-    password: this.pass
-  };
+        // Update this object.
+        user.update(object.user);
 
-  // Execute the login.
-  var _this = this;
-  this.api.execute('login', object, function(user) {
+        // Set the session.
+        user.setSession(object.session_name, object.sessid);
 
-    // Set the session ID and session name.
-    _this.sessid = user.sessid;
-    _this.session_name = user.session_name;
-
-    // Update this object.
-    _this.update(user.user);
-    callback(_this);
-  });
+        if (callback) {
+          callback.call(user, user);
+        }
+      };
+    })(this));
+  }
 };
 
 /**
@@ -80,15 +128,13 @@ drupal.user.prototype.login = function(callback) {
  * @param {function} callback The callback function.
  */
 drupal.user.prototype.register = function(callback) {
-
-  // Execute the register.
-  var _this = this;
-  this.api.execute('register', this.getObject(), function(user) {
-
-    // Now update the object.
-    _this.update(user);
-    callback(_this);
-  });
+  if (this.api) {
+    this.api.execute('register', this.getPOST(), (function(user) {
+      return function(object) {
+        user.update(object, callback);
+      };
+    })(this));
+  }
 };
 
 /**
@@ -97,24 +143,22 @@ drupal.user.prototype.register = function(callback) {
  * @param {function} callback The callback function.
  */
 drupal.user.prototype.logout = function(callback) {
-
-  // Execute the logout.
-  this.api.execute('logout', null, callback);
+  if (this.api) {
+    this.api.execute('logout', null, callback);
+  }
 };
 
 /**
- * Override the update routine.
+ * Gets a POST object.
  *
- * @param {object} object The object to update.
+ * @return {object} The filtered object.
  */
-drupal.user.prototype.update = function(object) {
+drupal.user.prototype.getPOST = function() {
 
-  drupal.entity.prototype.update.call(this, object);
-
-  // Make sure to also set the ID the same as uid.
-  if (object) {
-    this.id = object.uid || this.id;
-  }
+  // Add the password to POST's only.
+  var post = drupal.entity.prototype.getPOST.call(this);
+  post.pass = this.pass;
+  return post;
 };
 
 /**
@@ -122,11 +166,10 @@ drupal.user.prototype.update = function(object) {
  *
  * @return {object} The object to send to the Services endpoint.
  */
-drupal.user.prototype.getObject = function() {
-  return jQuery.extend(drupal.entity.prototype.getObject.call(this), {
+drupal.user.prototype.get = function() {
+  return jQuery.extend(drupal.entity.prototype.get.call(this), {
     name: this.name,
     mail: this.mail,
-    pass: this.pass,
     status: this.status
   });
 };

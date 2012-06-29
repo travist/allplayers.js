@@ -191,21 +191,17 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
-	<li><a href="../symbols/drupal.api.html">drupal.api</a></li>
+	<li><a href="../symbols/Boolean.html">Boolean</a></li>
+	
+	<li><a href="../symbols/Date.html">Date</a></li>
 	
 	<li><a href="../symbols/drupal.entity.html">drupal.entity</a></li>
 	
 	<li><a href="../symbols/drupal.node.html">drupal.node</a></li>
 	
-	<li><a href="../symbols/drupal.node.api.html">drupal.node.api</a></li>
-	
 	<li><a href="../symbols/drupal.system.html">drupal.system</a></li>
 	
-	<li><a href="../symbols/drupal.system.api.html">drupal.system.api</a></li>
-	
 	<li><a href="../symbols/drupal.user.html">drupal.user</a></li>
-	
-	<li><a href="../symbols/drupal.user.api.html">drupal.user.api</a></li>
 	
 </ul>
 <hr />
@@ -248,7 +244,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/drupal.node.html#constructor">drupal.node</a></b>(object, callback)
+								<b><a href="../symbols/drupal.node.html#constructor">drupal.node</a></b>(object, callback, options)
 							</div>
 							<div class="description"></div>
 						</td>
@@ -275,9 +271,49 @@ ul.inheritsList
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
+								<b><a href="../symbols/drupal.node.html#api">api</a></b>
+								</div>
+								<div class="description">Set the api to the drupal.node.api.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								drupal.node.<b><a href="../symbols/drupal.node.html#.api">api</a></b>
+								</div>
+								<div class="description">Declare the node api.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
 								<b><a href="../symbols/drupal.node.html#constructor">constructor</a></b>
 								</div>
 								<div class="description">Reset the constructor.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/drupal.node.html#entityName">entityName</a></b>
+								</div>
+								<div class="description">The name of this entity.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/drupal.node.html#id">id</a></b>
+								</div>
+								<div class="description">Set the ID based on the nid.</div>
 							</td>
 						</tr>
 					
@@ -327,7 +363,7 @@ ul.inheritsList
 				
 				
 				<dl class="inheritsList">
-				<dt>Fields borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#api">api</a>, <a href="../symbols/drupal.entity.html#id">id</a></dd>
+				<dt>Fields borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#uri">uri</a></dd>
 				</dl>
 				
 			
@@ -349,7 +385,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/drupal.node.html#getObject">getObject</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/drupal.node.html#get">get</a></b>()
 								</div>
 								<div class="description">Returns the object to send to Services.</div>
 							</td>
@@ -358,18 +394,27 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/drupal.node.html#setQuery">setQuery</a></b>(query, field, value)
+								<div class="fixedFont"><b><a href="../symbols/drupal.node.html#getQuery">getQuery</a></b>(query)
 								</div>
-								<div class="description">Override the setQuery method of the entity.</div>
+								<div class="description">Override the getQuery method of the entity.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">drupal.node.<b><a href="../symbols/drupal.node.html#.index">index</a></b>(query, callback, options)
+								</div>
+								<div class="description">Returns an index of nodes.</div>
 							</td>
 						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/drupal.node.html#update">update</a></b>(object)
+								<div class="fixedFont"><b><a href="../symbols/drupal.node.html#set">set</a></b>(object)
 								</div>
-								<div class="description">Override the update routine.</div>
+								<div class="description">Sets the object.</div>
 							</td>
 						</tr>
 					
@@ -379,7 +424,7 @@ ul.inheritsList
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#get">get</a>, <a href="../symbols/drupal.entity.html#getQuery">getQuery</a>, <a href="../symbols/drupal.entity.html#remove">remove</a>, <a href="../symbols/drupal.entity.html#save">save</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#clear">clear</a>, <a href="../symbols/drupal.entity.html#getPOST">getPOST</a>, <a href="../symbols/drupal.entity.html#load">load</a>, <a href="../symbols/drupal.entity.html#remove">remove</a>, <a href="../symbols/drupal.entity.html#retrieve">retrieve</a>, <a href="../symbols/drupal.entity.html#save">save</a>, <a href="../symbols/drupal.entity.html#store">store</a>, <a href="../symbols/drupal.entity.html#update">update</a></dd>
 				</dl>
 				
 			
@@ -394,7 +439,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>drupal.node</b>(object, callback)
+						<b>drupal.node</b>(object, callback, options)
 				</div>
 				
 				<div class="description">
@@ -422,6 +467,12 @@ ul.inheritsList
 								<dd>The function to be called once the node has
 been retrieved from the server.</dd>
 						
+							<dt>
+								<span class="light fixedFont">{object}</span>  <b>options</b>
+								
+							</dt>
+								<dd>Options used to govern functionality.</dd>
+						
 						</dl>
 					
 					
@@ -440,6 +491,50 @@ been retrieved from the server.</dd>
 					Field Detail
 				</div>
 				
+					<a name="api"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>api</b>
+					
+					</div>
+					<div class="description">
+						Set the api to the drupal.node.api.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name=".api"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">drupal.node.</span><b>api</b>
+					
+					</div>
+					<div class="description">
+						Declare the node api.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
 					<a name="constructor"> </a>
 					<div class="fixedFont">
 					
@@ -449,6 +544,50 @@ been retrieved from the server.</dd>
 					</div>
 					<div class="description">
 						Reset the constructor.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="entityName"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>entityName</b>
+					
+					</div>
+					<div class="description">
+						The name of this entity.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="id"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>id</b>
+					
+					</div>
+					<div class="description">
+						Set the ID based on the nid.
 						
 						
 					</div>
@@ -558,11 +697,11 @@ been retrieved from the server.</dd>
 					Method Detail
 				</div>
 				
-					<a name="getObject"> </a>
+					<a name="get"> </a>
 					<div class="fixedFont">
 					
 					<span class="light">{object}</span>
-					<b>getObject</b>()
+					<b>get</b>()
 					
 					</div>
 					<div class="description">
@@ -590,15 +729,15 @@ been retrieved from the server.</dd>
 
 					<hr />
 				
-					<a name="setQuery"> </a>
+					<a name="getQuery"> </a>
 					<div class="fixedFont">
 					
-					
-					<b>setQuery</b>(query, field, value)
+					<span class="light">{object}</span>
+					<b>getQuery</b>(query)
 					
 					</div>
 					<div class="description">
-						Override the setQuery method of the entity.
+						Override the getQuery method of the entity.
 						
 						
 					</div>
@@ -613,19 +752,62 @@ been retrieved from the server.</dd>
 									<span class="light fixedFont">{object}</span> <b>query</b>
 									
 								</dt>
-								<dd>The query object.</dd>
+								<dd>The query variables.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{object}</span> The query variables.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".index"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">drupal.node.</span><b>index</b>(query, callback, options)
+					
+					</div>
+					<div class="description">
+						Returns an index of nodes.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<span class="light fixedFont">{string}</span> <b>field</b>
+									<span class="light fixedFont">{object}</span> <b>query</b>
 									
 								</dt>
-								<dd>The field to set.</dd>
+								<dd>The query parameters.</dd>
 							
 								<dt>
-									<span class="light fixedFont">{string}</span> <b>value</b>
+									<span class="light fixedFont">{function}</span> <b>callback</b>
 									
 								</dt>
-								<dd>The value of the field to set.</dd>
+								<dd>The callback function.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{object}</span> <b>options</b>
+									
+								</dt>
+								<dd>Options used to govern functionality.</dd>
 							
 							</dl>
 						
@@ -638,15 +820,15 @@ been retrieved from the server.</dd>
 
 					<hr />
 				
-					<a name="update"> </a>
+					<a name="set"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>update</b>(object)
+					<b>set</b>(object)
 					
 					</div>
 					<div class="description">
-						Override the update routine.
+						Sets the object.
 						
 						
 					</div>
@@ -661,7 +843,7 @@ been retrieved from the server.</dd>
 									<span class="light fixedFont">{object}</span> <b>object</b>
 									
 								</dt>
-								<dd>The node object to update.</dd>
+								<dd>The object which contains the data.</dd>
 							
 							</dl>
 						
@@ -686,7 +868,7 @@ been retrieved from the server.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu May 24 2012 15:51:57 GMT-0500 (CDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Fri Jun 29 2012 15:44:26 GMT-0500 (CDT)
 		</div>
 	</body>
 </html>

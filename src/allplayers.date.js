@@ -175,7 +175,7 @@ allplayers.date.prototype.addRDate = function(addition) {
  *
  * @return {object} The JSON object representation of this object.
  */
-allplayers.date.prototype.getObject = function() {
+allplayers.date.prototype.get = function() {
   var i = 0;
   var obj = {
     start: this.start.toISOString(),

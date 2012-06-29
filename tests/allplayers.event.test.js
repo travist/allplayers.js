@@ -14,10 +14,10 @@ function getRandomDate(year) {
 asyncTest('Get Group Events', function() {
 
   // Search for Spring Soccer 2011 groups.
-  new allplayers.group({search: 'Soccer'}, function(groups) {
+  allplayers.group.index({search: 'Soccer'}, function(groups) {
 
     // Create a new group, and then get its events.
-    new allplayers.group(groups[0]).getEvents({
+    groups[0].getEvents({
       start: '2011-1-1',
       end: '2011-12-30'
     }, function(events) {
