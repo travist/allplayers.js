@@ -373,7 +373,9 @@ allplayers.group.prototype.set = function(object) {
     node_status: 0,
     logo: '',
     url: '',
-    groups_above_uuid: []
+    groups_above_uuid: [],
+    registration_link: '',
+    registration_text: ''
   }, object);
 };
 
@@ -397,7 +399,9 @@ allplayers.group.prototype.get = function() {
     logo: this.logo,
     uri: this.uri,
     url: this.url,
-    groups_above_uuid: this.groups_above_uuid
+    groups_above_uuid: this.groups_above_uuid,
+    registration_link: this.registration_link,
+    registration_text: this.registration_text
   });
 };
 
