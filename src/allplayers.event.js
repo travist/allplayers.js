@@ -52,7 +52,7 @@ allplayers.event.prototype.set = function(object) {
   this.api = allplayers.event.api;
 
   /** Set the id based on the uuid of the object. */
-  this.id = this.id || object.uuid || object.id || '';
+  this.id = object.uuid || object.id || this.id || '';
 
   // Set the values for this entity.
   this.setValues({

@@ -52,7 +52,11 @@ allplayers.group.prototype.set = function(object) {
   this.api = allplayers.group.api;
 
   /** Set the id based on the uuid of the object. */
-  this.id = this.id || object.uuid || object.id || '';
+  this.id = object.uuid || object.id || this.id || '';
+
+  /** See if this group has children. */
+  var has_value = object.hasOwnProperty('has_children');
+  this.has_children = has_value ? object.has_children : !!this.has_children;
 
   /** A {@link allplayers.location} object. */
   this.location = object.location || this.location || new allplayers.location();
@@ -70,7 +74,9 @@ allplayers.group.prototype.set = function(object) {
     node_status: 0,
     logo: '',
     url: '',
-    groups_above_uuid: []
+    groups_above_uuid: [],
+    registration_link: '',
+    registration_text: ''
   }, object);
 };
 
@@ -94,14 +100,16 @@ allplayers.group.prototype.get = function() {
     logo: this.logo,
     uri: this.uri,
     url: this.url,
-    groups_above_uuid: this.groups_above_uuid
+    groups_above_uuid: this.groups_above_uuid,
+    registration_link: this.registration_link,
+    registration_text: this.registration_text
   });
 };
 
 /**
  * Returns the events for this group.
  *
- * @param {object} params An object of the following parameters.
+ * @param {object} query An object of the following parameters.
  * <ul>
  * <li><strong>start</strong> - The start date to get the events.</li>
  * <li><strong>end</strong> - The end date to get the events.</li>
@@ -112,14 +120,13 @@ allplayers.group.prototype.get = function() {
  *
  * @param {function} callback The callback function to get the events.
  */
-allplayers.group.prototype.getEvents = function(params, callback) {
+allplayers.group.prototype.getEvents = function(query, callback) {
 
   // Get the events within this group.
-  this.api.get(this, 'events', params, function(events) {
+  this.api.get(this, 'events', query, function(events) {
 
     // Iterate through the events and create an event object out of them.
-    var i = events.length;
-    while (i--) {
+    for (var i in events) {
       events[i] = new allplayers.event(events[i]);
     }
 
@@ -131,7 +138,7 @@ allplayers.group.prototype.getEvents = function(params, callback) {
 /**
  * Returns the upcoming events for this group.
  *
- * @param {object} params An object of the following parameters.
+ * @param {object} query An object of the following parameters.
  * <ul>
  * <li><strong>start</strong> - The start date to get the events.</li>
  * <li><strong>end</strong> - The end date to get the events.</li>
@@ -142,14 +149,13 @@ allplayers.group.prototype.getEvents = function(params, callback) {
  *
  * @param {function} callback The callback function to get the events.
  */
-allplayers.group.prototype.getUpcomingEvents = function(params, callback) {
+allplayers.group.prototype.getUpcomingEvents = function(query, callback) {
 
   // Get the events within this group.
-  this.api.get(this, 'events/upcoming', params, function(events) {
+  this.api.get(this, 'events/upcoming', query, function(events) {
 
     // Iterate through the events and create an event object out of them.
-    var i = events.length;
-    while (i--) {
+    for (var i in events) {
       events[i] = new allplayers.event(events[i]);
     }
 
@@ -161,11 +167,11 @@ allplayers.group.prototype.getUpcomingEvents = function(params, callback) {
 /**
  * Returns a hierachy tree of all the subgroups within this group.
  *
- * @param {int} depth The depth of how deep the group tree should go.
+ * @param {object} query The query to add to the subgroups tree call.
  * @param {function} callback The callback function to get the subgroup tree.
  */
-allplayers.group.prototype.getGroupTree = function(depth, callback) {
+allplayers.group.prototype.getGroupTree = function(query, callback) {
 
   // Get the subgroups tree.
-  this.api.get(this, 'subgroups/tree', {depth: depth}, callback);
+  this.api.get(this, 'subgroups/tree', query, callback);
 };

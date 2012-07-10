@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AllPlayers.com Group Finder</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel='stylesheet' type='text/css' href='../treeselect/lib/jquery.moreorless.js/moreorless.css' />
+    <link rel='stylesheet' type='text/css' href='../treeselect/css/chosen.css' />
+    <link rel='stylesheet' type='text/css' href='../treeselect/css/treeselect.css' />
+    <link rel='stylesheet' type='text/css' href='../group_select/css/group_select.css' />
+    <link rel='stylesheet' type='text/css' href='css/group_finder.css' />
+    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+    <script type='text/javascript' src='../../drupal.api.js/bin/drupal.api.js'></script>
+    <script type='text/javascript' src='../../bin/allplayers.js'></script>
+    <script type='text/javascript' src='../treeselect/lib/jquery.moreorless.js/jquery.moreorless.js'></script>
+    <script type='text/javascript' src='../treeselect/js/jquery.treeselect.js'></script>
+    <script type='text/javascript' src='../treeselect/js/jquery.chosentree.js'></script>
+    <script type='text/javascript' src='../group_select/js/group_select.js'></script>
+    <script type='text/javascript' src='js/group_finder.js'></script>
+    <script type='text/javascript'>
+      jQuery(function() {
+        $(".group_finder").group_finder({
+          include_registration_info: true,
+          /** uuid: "935c7f9e-f61e-11e0-98df-12313d18191a" /** Dallas Power Volleyball Club */
+          uuid: "931102d0-f61e-11e0-98df-12313d18191a" /** The Y */
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <ul class="group_finder"></ul>
+  </body>
+</html>
