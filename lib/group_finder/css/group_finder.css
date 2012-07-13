@@ -6,6 +6,10 @@
   padding: 0px 6px;
 }
 
+.chzntree-search-results .allplayers-register-link {
+  margin-left: 4px;
+}
+
 .allplayers-url-link {
   background: #FFF url(https://files.allplayers.com/sites/all/themes/allplayers960/images/register-button-bkg.png) 0% 100%;
   border-radius: 10px;
