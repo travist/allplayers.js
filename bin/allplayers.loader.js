@@ -1,0 +1,3 @@
+var allplayers=allplayers||{};
+allplayers.loader=function(e){for(var a="",b=document.scripts.length;b--;){var c=document.scripts[b].getAttribute("src"),d=c.search(/(src|bin)\/allplayers\.loader\.js$/);if(0<=d){a=c.substr(0,d);break}}console.log(a);a={scripts:["http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js","lib/"+e+"/bin/allplayers."+e+".compressed.js"],tests:[function(){return"undefined"!==typeof jQuery},function(){return"undefined"!==typeof jQuery.fn[e]}]};b=null;for(c=a.scripts.length;c--;)a.tests[c]()||(b=
+document.createElement("script"),b.src=a.script,d=document.getElementsByTagName("script")[0],d.parentNode.insertBefore(b,d))};
