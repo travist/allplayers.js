@@ -76,7 +76,7 @@
 
 .treeselect .treeselect-select-all {
   font-weight: bold;
-  margin-left: 10px;
+  margin-left: 5px;
 }
 
 .treeselect li span.treeselect-expand, .treeselect li span.treeselect-expand.collapsed {
@@ -95,4 +95,5 @@
 
 .treeselect-title {
   display: inline-block;
+  margin-right: 10px;
 }
