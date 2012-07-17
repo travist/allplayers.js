@@ -488,6 +488,72 @@ if (!JSON) {
 /** The drupal namespace. */
 var drupal = drupal || {};
 
+/** Determine if we have storage. */
+drupal.hasStorage = (typeof(Storage) !== 'undefined');
+drupal.hasStorage &= (typeof(JSON) !== 'undefined');
+
+/**
+ * Retrieve an item out of local storage.
+ *
+ * @param {string} key The key for the object to retrieve.
+ * @return {object} The object that was retrieved.
+ */
+drupal.retrieve = function(key) {
+  var object = null;
+
+  // Check to see if we have storage.
+  if (key && drupal.hasStorage) {
+
+    // Get it out of localStorage.
+    if (object = JSON.parse(localStorage.getItem(key))) {
+
+      // Make sure this object hasn't expired.
+      if ((new Date()).getTime() > object.expires) {
+
+        // Clear it if it has.
+        localStorage.removeItem(key);
+        object = {};
+      }
+    }
+  }
+
+  return object;
+};
+
+/**
+ * Store an object with an expiration.
+ *
+ * @param {string} key The key for the object to store.
+ * @param {object} object They object to store.
+ * @param {number} expires The expiration (in seconds) for this object.
+ */
+drupal.store = function(key, object, expires) {
+
+  // Default the expiration if it wasn't provided.
+  expires = expires || 3600;
+
+  // Make sure we can store.
+  if (key && drupal.hasStorage) {
+
+    // Set an expiration date for this object.
+    object.expires = (expires * 1000) + (new Date()).getTime();
+
+    // Store this object in localStorage.
+    localStorage.setItem(key, JSON.stringify(object));
+  }
+};
+
+/**
+ * Clears an object out of storage.
+ *
+ * @param {string} key The key for this object to clear.
+ */
+drupal.clear = function(key) {
+  if (key && drupal.hasStorage) {
+    localStorage.removeItem(key);
+  }
+};
+
 /**
  * The Drupal API class.  This is a static class helper
  * to assist in communication between javascript and
@@ -500,6 +566,7 @@ drupal.api = function() {
 
     /** The resource within this endpoint */
     resource: '',
+    cacheId: '',
 
     /** See if we are dealing with jQuery Mobile applications. */
     isMobile: jQuery.hasOwnProperty('mobile'),
@@ -636,9 +703,9 @@ drupal.api = function() {
      * @param {string} endpoint An additional endpoint to add onto the resource.
      * @param {object} query key-value pairs to add to the query of the URL.
      * @param {function} callback The callback function.
+     * @param {boolean} cache cache/get the results in/from localStorage.
      */
-    get: function(object, endpoint, query, callback) {
-
+    get: function(object, endpoint, query, callback, cache) {
       // Normalize the arguments based on the different schemes of calling this.
       var type = (typeof endpoint);
       if (type === 'object') {
@@ -656,7 +723,30 @@ drupal.api = function() {
       url += (endpoint) ? ('/' + endpoint) : '';
       url += '.jsonp';
       url += query ? ('?' + decodeURIComponent(jQuery.param(query, true))) : '';
-      this.call(url, 'jsonp', 'GET', null, callback);
+
+      // See if we should cache the result.
+      if (cache) {
+        this.cacheId = this.cacheId || url.replace(/[^A-z0-9]/g, '');
+        var storage = drupal.retrieve(cacheId);
+        if (storage) {
+          callback(storage);
+          return;
+        }
+      }
+
+      // No cache exists, so make the server call.
+      this.call(url, 'jsonp', 'GET', null, (function(api) {
+        return function(data) {
+
+          // Store this in cache...
+          if (cache) {
+            drupal.store(api.cacheId, data);
+          }
+
+          // Store the result.
+          callback(data);
+        }
+      })(this));
     },
 
     /**
@@ -696,16 +786,19 @@ drupal.api = function() {
      * @param {function} callback The callback function.
      */
     remove: function(object, callback) {
+
+      // Remove the storage if the cacheID exists.
+      if (this.cacheId) {
+        drupal.clear(this.cacheId);
+      }
+
+      // Call to delete the resource.
       this.call(this.getURL(object), 'json', 'DELETE', null, callback);
     }
   };
 };
 // The drupal namespace.
 var drupal = drupal || {};
-
-/** Determine if we have storage. */
-drupal.hasStorage = (typeof(Storage) !== 'undefined');
-drupal.hasStorage &= (typeof(JSON) !== 'undefined');
 
 /**
  * @constructor
@@ -747,7 +840,7 @@ drupal.entity.index = function(object, query, callback, options) {
 
   // Set the default options.
   options = jQuery.extend({
-    store: false
+    store: true
   }, options || {});
 
   // Don't require a query...
@@ -762,12 +855,11 @@ drupal.entity.index = function(object, query, callback, options) {
     var i = entities.length;
     while (i--) {
       entities[i] = new object(entities[i], null, options);
-      entities[i].store();
     }
     if (callback) {
       callback(entities);
     }
-  });
+  }, options.store);
 };
 
 /**
@@ -795,76 +887,9 @@ drupal.entity.prototype.update = function(object, callback) {
     this.set(object);
   }
 
-  // Now store the object.
-  this.store();
-
   // Now callback that this object has been updated.
   if (callback) {
     callback.call(this, this);
-  }
-};
-
-/**
- * Stores the object in local storage.
- */
-drupal.entity.prototype.store = function() {
-  if (this.id && this.options.store && drupal.hasStorage) {
-
-    // Get the object.
-    var object = this.get();
-
-    // Get the key for this object.
-    var key = this.entityName + '-' + this.id;
-
-    // Set an expiration date for this object.
-    object.expires = (this.options.expires * 1000) + (new Date()).getTime();
-
-    // Store this object in localStorage.
-    localStorage.setItem(key, JSON.stringify(object));
-  }
-};
-
-/**
- * Retrieves an object from local storage.
- *
- * @return {object} The object in local storage.
- */
-drupal.entity.prototype.retrieve = function() {
-  var object = null, key = '', value = '';
-  if (this.id && this.options.store && drupal.hasStorage) {
-
-    // Get the key for this object.
-    var key = this.entityName + '-' + this.id;
-
-    // Get it out of localStorage.
-    if (object = JSON.parse(localStorage.getItem(key))) {
-
-      // Make sure this object hasn't expired.
-      if ((new Date()).getTime() > object.expires) {
-
-        // Clear it if it has.
-        localStorage.removeItem(key);
-      }
-      else {
-
-        // Set the object if it was retrieved.
-        this.set(object);
-      }
-    }
-  }
-  return object;
-};
-
-/**
- * Clears an item out of local storage.
- */
-drupal.entity.prototype.clear = function() {
-  if (this.id && drupal.hasStorage) {
-    var object = this.get(), key = '';
-    for (var prop in object) {
-      key = this.entityName + '-' + this.id + '-' + prop;
-      localStorage.removeItem(key);
-    }
   }
 };
 
@@ -936,12 +961,7 @@ drupal.entity.prototype.load = function(callback) {
     callback(null);
   }
 
-  // Declare the object to load...
-  var object = null;
-  if (object = this.retrieve()) {
-    this.update(object, callback);
-  }
-  else if (this.api) {
+  if (this.api) {
 
     // Call the API.
     this.api.get(this.get(), {}, (function(entity) {
@@ -955,7 +975,7 @@ drupal.entity.prototype.load = function(callback) {
         // Update the object.
         entity.update(object, callback);
       };
-    })(this));
+    })(this), this.options.store);
   }
 };
 
@@ -990,7 +1010,6 @@ drupal.entity.prototype.remove = function(callback) {
 
     // Call the API.
     this.api.remove(this.get(), callback);
-    this.clear();
   }
 };
 // The drupal namespace.

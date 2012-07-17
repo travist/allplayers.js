@@ -431,7 +431,7 @@ allplayers.group.prototype.getEvents = function(query, callback) {
 
     // Call the callback.
     callback(events);
-  });
+  }, true);
 };
 
 /**
@@ -460,7 +460,7 @@ allplayers.group.prototype.getUpcomingEvents = function(query, callback) {
 
     // Call the callback.
     callback(events);
-  });
+  }, true);
 };
 
 /**
@@ -472,7 +472,7 @@ allplayers.group.prototype.getUpcomingEvents = function(query, callback) {
 allplayers.group.prototype.getGroupTree = function(query, callback) {
 
   // Get the subgroups tree.
-  this.api.get(this, 'subgroups/tree', query, callback);
+  this.api.get(this, 'subgroups/tree', query, callback, true);
 };
 /** The allplayers namespace. */
 var allplayers = allplayers || {};
