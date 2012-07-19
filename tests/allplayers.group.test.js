@@ -1,7 +1,7 @@
 
 asyncTest("Group Search", function() {
   // Find some groups based on a search.
-  new allplayers.group({search:"Spring Soccer"}, function(groups) {
+  allplayers.group.index({search:"Spring Soccer"}, function(groups) {
     expect(1 + 2*groups.length);
     start();
     ok(!!groups.length, "Groups were found.");
@@ -13,7 +13,7 @@ asyncTest("Group Search", function() {
 });
 
 asyncTest("Subgroup Tree", function() {
-  new allplayers.group({search:"The Y"}, function(groups) {
+  allplayers.group.index({search:"The Y"}, function(groups) {
     var group = null;
     for (var i in groups) {
       group = groups[i];

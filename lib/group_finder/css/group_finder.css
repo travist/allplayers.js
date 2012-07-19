@@ -1,0 +1,18 @@
+.allplayers-register-link {
+  background: #FFF url(https://files.allplayers.com/sites/all/themes/allplayers960/images/register-button-bkg.png) 0% 100%;
+  border-radius: 8px;
+  border: 1px solid #CCC;
+  margin: 0px 0px 0px 26px;
+  padding: 0px 6px;
+}
+
+.allplayers-url-link {
+  background: #FFF url(https://files.allplayers.com/sites/all/themes/allplayers960/images/register-button-bkg.png) 0% 100%;
+  border-radius: 10px;
+  border: 1px solid #CCC;
+  position:absolute;
+  padding: 1px;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+}

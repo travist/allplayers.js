@@ -6,21 +6,25 @@
 #
 
 # Create the list of files
-files =	src/drupal.api.js\
-	src/drupal.system.js\
-	src/drupal.system.api.js\
+lintfiles = src/drupal.api.js\
 	src/drupal.entity.js\
+	src/drupal.system.js\
 	src/drupal.node.js\
-	src/drupal.node.api.js\
-	src/drupal.user.js\
-	src/drupal.user.api.js
+	src/drupal.user.js
+
+files =	lib/json2.js\
+	src/drupal.api.js\
+	src/drupal.entity.js\
+	src/drupal.system.js\
+	src/drupal.node.js\
+	src/drupal.user.js
 
 .DEFAULT_GOAL := all
 
 all: jslint js jsdoc
 
 # Perform a jsLint on all the files.
-jslint: ${files}
+jslint: ${lintfiles}
 	gjslint $^
 
 # Create an aggregated js file and a compressed js file.
@@ -28,7 +32,13 @@ js: ${files}
 	@echo "Generating aggregated bin/drupal.api.js file"
 	@cat > bin/drupal.api.js $^
 	@echo "Generating compressed bin/drupal.api.compressed.js file"
-	@java -jar tools/compiler.jar --js bin/drupal.api.js --js_output_file bin/drupal.api.compressed.js
+	curl -s \
+	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
+	  -d output_format=text \
+	  -d output_info=compiled_code \
+	  --data-urlencode "js_code@bin/drupal.api.js" \
+	  http://closure-compiler.appspot.com/compile \
+	  > bin/drupal.api.compressed.js
 
 # Create the documentation from source code.
 jsdoc: ${files}
@@ -43,9 +53,6 @@ fixjsstyle: ${files}
 tools:
 	apt-get install python-setuptools
 	apt-get install unzip
-	wget http://closure-compiler.googlecode.com/files/compiler-latest.zip -P tools
-	unzip tools/compiler-latest.zip -d tools
-	rm tools/compiler-latest.zip tools/COPYING tools/README
 	easy_install http://closure-linter.googlecode.com/files/closure_linter-latest.tar.gz
 	wget http://jsdoc-toolkit.googlecode.com/files/jsdoc_toolkit-2.4.0.zip -P tools
 	unzip tools/jsdoc_toolkit-2.4.0.zip -d tools

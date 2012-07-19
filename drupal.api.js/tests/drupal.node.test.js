@@ -2,7 +2,7 @@ var listNodes = function(callback) {
   asyncTest("Get list of nodes based on node type", function() {
 
     // Get all "auto" nodes.
-    new drupal.node({type:"page"}, function(nodes) {
+    drupal.node.index({type:"page"}, function(nodes) {
 
       // Start the test...
       start();
@@ -140,12 +140,12 @@ var createNode = function(callback) {
   });
 };
 
-var runNodeTests = function() {
+var runNodeTests = function(callback) {
   // perform the tests in a specific order.
   createNode(function(node) {
     updateNode(node, function(updatedNode) {
       listNodes(function() {
-        deleteNode(updatedNode);
+        deleteNode(updatedNode, callback);
       });
     });
   });

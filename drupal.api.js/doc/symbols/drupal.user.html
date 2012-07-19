@@ -191,21 +191,17 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
-	<li><a href="../symbols/drupal.api.html">drupal.api</a></li>
+	<li><a href="../symbols/Boolean.html">Boolean</a></li>
+	
+	<li><a href="../symbols/Date.html">Date</a></li>
 	
 	<li><a href="../symbols/drupal.entity.html">drupal.entity</a></li>
 	
 	<li><a href="../symbols/drupal.node.html">drupal.node</a></li>
 	
-	<li><a href="../symbols/drupal.node.api.html">drupal.node.api</a></li>
-	
 	<li><a href="../symbols/drupal.system.html">drupal.system</a></li>
 	
-	<li><a href="../symbols/drupal.system.api.html">drupal.system.api</a></li>
-	
 	<li><a href="../symbols/drupal.user.html">drupal.user</a></li>
-	
-	<li><a href="../symbols/drupal.user.api.html">drupal.user.api</a></li>
 	
 </ul>
 <hr />
@@ -248,7 +244,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/drupal.user.html#constructor">drupal.user</a></b>(object, callback)
+								<b><a href="../symbols/drupal.user.html#constructor">drupal.user</a></b>(object, callback, options)
 							</div>
 							<div class="description"></div>
 						</td>
@@ -275,6 +271,26 @@ ul.inheritsList
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
+								<b><a href="../symbols/drupal.user.html#api">api</a></b>
+								</div>
+								<div class="description">Set the api.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								drupal.user.<b><a href="../symbols/drupal.user.html#.api">api</a></b>
+								</div>
+								<div class="description">Declare the user api.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
 								<b><a href="../symbols/drupal.user.html#constructor">constructor</a></b>
 								</div>
 								<div class="description">Reset the constructor.</div>
@@ -285,9 +301,9 @@ ul.inheritsList
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
-								<b><a href="../symbols/drupal.user.html#mail">mail</a></b>
+								<b><a href="../symbols/drupal.user.html#entityName">entityName</a></b>
 								</div>
-								<div class="description">The email address of our user.</div>
+								<div class="description">The name of this entity.</div>
 							</td>
 						</tr>
 					
@@ -295,19 +311,9 @@ ul.inheritsList
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
 								<div class="fixedFont">
-								<b><a href="../symbols/drupal.user.html#name">name</a></b>
+								<b><a href="../symbols/drupal.user.html#id">id</a></b>
 								</div>
-								<div class="description">The name for this user.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont">
-								<b><a href="../symbols/drupal.user.html#pass">pass</a></b>
-								</div>
-								<div class="description">The password of the user.</div>
+								<div class="description">Set the ID based on the uid.</div>
 							</td>
 						</tr>
 					
@@ -317,7 +323,7 @@ ul.inheritsList
 								<div class="fixedFont">
 								<b><a href="../symbols/drupal.user.html#sessid">sessid</a></b>
 								</div>
-								<div class="description">The session ID of the user.</div>
+								<div class="description">Set the session id for this user.</div>
 							</td>
 						</tr>
 					
@@ -327,17 +333,7 @@ ul.inheritsList
 								<div class="fixedFont">
 								<b><a href="../symbols/drupal.user.html#session_name">session_name</a></b>
 								</div>
-								<div class="description">The session name of the user</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont">
-								<b><a href="../symbols/drupal.user.html#status">status</a></b>
-								</div>
-								<div class="description">The status of the user.</div>
+								<div class="description">Set the session name for this user.</div>
 							</td>
 						</tr>
 					
@@ -347,7 +343,7 @@ ul.inheritsList
 				
 				
 				<dl class="inheritsList">
-				<dt>Fields borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#api">api</a>, <a href="../symbols/drupal.entity.html#id">id</a></dd>
+				
 				</dl>
 				
 			
@@ -369,9 +365,27 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/drupal.user.html#getObject">getObject</a></b>()
+								<div class="fixedFont"><b><a href="../symbols/drupal.user.html#get">get</a></b>()
 								</div>
 								<div class="description">Returns the object to send to Services.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/drupal.user.html#getPOST">getPOST</a></b>()
+								</div>
+								<div class="description">Gets a POST object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">drupal.user.<b><a href="../symbols/drupal.user.html#.index">index</a></b>(query, callback, options)
+								</div>
+								<div class="description">Returns an index of users.</div>
 							</td>
 						</tr>
 					
@@ -405,9 +419,18 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/drupal.user.html#update">update</a></b>(object)
+								<div class="fixedFont"><b><a href="../symbols/drupal.user.html#set">set</a></b>(object)
 								</div>
-								<div class="description">Override the update routine.</div>
+								<div class="description">Sets the object.</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/drupal.user.html#setSession">setSession</a></b>(name, sessid)
+								</div>
+								<div class="description">Sets a user session.</div>
 							</td>
 						</tr>
 					
@@ -417,7 +440,7 @@ ul.inheritsList
 				
 				
 				<dl class="inheritsList">
-				<dt>Methods borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#get">get</a>, <a href="../symbols/drupal.entity.html#getQuery">getQuery</a>, <a href="../symbols/drupal.entity.html#remove">remove</a>, <a href="../symbols/drupal.entity.html#save">save</a>, <a href="../symbols/drupal.entity.html#setQuery">setQuery</a></dd>
+				<dt>Methods borrowed from class <a href="../symbols/drupal.entity.html">drupal.entity</a>: </dt><dd><a href="../symbols/drupal.entity.html#getQuery">getQuery</a>, <a href="../symbols/drupal.entity.html#load">load</a>, <a href="../symbols/drupal.entity.html#remove">remove</a>, <a href="../symbols/drupal.entity.html#save">save</a>, <a href="../symbols/drupal.entity.html#setValues">setValues</a>, <a href="../symbols/drupal.entity.html#update">update</a></dd>
 				</dl>
 				
 			
@@ -432,7 +455,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>drupal.user</b>(object, callback)
+						<b>drupal.user</b>(object, callback, options)
 				</div>
 				
 				<div class="description">
@@ -460,6 +483,12 @@ ul.inheritsList
 								<dd>The function to be called once the user has
 been retrieved from the server.</dd>
 						
+							<dt>
+								<span class="light fixedFont">{object}</span>  <b>options</b>
+								
+							</dt>
+								<dd>Options used to govern functionality.</dd>
+						
 						</dl>
 					
 					
@@ -477,6 +506,50 @@ been retrieved from the server.</dd>
 				<div class="sectionTitle">
 					Field Detail
 				</div>
+				
+					<a name="api"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>api</b>
+					
+					</div>
+					<div class="description">
+						Set the api.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name=".api"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">drupal.user.</span><b>api</b>
+					
+					</div>
+					<div class="description">
+						Declare the user api.
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					<hr />
 				
 					<a name="constructor"> </a>
 					<div class="fixedFont">
@@ -500,15 +573,15 @@ been retrieved from the server.</dd>
 
 					<hr />
 				
-					<a name="mail"> </a>
+					<a name="entityName"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>mail</b>
+					<b>entityName</b>
 					
 					</div>
 					<div class="description">
-						The email address of our user.
+						The name of this entity.
 						
 						
 					</div>
@@ -522,37 +595,15 @@ been retrieved from the server.</dd>
 
 					<hr />
 				
-					<a name="name"> </a>
+					<a name="id"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>name</b>
+					<b>id</b>
 					
 					</div>
 					<div class="description">
-						The name for this user.
-						
-						
-					</div>
-					
-					
-
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="pass"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>pass</b>
-					
-					</div>
-					<div class="description">
-						The password of the user.
+						Set the ID based on the uid.
 						
 						
 					</div>
@@ -574,7 +625,7 @@ been retrieved from the server.</dd>
 					
 					</div>
 					<div class="description">
-						The session ID of the user.
+						Set the session id for this user.
 						
 						
 					</div>
@@ -596,29 +647,7 @@ been retrieved from the server.</dd>
 					
 					</div>
 					<div class="description">
-						The session name of the user
-						
-						
-					</div>
-					
-					
-
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="status"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>status</b>
-					
-					</div>
-					<div class="description">
-						The status of the user.
+						Set the session name for this user.
 						
 						
 					</div>
@@ -640,11 +669,11 @@ been retrieved from the server.</dd>
 					Method Detail
 				</div>
 				
-					<a name="getObject"> </a>
+					<a name="get"> </a>
 					<div class="fixedFont">
 					
 					<span class="light">{object}</span>
-					<b>getObject</b>()
+					<b>get</b>()
 					
 					</div>
 					<div class="description">
@@ -666,6 +695,86 @@ been retrieved from the server.</dd>
 								<dd><span class="light fixedFont">{object}</span> The object to send to the Services endpoint.</dd>
 							
 							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="getPOST"> </a>
+					<div class="fixedFont">
+					
+					<span class="light">{object}</span>
+					<b>getPOST</b>()
+					
+					</div>
+					<div class="description">
+						Gets a POST object.
+						
+						
+					</div>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{object}</span> The filtered object.</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".index"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">drupal.user.</span><b>index</b>(query, callback, options)
+					
+					</div>
+					<div class="description">
+						Returns an index of users.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{object}</span> <b>query</b>
+									
+								</dt>
+								<dd>The query parameters.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{function}</span> <b>callback</b>
+									
+								</dt>
+								<dd>The callback function.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{object}</span> <b>options</b>
+									
+								</dt>
+								<dd>Options used to govern functionality.</dd>
+							
+							</dl>
+						
+						
+						
+						
 						
 						
 						
@@ -780,15 +889,15 @@ been retrieved from the server.</dd>
 
 					<hr />
 				
-					<a name="update"> </a>
+					<a name="set"> </a>
 					<div class="fixedFont">
 					
 					
-					<b>update</b>(object)
+					<b>set</b>(object)
 					
 					</div>
 					<div class="description">
-						Override the update routine.
+						Sets the object.
 						
 						
 					</div>
@@ -803,7 +912,49 @@ been retrieved from the server.</dd>
 									<span class="light fixedFont">{object}</span> <b>object</b>
 									
 								</dt>
-								<dd>The object to update.</dd>
+								<dd>The object which contains the data.</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="setSession"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>setSession</b>(name, sessid)
+					
+					</div>
+					<div class="description">
+						Sets a user session.
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{string}</span> <b>name</b>
+									
+								</dt>
+								<dd>The name of the session.</dd>
+							
+								<dt>
+									<span class="light fixedFont">{string}</span> <b>sessid</b>
+									
+								</dt>
+								<dd>The session ID.</dd>
 							
 							</dl>
 						
@@ -828,7 +979,7 @@ been retrieved from the server.</dd>
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu May 24 2012 15:51:58 GMT-0500 (CDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Jul 18 2012 16:32:06 GMT-0500 (CDT)
 		</div>
 	</body>
 </html>
