@@ -164,7 +164,7 @@ drupal.api = function() {
         error: (function(api) {
           return function(xhr, ajaxOptions, thrownError) {
             api.loading(false);
-            console.log(xhr.responseText);
+            console.log(xhr.statusText);
             if (callback) {
               callback(null);
             }
@@ -241,8 +241,8 @@ drupal.api = function() {
       if (cache) {
         this.cacheId = url.replace(/[^A-z0-9\-]/g, '');
         var storage = drupal.retrieve(this.cacheId);
-        if (storage) {
-          callback(storage);
+        if (storage && (storage.url === url)) {
+          callback(storage.data);
           return;
         }
       }
@@ -253,7 +253,10 @@ drupal.api = function() {
 
           // Store this in cache...
           if (cache) {
-            drupal.store(api.cacheId, data);
+            drupal.store(api.cacheId, {
+              url: url,
+              data: data
+            });
           }
 
           // Store the result.

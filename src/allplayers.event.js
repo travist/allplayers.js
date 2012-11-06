@@ -55,7 +55,7 @@ allplayers.event.prototype.set = function(object) {
   this.id = object.uuid || object.id || this.id || '';
 
   // Set the values for this entity.
-  this.setValues({
+  this.setProperties({
     allDay: false,
     gids: [],
     description: '',

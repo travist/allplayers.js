@@ -30,7 +30,7 @@ allplayers.location.prototype.constructor = allplayers.location;
  */
 allplayers.location.prototype.set = function(object) {
   drupal.entity.prototype.set.call(this, object);
-  this.setValues({
+  this.setProperties({
     street: 0,
     city: '',
     state: '',
