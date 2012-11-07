@@ -3381,7 +3381,6 @@ var allplayers = allplayers || {};
       params.load = function(treenode, callback) {
         (new allplayers.group({id: treenode.id || params.uuid})).getGroupTree({
           depth: params.depth,
-          sort: params.sort,
           include_group_info: params.include_group_info,
           include_hidden: params.include_hidden,
           inclusive: 1,
