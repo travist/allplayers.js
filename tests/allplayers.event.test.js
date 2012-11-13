@@ -21,13 +21,19 @@ asyncTest('Get Group Events', function() {
       start: '2011-1-1',
       end: '2011-12-30'
     }, function(events) {
-
-      expect(1 + 2*events.length);
-      start();
-      ok(!!events.length, "Events were found");
-      for (var i in events) {
-        ok(!!events[i].id, "Event ID was found");
-        ok(!!events[i].title, "Event Title was found");
+      if (events) {
+        expect(1 + 2*events.length);
+        start();
+        ok(!!events.length, "Events were found");
+        for (var i in events) {
+          ok(!!events[i].id, "Event ID was found");
+          ok(!!events[i].title, "Event Title was found");
+        }
+      }
+      else {
+        expect(1);
+        start();
+        ok(true, 'No events found');
       }
     });
   });
