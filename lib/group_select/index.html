@@ -7,13 +7,14 @@
     <link rel='stylesheet' type='text/css' href='../treeselect/css/treeselect.css' />
     <link rel='stylesheet' type='text/css' href='../treeselect/css/chosentree.css' />
     <link rel='stylesheet' type='text/css' href='css/group_select.css' />
-    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+    <script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
     <script type='text/javascript' src='../../bin/allplayers.js'></script>
     <script type='text/javascript'>
       jQuery(function() {
+        drupal.endpoint = 'https://www.allplayers.com/api/v1/rest';
         $(".group_select").group_select({
           deepLoad: true,
-          uuid: "931102d0-f61e-11e0-98df-12313d18191a" /** The Y */
+          uuid: "6aa68dde-f9b5-11e0-a44b-12313d04fc0f" /** 2012 Winter Basketball */
         });
       });
     </script>
