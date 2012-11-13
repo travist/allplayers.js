@@ -44,7 +44,7 @@
   width:100%;
 }
 
-.treeselect .treenode ul {
+.treeselect .treenode ul ul {
   margin: 0 15px 0 15px;
 }
 
@@ -55,10 +55,11 @@
   background:#f3f3f3;
 }
 
-.treeselect .treenode input {
+.treeselect .treenode input, .treeselect .treenode .treenode-no-select {
   float:left;
   position:absolute;
-  top:3px;width:13px;
+  top:3px;
+  width:13px;
   height:13px;
   cursor:auto;
   font-size:0;
@@ -67,7 +68,7 @@
 .treeselect .treenode span.treeselect-expand {
   float:left;
   position:absolute;
-  top:2px;
+  top:4px;
   width:13px;
   height:13px;
   cursor:auto;
@@ -87,8 +88,9 @@
   background:url(images/expanded.gif) no-repeat 0 0;
 }
 
-.treeselect .treebusy {
-  background:url(images/throbber.gif) no-repeat 0 0 !important;
+.treeselect .treenode span.treeselect-expand.treebusy {
+  background:url(images/throbber.gif) no-repeat 0 0;
+  top:5px;
   width:16px;
   height:10px;
 }

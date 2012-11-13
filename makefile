@@ -4,11 +4,26 @@
 #
 
 # Create the list of files
-files =	src/allplayers.date.js\
+files =	drupal.api.js/bin/drupal.api.js\
+	src/allplayers.date.js\
 	src/allplayers.event.js\
 	src/allplayers.group.js\
 	src/allplayers.location.js\
-	src/allplayers.calendar.js
+	src/allplayers.calendar.js\
+	lib/treeselect/lib/jquery.moreorless.js/jquery.moreorless.js\
+	lib/treeselect/bin/jquery.treeselect.js\
+	lib/group_select/js/group_select.js\
+	lib/group_finder/js/group_finder.js\
+
+lintfiles = src/allplayers.date.js\
+	src/allplayers.event.js\
+	src/allplayers.group.js\
+	src/allplayers.location.js\
+	src/allplayers.calendar.js\
+	lib/treeselect/lib/jquery.moreorless.js/jquery.moreorless.js\
+	lib/treeselect/bin/jquery.treeselect.js\
+	lib/group_select/js/group_select.js\
+	lib/group_finder/js/group_finder.js\
 
 docfiles = drupal.api.js/src/drupal.api.js\
 	drupal.api.js/src/drupal.system.js\
@@ -23,13 +38,13 @@ docfiles = drupal.api.js/src/drupal.api.js\
 
 .DEFAULT_GOAL := all
 
-all: makecore jslint js jsdoc
+all: makecore jslint js
 
 makecore:
-	cd drupal.api.js; make -B; cd ..;
+	cd drupal.api.js; make -B; cd ..; cd lib/treeselect; make -B; cd ../..;
 
 # Perform a jsLint on all the files.
-jslint: ${files}
+jslint: ${lintfiles}
 	gjslint $^
 
 # Create an aggregated js file and a compressed js file.

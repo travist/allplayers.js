@@ -62,7 +62,7 @@ allplayers.group.prototype.set = function(object) {
   this.location = object.location || this.location || new allplayers.location();
 
   // Set the values for this entity.
-  this.setValues({
+  this.setProperties({
     activity_level: 0,
     list_in_directory: 0,
     active: false,

@@ -8,17 +8,12 @@
     <link rel='stylesheet' type='text/css' href='../treeselect/css/chosentree.css' />
     <link rel='stylesheet' type='text/css' href='../group_select/css/group_select.css' />
     <link rel='stylesheet' type='text/css' href='css/group_finder.css' />
-    <link rel='stylesheet' type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.21/themes/smoothness/jquery-ui.css" />
-    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script type='text/javascript' src='../../drupal.api.js/bin/drupal.api.js'></script>
+    <link rel='stylesheet' type="text/css" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.21/themes/smoothness/jquery-ui.css" />
+    <script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type='text/javascript' src='../../bin/allplayers.js'></script>
-    <script type='text/javascript' src='../treeselect/lib/jquery.moreorless.js/jquery.moreorless.js'></script>
-    <script type='text/javascript' src='../treeselect/js/jquery.treeselect.js'></script>
-    <script type='text/javascript' src='../treeselect/js/jquery.chosentree.js'></script>
-    <script type='text/javascript' src='../group_select/js/group_select.js'></script>
-    <script type='text/javascript' src='js/group_finder.js'></script>
     <script type='text/javascript'>
       jQuery(function() {
+        drupal.endpoint = 'https://www.allplayers.com/api/v1/rest';
         $(".group_finder").group_finder({
           /** uuid: "92e46efa-f61e-11e0-98df-12313d18191a" /** TAV */
           /** uuid: "935c7f9e-f61e-11e0-98df-12313d18191a" /** Dallas Power Volleyball Club */

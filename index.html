@@ -3,21 +3,14 @@
   <head>
     <title>AllPlayers API Unit Tests</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel='stylesheet' type='text/css' href='http://code.jquery.com/qunit/qunit-git.css' />
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css" type="text/css" media="all" />
-    <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
-    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js'></script>
-    <script type='text/javascript' src='http://code.jquery.com/qunit/qunit-git.js'></script>
-    <script type='text/javascript' src='drupal.api.js/bin/drupal.api.js'></script>
-    <script type='text/javascript' src='src/allplayers.calendar.js'></script>
-    <script type='text/javascript' src='src/allplayers.date.js'></script>
-    <script type='text/javascript' src='src/allplayers.event.js'></script>
-    <script type='text/javascript' src='src/allplayers.group.js'></script>
-    <script type='text/javascript' src='src/allplayers.location.js'></script>
+    <link rel='stylesheet' type='text/css' href='drupal.api.js/tests/qunit-1.10.0.css' />
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css" type="text/css" media="all" />
+    <script type='text/javascript' src="//ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+    <script type='text/javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js'></script>
+    <script type='text/javascript' src='drupal.api.js/tests/qunit-1.10.0.js'></script>
+    <script type='text/javascript' src='bin/allplayers.js'></script>
     <script type="text/javascript">
-
-      // Define the endpoint.
-      drupal.endpoint = '/api/v1/rest';
+      drupal.endpoint = 'https://www.allplayers.com/api/v1/rest';
     </script>
     <script type='text/javascript' src='tests/allplayers.event.test.js'></script>
     <script type='text/javascript' src='tests/allplayers.group.test.js'></script>
