@@ -1912,7 +1912,7 @@ allplayers.group.prototype.getUpcomingEvents = function(query, callback) {
 allplayers.group.prototype.getGroupTree = function(query, callback) {
 
   // Get the subgroups tree.
-  this.api.get(this, 'subgroups/tree', query, callback, true);
+  this.api.get(this, 'subgroups/tree', query, callback, false);
 };
 /** The allplayers namespace. */
 var allplayers = allplayers || {};
