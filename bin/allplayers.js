@@ -3237,6 +3237,14 @@ var allplayers = allplayers || {};
               doSearch(input.val());
             });
 
+            // Make sure to do a search.
+            jQuery(document).bind('keydown', function(event) {
+              if ((event.keyCode == 13) && input.is(':focus')) {
+                event.preventDefault();
+                doSearch(input.val());
+              }
+            });
+
             // Add the autosearch.
             search.addClass('manualsearch');
           }
