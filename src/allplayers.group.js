@@ -173,5 +173,17 @@ allplayers.group.prototype.getUpcomingEvents = function(query, callback) {
 allplayers.group.prototype.getGroupTree = function(query, callback) {
 
   // Get the subgroups tree.
-  this.api.get(this, 'subgroups/tree', query, callback, true);
+  this.api.get(this, 'subgroups/tree', query, callback, false);
+};
+
+/**
+ * Provide a tree search.
+ *
+ * @param {string} query The search string to use when searching.
+ * @param {function} callback The callback function for this search.
+ */
+allplayers.group.prototype.find = function(query, callback) {
+
+  // Search the subgroups.
+  this.api.get(this, 'subgroups/find', {'query': query}, callback);
 };
