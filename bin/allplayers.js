@@ -2974,6 +2974,11 @@ var allplayers = allplayers || {};
             // Get the number of nodes.
             var numNodes = nodes.length;
 
+            // If no nodes were returned then return nothing.
+            if (nodes.length == 0) {
+              callback(results, true);
+            }
+
             for (var id in nodes) {
 
               // Set the treenode.
