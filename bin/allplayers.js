@@ -2311,6 +2311,11 @@ var allplayers = allplayers || {};
     /** Keep track of all loaded nodes */
     var loadedNodes = {};
 
+    /** Variable for the busy states. */
+    var busyloading = 'treebusy-loading';
+    var busyloadingall = 'treebusy-loading-all';
+    var busyselecting = 'treebusy-selecting';
+
     /**
      * Constructor.
      */
@@ -2356,15 +2361,29 @@ var allplayers = allplayers || {};
     /**
      * Set the busy cursor for this node.
      */
-    TreeNode.prototype.setBusy = function(state) {
-      if (state != this.span.hasClass('treebusy')) {
+    TreeNode.prototype.setBusy = function(state, type) {
+
+      // Make sure the state has changed.
+      if (state != this.span.hasClass(type)) {
         this.busy = state;
         if (state) {
+
+          // Set the busy type and treebusy.
+          this.span.addClass(type);
           this.span.addClass('treebusy');
         }
         else {
-          this.span.removeClass('treebusy');
+
+          // Remove the busy type.
+          this.span.removeClass(type);
+
+          // Only remove the busy if the busy flags are empty.
+          var othertype = (type == busyloading) ? busyselecting : busyloading;
+          if (!this.span.hasClass(othertype)) {
+            this.span.removeClass('treebusy');
+          }
         }
+
       }
     };
 
@@ -2394,22 +2413,27 @@ var allplayers = allplayers || {};
         return;
       }
 
-      var triggerCallback = (function(treenode) {
-        return function() {
-          // Callback that we are loaded.
-          if (callback) {
-            callback(treenode);
-          }
+      // Trigger the callback when the node is done loading.
+      var triggerCallback = function() {
 
-          // Process the loadqueue.
-          for (var i in treenode.loadqueue) {
-            treenode.loadqueue[i](treenode);
-          }
+        // Callback that we are loaded.
+        if (callback) {
+          callback(this);
+        }
 
-          // Empty the loadqueue.
-          treenode.loadqueue.length = 0;
-        };
-      })(this);
+        // Process the loadqueue.
+        for (var i in this.loadqueue) {
+          this.loadqueue[i](this);
+        }
+
+        // Empty the loadqueue.
+        this.loadqueue.length = 0;
+
+        // Say we are not busy.
+        if (!hideBusy) {
+          this.setBusy(false, busyloading);
+        }
+      };
 
       // Say we are loading.
       this.loading = true;
@@ -2419,7 +2443,7 @@ var allplayers = allplayers || {};
 
         // Make this node busy.
         if (!hideBusy) {
-          this.setBusy(true);
+          this.setBusy(true, busyloading);
         }
 
         // Call the load function.
@@ -2439,15 +2463,16 @@ var allplayers = allplayers || {};
               loadedNodes[treenode.id] = treenode.id;
 
               // Build the node.
-              treenode.build();
+              treenode.build(function() {
+
+                // Callback that we are loaded.
+                triggerCallback.call(treenode);
+              });
             }
+            else {
 
-            // Callback that we are loaded.
-            triggerCallback();
-
-            // Say we are not busy.
-            if (!hideBusy) {
-              treenode.setBusy(false);
+              // Callback that we are loaded.
+              triggerCallback.call(treenode);
             }
           };
         })(this));
@@ -2455,7 +2480,7 @@ var allplayers = allplayers || {};
       else if (callback) {
 
         // Just callback since we are already loaded.
-        triggerCallback();
+        triggerCallback.call(this);
       }
 
       // Say that we are not loading anymore.
@@ -2485,7 +2510,7 @@ var allplayers = allplayers || {};
         // If no children, then just call the callback immediately.
         if (!i || ids.hasOwnProperty(node.id)) {
           if (callback) {
-            callback(node);
+            callback.call(node, node);
           }
           return;
         }
@@ -2495,32 +2520,38 @@ var allplayers = allplayers || {};
 
         // Make this node busy.
         if (!hideBusy) {
-          node.setBusy(true);
+          node.setBusy(true, busyloadingall);
         }
 
         // Iterate through each child.
         while (i--) {
 
-          // Load this childs children...
-          node.children[i].loadAll(function() {
+          // Load recurssion on a separate thread.
+          setTimeout((function(index) {
+            return function() {
 
-            // Decrement the child count.
-            count--;
+              // Load this childs children...
+              node.children[index].loadAll(function() {
 
-            // If all children are done loading, call the callback.
-            if (!count) {
+                // Decrement the child count.
+                count--;
 
-              // Callback that we are done loading this tree.
-              if (callback) {
-                callback(node);
-              }
+                // If all children are done loading, call the callback.
+                if (!count) {
 
-              // Make this node busy.
-              if (!hideBusy) {
-                node.setBusy(false);
-              }
-            }
-          }, operation, hideBusy, ids);
+                  // Callback that we are done loading this tree.
+                  if (callback) {
+                    callback.call(node, node);
+                  }
+
+                  // Make this node busy.
+                  if (!hideBusy) {
+                    node.setBusy(false, busyloadingall);
+                  }
+                }
+              }, operation, hideBusy, ids);
+            };
+          })(i), 2);
         }
       });
     };
@@ -2529,7 +2560,6 @@ var allplayers = allplayers || {};
      * Expands the node.
      */
     TreeNode.prototype.expand = function(state) {
-      this.checked = this.input.is(':checked');
       if (state) {
         this.link.removeClass('collapsed').addClass('expanded');
         this.span.removeClass('collapsed').addClass('expanded');
@@ -2558,58 +2588,41 @@ var allplayers = allplayers || {};
     /**
      * Selects all children of this node.
      *
-     * @param {boolean} state The state of the selection.
-     * @param {boolean} indirect TRUE - indirect selection, FALSE - direct.
+     * @param {boolean} state The state of the selection or array of defaults.
+     * @param {function} done Called when we are done selecting.
      */
-    TreeNode.prototype.selectChildren = function(state, indirect) {
-      // If they wish to deep load then do that here - base the check on the
-      // state passed in rather than the checked state of the input, because
-      // the input may not have been checked if it is not a selectable input.
-      if (state && params.deepLoad && !indirect) {
+    TreeNode.prototype.selectChildren = function(state, done) {
 
-        // Load all nodes underneath this node.
-        this.loadAll(function(node) {
+      // See if the state is a boolean.
+      var defaults = (typeof state == 'object');
 
-          // Now select the children.
-          var i = node.children.length;
-          while (i--) {
-            node.children[i].select(state);
-            node.children[i].selectChildren(state, true);
-          }
-          if (params.selected) {
-            params.selected(node, !indirect);
-          }
-        });
-      }
-      else {
+      // Load all nodes underneath this node.
+      this.loadAll(function() {
 
-        // Now select the children.
-        var i = this.children.length;
-        while (i--) {
-          this.children[i].select(state);
-          this.children[i].selectChildren(state, true);
-        }
+        // Say this node is now fully selected.
         if (params.selected) {
-          params.selected(this, !indirect);
+          params.selected(this, true);
         }
-      }
-    };
 
-    /**
-     * Check this node.
-     */
-    TreeNode.prototype.check = function(state) {
+        // Set this node not busy.
+        this.setBusy(false, busyselecting);
 
-      // Set the checked state.
-      this.checked = state;
+        // Say we are now done.
+        if (done) {
+          done.call(this);
+        }
 
-      // Make sure the input is checked accordingly.
-      this.input.attr('checked', state);
+      }, function(node) {
 
-      // Select this node.
-      if (params.selected) {
-        params.selected(this, true);
-      }
+        var val = state;
+        if (defaults) {
+          val = state.hasOwnProperty(node.value);
+          val |= state.hasOwnProperty(node.id);
+        }
+
+        // Select this node.
+        node.select(val);
+      });
     };
 
     /**
@@ -2622,14 +2635,20 @@ var allplayers = allplayers || {};
       // Only check this node if it is a selectable input.
       if (!this.input.hasClass('treenode-no-select')) {
 
+        // Convert state to a boolean.
+        state = !!state;
+
         // Set the checked state.
         this.checked = state;
 
         // Make sure the input is checked accordingly.
         this.input.attr('checked', state);
 
+        // Say that this node is selected.
+        if (params.selected) {
+          params.selected(this);
+        }
       }
-
     };
 
     /**
@@ -2676,14 +2695,14 @@ var allplayers = allplayers || {};
           this.input.bind('click', (function(node) {
             return function(event) {
 
-              // Determine if the input is checked.
-              var checked = $(event.target).is(':checked');
+              // Set the checked state based on input.
+              node.checked = $(event.target).is(':checked');
 
               // Expand if checked.
-              node.expand(checked);
+              node.expand(node.checked);
 
               // Call the select method.
-              node.selectChildren(checked);
+              node.selectChildren(node.checked);
             };
           })(this));
 
@@ -2761,7 +2780,7 @@ var allplayers = allplayers || {};
     /**
      * Build the children.
      */
-    TreeNode.prototype.build_children = function() {
+    TreeNode.prototype.build_children = function(done) {
 
       // Create the childlist element.
       this.childlist = $();
@@ -2774,6 +2793,9 @@ var allplayers = allplayers || {};
 
         // Set the odd state.
         var odd = this.odd;
+
+        // Get the number of children.
+        var numChildren = this.children.length;
 
         // Now if there are children, iterate and build them.
         for (var i in this.children) {
@@ -2792,20 +2814,40 @@ var allplayers = allplayers || {};
               exclude: this.exclude
             }));
 
-            // Now append the built children to this list.
-            this.childlist.append(this.children[i].build());
+            // Set timeout to help with recursion.
+            setTimeout((function(treenode, index) {
+              return function() {
+
+                // Add the child tree to the list.
+                treenode.children[index].build(function(child) {
+
+                  // Decrement the number of children loaded.
+                  numChildren--;
+
+                  // Append the child to the list.
+                  treenode.childlist.append(child.display);
+
+                  // If there are no more chlidren, then say we are done.
+                  if (!numChildren) {
+                    done.call(treenode, treenode.childlist);
+                  }
+                });
+              };
+            })(this, i), 2);
           }
         }
       }
+      else {
 
-      // Return the childlist.
-      return this.childlist;
+        // Call that we are done loading this child.
+        done.call(this, this.childlist);
+      }
     };
 
     /**
      * Builds the DOM and the tree for this node.
      */
-    TreeNode.prototype.build = function() {
+    TreeNode.prototype.build = function(done) {
 
       // Keep track of the left margin for each element.
       var left = 5, elem = null;
@@ -2841,40 +2883,54 @@ var allplayers = allplayers || {};
         this.display.append(this.build_title(left));
       }
 
+      // Called when the node is done building.
+      var onDone = function() {
+
+        // See if they wish to alter the build.
+        if (params.onbuild) {
+          params.onbuild(this);
+        }
+
+        // Create a search item.
+        this.searchItem = this.display.clone();
+        $('.treeselect-expand', this.searchItem).remove();
+
+        // If the search title is not a link, then make it one...
+        var searchTitle = $('div.treeselect-title', this.searchItem);
+        if (searchTitle.length > 0) {
+          searchTitle.replaceWith(this.nodeLink);
+        }
+
+        // See if they wish to hook into the postbuild process.
+        if (params.postbuild) {
+          params.postbuild(this);
+        }
+
+        // Check if this node is excluded, and hide if so.
+        if (typeof this.exclude[this.id] !== 'undefined') {
+          if ($('.treenode-input', this.display).length == 0) {
+            this.display.hide();
+          }
+        }
+
+        // If they wish to know when we are done building.
+        if (done) {
+          done.call(this, this);
+        }
+      };
+
       // Append the children.
       if (this.childlist.length == 0) {
-        this.display.append(this.build_children());
+        this.build_children(function(children) {
+          if (children.length > 0) {
+            this.display.append(children);
+          }
+          onDone.call(this);
+        });
       }
-
-      // See if they wish to alter the build.
-      if (params.onbuild) {
-        params.onbuild(this);
+      else {
+        onDone.call(this);
       }
-
-      // Create a search item.
-      this.searchItem = this.display.clone();
-      $('.treeselect-expand', this.searchItem).remove();
-
-      // If the search title is not a link, then make it one...
-      var searchTitle = $('div.treeselect-title', this.searchItem);
-      if (searchTitle.length > 0) {
-        searchTitle.replaceWith(this.nodeLink);
-      }
-
-      // See if they wish to hook into the postbuild process.
-      if (params.postbuild) {
-        params.postbuild(this);
-      }
-
-      // Check if this node is and all child nodes are excluded, and hide if so.
-      if (typeof this.exclude[this.id] !== 'undefined') {
-        if ($('.treenode-input', this.display).length == 0) {
-          this.display.hide();
-        }
-      }
-
-      // Return the display.
-      return this.display;
     };
 
     /**
@@ -2885,33 +2941,6 @@ var allplayers = allplayers || {};
         return this.selectAllText;
       }
       return false;
-    };
-
-    /**
-     * Sets the defaults for this node.
-     *
-     * @param {function} callback Called all defaults are set.
-     */
-    TreeNode.prototype.setDefault = function(defaults, callback) {
-
-      // Make sure the defaults is set.
-      if (!jQuery.isEmptyObject(defaults)) {
-
-        // Load all nodes and apply a default to them.
-        this.loadAll(function(node) {
-          if (callback) {
-            callback(node);
-          }
-        }, function(node) {
-          if (defaults.hasOwnProperty(node.value) ||
-              defaults.hasOwnProperty(node.id)) {
-            node.check(true);
-          }
-        });
-      }
-      else if (callback) {
-        callback(this);
-      }
     };
 
     /**
@@ -2941,6 +2970,10 @@ var allplayers = allplayers || {};
           // Call the searcher for the new nodes.
           params.searcher(this, text, function(nodes, getNode) {
             var treenode = null;
+
+            // Get the number of nodes.
+            var numNodes = nodes.length;
+
             for (var id in nodes) {
 
               // Set the treenode.
@@ -2953,14 +2986,22 @@ var allplayers = allplayers || {};
               loadedNodes[treenode.id] = treenode.id;
 
               // Build the node.
-              treenode.build();
+              treenode.build(function() {
 
-              // Add the node to the results.
-              results[id] = treenode;
+                // Decrement the counter.
+                numNodes--;
+
+                // Add the node to the results.
+                results[id] = treenode;
+
+                // If no more nodes are loading, then callback.
+                if (!numNodes) {
+
+                  // Callback with the search results.
+                  callback(results, true);
+                }
+              });
             }
-
-            // Callback with the search results.
-            callback(results, true);
           });
         }
         else {
@@ -3004,9 +3045,6 @@ var allplayers = allplayers || {};
         }).bind('click', (function(node) {
           return function(event) {
             node.selectChildren($(event.target).is(':checked'));
-            if (params.selected) {
-              params.selected(node, true);
-            }
           };
         })(root)));
 
@@ -3019,36 +3057,55 @@ var allplayers = allplayers || {};
         }
       }
 
-      // Create an init node to show that the tree is busy.
+      // Create a loading span.
       var initBusy = $(document.createElement('span')).addClass('treebusy');
-      root.display.append(initBusy);
+      root.display.append(initBusy.css('display', 'block'));
+
+      // Called when the root node is done loading.
+      var doneLoading = function() {
+
+        // Remove the init busy cursor.
+        initBusy.remove();
+
+        // Call the treeloaded params.
+        if (params.treeloaded) {
+          params.treeloaded(this);
+        }
+      };
 
       // Load the node.
       root.loadNode(function(node) {
 
-        // Remove the init node.
-        initBusy.remove();
-
+        // Check the length of children in this node.
         if (node.children.length == 0) {
 
           // If the root node does not have any children, then hide.
           node.display.hide();
         }
 
-        // If this node is checked, then check it.
-        if (node.checked) {
-          node.selectChildren(node.checked);
-        }
-
         // Expand this root node.
         node.expand(true);
 
-        // Now set the defaults.
-        node.setDefault(params.default_value, function(node) {
-          if (params.treeloaded) {
-            params.treeloaded(node);
-          }
-        });
+        // Select this node based on the default value.
+        node.select(node.checked);
+
+        // Set the defaults for all the children.
+        var defaults = node.checked;
+        if (!jQuery.isEmptyObject(params.default_value)) {
+          defaults = params.default_value;
+        }
+
+        // If there are defaults, then select the children with them.
+        if (defaults) {
+
+          // Select the children based on the defaults.
+          node.selectChildren(defaults, function() {
+            doneLoading.call(node);
+          });
+        }
+        else {
+          doneLoading.call(node);
+        }
       });
 
       // If the root element doesn't have children, then hide the treeselect.
@@ -3094,7 +3151,6 @@ var allplayers = allplayers || {};
       var input = null;
       var search_btn = null;
       var label = null;
-      var loading = null;
       var description = null;
       var treeselect = null;
       var treewrapper = null;
@@ -3288,11 +3344,6 @@ var allplayers = allplayers || {};
       treewrapper.addClass('treewrapper');
       treewrapper.hide();
 
-      // Create a loading span.
-      loading = $(document.createElement('span')).attr({
-        'class': 'tree-loading treebusy'
-      }).css('display', 'block');
-
       // Get the tree select.
       treeselect = $(document.createElement('div'));
       treeselect.addClass('treeselect');
@@ -3305,7 +3356,7 @@ var allplayers = allplayers || {};
       });
 
       // Add the treeselect widget.
-      treewrapper.append(treeselect.append(loading));
+      treewrapper.append(treeselect);
       $(this).append(selector.append(treewrapper));
 
       // Add the description.
@@ -3316,16 +3367,46 @@ var allplayers = allplayers || {};
 
       // Reset the selected callback.
       treeparams.selected = (function(chosentree) {
+
+        // Keep track of the selected nodes.
+        var selectedNodes = {};
+
+        // The node callback.
         return function(node, direct) {
 
-          // Get the existing choices.
-          var selected_choice = $('li#choice_' + node.id, choices);
-
-          // Only add if this node is valid.
+          // If this is a valid node.
           if (node.id) {
+
+            // Get the existing choices.
+            var selected_choice = $('li#choice_' + node.id, choices);
 
             // Add the choice if not already added.
             if (node.checked && (selected_choice.length == 0)) {
+
+              // Add this to the selected nodes.
+              selectedNodes[node.id] = node;
+            }
+            else if (!node.checked) {
+
+              // If not selected, then remove the choice.
+              selected_choice.remove();
+            }
+          }
+
+          // If we are done selecting.
+          if (direct) {
+
+            // Set the chosentree value.
+            chosentree.value = {};
+
+            // Iterate through all the selected nodes.
+            for (var id in selectedNodes) {
+
+              // Set the node.
+              node = selectedNodes[id];
+
+              // Add to the chosen tree value.
+              chosentree.value[id] = node;
 
               // Get and add a new choice.
               var choice = $(document.createElement('li'));
@@ -3360,41 +3441,28 @@ var allplayers = allplayers || {};
               }
 
               // Add this to the choices.
-              search.before(choice.append(span).append(close));
+              choices.prepend(choice.append(span).append(close));
             }
-            else if (!node.checked) {
-
-              // If not selected, then remove the choice.
-              selected_choice.remove();
-            }
-          }
-
-          // Make sure we don't do this often for performance.
-          if (direct) {
-
-            // Get all of the nodes that are selected.
-            var nodes = [];
-            chosentree.value = {};
 
             // Show the choices.
             choices.show();
+
+            // Reset the selected nodes.
+            selectedNodes = {};
 
             // Don't show the default value if the root has not children.
             if (input && node.children.length == 0) {
               input.attr({'value': ''});
             }
 
-            // Add the selected items to the choices.
-            $('li.search-choice', choices).each(function() {
-              chosentree.value[this.nodeData.id] = this.nodeData.value;
-              nodes.push(this.nodeData);
-            });
-
             // Show more or less.
             if (jQuery.fn.moreorless) {
 
+              // Get how many nodes there are.
+              var numNodes = $('li.search-choice', choices).length;
+
               // Add this to the choices.
-              var more_text = params.more_text.replace('%num%', nodes.length);
+              var more_text = params.more_text.replace('%num%', numNodes);
               choices.moreorless(params.min_height, more_text);
               if (!choices.div_expanded) {
                 showTree(true, null);
@@ -3413,11 +3481,6 @@ var allplayers = allplayers || {};
           }
         };
       })(this);
-
-      // Add the treeloaded event.
-      treeparams.treeloaded = function(node) {
-        loading.remove();
-      };
 
       // Now declare our treeselect control.
       treeselect.treeselect(treeparams);
