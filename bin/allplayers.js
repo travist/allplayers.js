@@ -3616,6 +3616,9 @@ var allplayers = allplayers || {};
       show_url_link: 1,
       showRoot: 0,
       showtree: 1,
+      gotoPath: '',
+      gotoText: '',
+      gotoClass: 'allplayers-register-link',
       onRoot: function(root) {
         rootNode = root;
       },
@@ -3675,6 +3678,23 @@ var allplayers = allplayers || {};
                 }, true);
               }
             }
+          }
+
+          // Add a way to provide a generic path.
+          if (params.gotoPath && node.data.url && !node.has_goto_link) {
+            node.has_goto_link = true;
+
+            // Add the documnet URL to the end of the register
+            var link = node.data.url + '/' + params.gotoPath;
+            link += '?destination=';
+            link += encodeURIComponent(window.document.URL);
+            link += '&from=' + rootNode.id;
+
+            // Add a goto link to the group finder.
+            node.link.after($(document.createElement('a')).attr({
+              'class': params.gotoClass,
+              href: link
+            }).text(params.gotoText));
           }
 
           if (params.show_url_link && node.data.url && !node.has_url_link) {
