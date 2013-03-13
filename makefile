@@ -36,9 +36,15 @@ docfiles = drupal.api.js/src/drupal.api.js\
 	src/allplayers.location.js\
 	src/allplayers.calendar.js
 
+embedserverfiles = src/allplayers.embed.js\
+	src/allplayers.embed.server.js
+
+embedclientfiles = src/allplayers.embed.js\
+	src/allplayers.embed.client.js
+
 .DEFAULT_GOAL := all
 
-all: makecore jslint js
+all: makecore jslint js getporthole embedserver embedclient rmporthole
 
 makecore:
 	cd drupal.api.js; make -B; cd ..; cd lib/treeselect; make -B; cd ../..;
@@ -67,6 +73,38 @@ js: ${files}
 	  --data-urlencode "js_code@src/allplayers.loader.js" \
 	  http://closure-compiler.appspot.com/compile \
 	  > bin/allplayers.loader.js
+
+getporthole:
+	@curl https://raw.github.com/ternarylabs/porthole/master/src/porthole.min.js > lib/porthole.min.js
+
+embedserver: ${embedserverfiles}
+	gjslint $^
+	@echo "Generating allplayers.embed.server.js"
+	@cat > bin/allplayers.embed.server.js lib/porthole.min.js $^
+	@echo "Generating allplayers.embed.server.min.js"
+	curl -s \
+	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
+	  -d output_format=text \
+	  -d output_info=compiled_code \
+	  --data-urlencode "js_code@bin/allplayers.embed.server.js" \
+	  http://closure-compiler.appspot.com/compile \
+	  > bin/allplayers.embed.server.min.js
+
+embedclient: ${embedclientfiles}
+	gjslint $^
+	@echo "Generating allplayers.embed.client.js"
+	@cat > bin/allplayers.embed.client.js lib/porthole.min.js $^
+	@echo "Generating allplayers.embed.client.min.js"
+	curl -s \
+	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
+	  -d output_format=text \
+	  -d output_info=compiled_code \
+	  --data-urlencode "js_code@bin/allplayers.embed.client.js" \
+	  http://closure-compiler.appspot.com/compile \
+	  > bin/allplayers.embed.client.min.js
+
+rmporthole:
+	@rm lib/porthole.min.js
 
 # Create the documentation from source code.
 jsdoc: ${docfiles}
