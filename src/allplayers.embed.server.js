@@ -12,7 +12,7 @@ allplayers.embed.server = function(options) {
       return 0;
     },
     isComplete: function() {
-
+      return false;
     }
   });
 };
@@ -33,6 +33,7 @@ allplayers.embed.server.prototype.init = function() {
 
   var initialized = false;
   var self = this;
+  var numTries = 10;
 
   // Send document stats via porthole message.
   var proxy = new Porthole.WindowProxy(this.options.proxy);
@@ -45,15 +46,21 @@ allplayers.embed.server.prototype.init = function() {
   // Function to send the resize event.
   var initialize = function() {
 
+    // Get the height of the content.
+    var height = self.options.getHeight();
+
     // Send the event to initialize the iframe.
-    proxy.post({'event': {
-      'name': 'init',
-      'height' : self.options.getHeight(),
-      'id' : window.location.hash
-    }});
+    proxy.post({
+      'height': height,
+      'event': {
+        'name': 'init',
+        'height' : height,
+        'id' : window.location.hash
+      }
+    });
 
     // We are now initialized.
-    if (initialized) {
+    if ((numTries <= 0) || initialized) {
 
       // If we are on the complete page, then say so...
       if (self.options.isComplete()) {
@@ -65,6 +72,7 @@ allplayers.embed.server.prototype.init = function() {
     else {
 
       // Try again in 500 ms.
+      numTries--;
       setTimeout(initialize, 500);
     }
   };
