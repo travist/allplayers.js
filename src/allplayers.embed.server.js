@@ -31,26 +31,63 @@ allplayers.embed.server.prototype.init = function() {
   // Call the parent.
   allplayers.embed.prototype.init.call(this);
 
-  var initialized = false;
+  // If the iframe was resized.
+  this.resized = false;
+
+  // Keep track of the self pointer.
   var self = this;
-  var numTries = 10;
 
   // Send document stats via porthole message.
-  var proxy = new Porthole.WindowProxy(this.options.proxy);
-  proxy.addEventListener(function(message) {
+  this.proxy = new Porthole.WindowProxy(this.options.proxy);
+  this.proxy.addEventListener(function(message) {
     if (message.data.hasOwnProperty('init') && message.data.init) {
-      initialized = true;
+      self.resized = true;
     }
+  });
+
+  // Bind to the document resize event.
+  var throttle = null;
+  jQuery(document).bind('DOMSubtreeModified', function() {
+    if (throttle) {
+      clearTimeout(throttle);
+    }
+    throttle = setTimeout(function() {
+      self.resize();
+    }, 500);
+  });
+
+  // Trigger the resizing events.
+  this.resize();
+};
+
+/**
+ * Initialize the allplayer embed library.
+ */
+allplayers.embed.server.prototype.resize = function() {
+
+  // If the iframe was resized.
+  this.resized = false;
+  var self = this;
+
+  // Change all links to reference platform instead of www.
+  var container = self.options.getContainer();
+  jQuery('a[href^="https://www."]', container).each(function() {
+
+    // Replace the href with platform
+    var href = $(this).attr('href');
+    $(this).attr({
+      'href': href.replace(/^https\:\/\/www\./, 'https://platform.')
+    });
   });
 
   // Function to send the resize event.
   var initialize = function() {
 
     // Get the height of the content.
-    var height = self.options.getHeight();
+    var height = container.outerHeight(true);
 
     // Send the event to initialize the iframe.
-    proxy.post({
+    self.proxy.post({
       'height': height,
       'event': {
         'name': 'init',
@@ -60,11 +97,11 @@ allplayers.embed.server.prototype.init = function() {
     });
 
     // We are now initialized.
-    if ((numTries <= 0) || initialized) {
+    if (self.resized) {
 
       // If we are on the complete page, then say so...
       if (self.options.isComplete()) {
-        proxy.post({'event': {
+        self.proxy.post({'event': {
           'name': 'complete'
         }});
       }
@@ -72,7 +109,6 @@ allplayers.embed.server.prototype.init = function() {
     else {
 
       // Try again in 500 ms.
-      numTries--;
       setTimeout(initialize, 500);
     }
   };
