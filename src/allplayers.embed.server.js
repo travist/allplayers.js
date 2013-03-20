@@ -76,7 +76,10 @@ allplayers.embed.server.prototype.resize = function() {
     // Replace the href with platform
     var href = $(this).attr('href');
     $(this).attr({
-      'href': href.replace(/^https\:\/\/www\./, 'https://platform.')
+      'href': href.replace(
+        /https:\/\/www.(.*?).allplayers.com/,
+        'https://platform.$1.allplayers.com'
+      )
     });
   });
 
