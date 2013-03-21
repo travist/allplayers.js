@@ -8,8 +8,8 @@ var allplayers = allplayers || {embed: {}};
  */
 allplayers.embed.server = function(options) {
   allplayers.embed.call(this, options, {
-    getHeight: function() {
-      return 0;
+    getContainer: function() {
+      return jQuery();
     },
     isComplete: function() {
       return false;
@@ -31,19 +31,15 @@ allplayers.embed.server.prototype.init = function() {
   // Call the parent.
   allplayers.embed.prototype.init.call(this);
 
-  // If the iframe was resized.
-  this.resized = false;
+  this.container = this.options.getContainer();
+  this.height = 0;
+  this.heightTimer = null;
 
   // Keep track of the self pointer.
   var self = this;
 
   // Send document stats via porthole message.
   this.proxy = new Porthole.WindowProxy(this.options.proxy);
-  this.proxy.addEventListener(function(message) {
-    if (message.data.hasOwnProperty('init') && message.data.init) {
-      self.resized = true;
-    }
-  });
 
   // Bind to the document resize event.
   var throttle = null;
@@ -52,9 +48,17 @@ allplayers.embed.server.prototype.init = function() {
       clearTimeout(throttle);
     }
     throttle = setTimeout(function() {
+      self.height = 0;
       self.resize();
     }, 500);
   });
+
+  // If we are on the complete page, then say so...
+  if (this.options.isComplete()) {
+    this.proxy.post({'event': {
+      'name': 'complete'
+    }});
+  }
 
   // Trigger the resizing events.
   this.resize();
@@ -65,12 +69,7 @@ allplayers.embed.server.prototype.init = function() {
  */
 allplayers.embed.server.prototype.resize = function() {
 
-  // If the iframe was resized.
-  this.resized = false;
-  var self = this;
-
   // Change all links to reference platform instead of www.
-  var container = self.options.getContainer();
   jQuery('a[href^="https://www."]', container).each(function() {
 
     // Replace the href with platform
@@ -84,38 +83,36 @@ allplayers.embed.server.prototype.resize = function() {
   });
 
   // Function to send the resize event.
-  var initialize = function() {
+  var self = this;
+  var checkHeight = function() {
 
-    // Get the height of the content.
-    var height = container.outerHeight(true);
+    // Get the new height of the container.
+    var newHeight = self.container.outerHeight(true);
+    if (self.height !== newHeight) {
 
-    // Send the event to initialize the iframe.
-    self.proxy.post({
-      'height': height,
-      'event': {
-        'name': 'init',
-        'height' : height,
-        'id' : window.location.hash
-      }
-    });
+      // Set the height.
+      self.height = newHeight;
 
-    // We are now initialized.
-    if (self.resized) {
-
-      // If we are on the complete page, then say so...
-      if (self.options.isComplete()) {
-        self.proxy.post({'event': {
-          'name': 'complete'
-        }});
-      }
+      // Send the event to resize the iframe.
+      self.proxy.post({
+        'height': self.height,
+        'event': {
+          'name': 'init',
+          'height' : self.height,
+          'id' : window.location.hash
+        }
+      });
     }
-    else {
 
-      // Try again in 500 ms.
-      setTimeout(initialize, 500);
+    // Clear the timer if it exists.
+    if (self.heightTimer) {
+      clearTimeout(self.heightTimer);
     }
+
+    // Try again in 500 ms.
+    self.heightTimer = setTimeout(checkHeight, 500);
   };
 
-  // Initialize the iframe.
-  initialize();
+  // Check the height of the iframe.
+  checkHeight();
 };

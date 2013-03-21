@@ -140,11 +140,6 @@ allplayers.embed.client.prototype.init = function() {
           self.options.complete.call(self, event);
           break;
       }
-
-      // Say that we received this event.
-      var response = {};
-      response[event.name] = true;
-      proxy.post(response);
     }
   });
 };
