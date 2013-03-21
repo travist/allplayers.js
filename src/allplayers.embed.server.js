@@ -70,7 +70,7 @@ allplayers.embed.server.prototype.init = function() {
 allplayers.embed.server.prototype.resize = function() {
 
   // Change all links to reference platform instead of www.
-  jQuery('a[href^="https://www."]', container).each(function() {
+  jQuery('a[href^="https://www."]', this.container).each(function() {
 
     // Replace the href with platform
     var href = $(this).attr('href');
