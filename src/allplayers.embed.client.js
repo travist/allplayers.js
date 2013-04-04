@@ -90,7 +90,9 @@ allplayers.embed.client.prototype.init = function() {
       source += '?';
       for (var param in this.options.query) {
         source += param + '=' + encodeURIComponent(this.options.query[param]);
+        source += '&';
       }
+      source = source.replace(/\&$/, '');
     }
   }
 
