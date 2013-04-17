@@ -83,6 +83,9 @@ allplayers.embed.client.prototype.init = function() {
       case 'registration':
         source += '/register';
         break;
+      case 'forms':
+        source += '/forms';
+        break;
     }
 
     // If they have some query options then add them here.
