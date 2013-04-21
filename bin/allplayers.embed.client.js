@@ -35,6 +35,7 @@ allplayers.embed = function(options, defaults) {
  * Initialize this embed code.
  */
 allplayers.embed.prototype.init = function() {
+  document.proxy = this;
 };
 var allplayers = allplayers || {embed: {}};
 
@@ -76,7 +77,7 @@ allplayers.embed.client = function(options, context) {
     base: 'https://platform.allplayers.com',
     type: 'registration',
     group: 'api',
-    query: false,
+    query: {},
     src: '',
     complete: function() {}
   });
@@ -126,8 +127,11 @@ allplayers.embed.client.prototype.init = function() {
         break;
     }
 
+    // Add the type as a query parameter.
+    this.options.query.embedtype = this.options.type;
+
     // If they have some query options then add them here.
-    if (this.options.query) {
+    if (!jQuery.isEmptyObject(this.options.query)) {
       source += '?';
       for (var param in this.options.query) {
         source += param + '=' + encodeURIComponent(this.options.query[param]);
@@ -158,19 +162,31 @@ allplayers.embed.client.prototype.init = function() {
   this.context.append(iframe);
 
   // Get the proxy.
-  var proxy = new Porthole.WindowProxy(
+  this.proxy = new Porthole.WindowProxy(
     this.options.proxy,
     iframe.attr('id')
   );
 
+  // Pass along chrome message responses to the server.
+  window.addEventListener('message', function(event) {
+    if (event.data.name == 'chromeMsgResp') {
+      document.proxy.post({event: event.data});
+    }
+  });
+
   // Add the event listener.
   var self = this;
-  proxy.addEventListener(function(e) {
+  this.proxy.addEventListener(function(e) {
 
     // Switch on the event name.
     var event = e.data.hasOwnProperty('event') ? e.data.event : false;
     if (event) {
       switch (event.name) {
+
+        // Pass along chrome messages.
+        case 'chromeMsg':
+          window.postMessage(e.data, '*');
+          break;
 
         // Called when the iframe has initalized.
         case 'init':
