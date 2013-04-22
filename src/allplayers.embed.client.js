@@ -50,6 +50,24 @@ allplayers.embed.client.prototype = new allplayers.embed();
 /** Reset the constructor. */
 allplayers.embed.client.prototype.constructor = allplayers.embed.client;
 
+/**
+ * Return the value of a parameter.
+ *
+ * @param {string} name The name of the parameter to get.
+ * @return {string} The value of the parameter.
+ */
+allplayers.embed.client.getParam = function(name) {
+  name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
+  var regexS = '[\\?&]' + name + '=([^&#]*)';
+  var regex = new RegExp(regexS);
+  var results = regex.exec(window.location.search);
+  if (results == null) {
+    return '';
+  }
+  else {
+    return decodeURIComponent(results[1].replace(/\+/g, ' '));
+  }
+};
 
 /**
  * Initialize the allplayer embed library.
@@ -81,14 +99,25 @@ allplayers.embed.client.prototype.init = function() {
     source = this.options.src;
   }
   else {
-    source = this.options.base + '/g/' + this.options.group;
-    switch (this.options.type) {
-      case 'registration':
-        source += '/register';
-        break;
-      case 'forms':
-        source += '/forms';
-        break;
+
+    // Start the source out on the base.
+    source = this.options.base + '/';
+
+    // See if they provide their own query.
+    var q = allplayers.embed.client.getParam('q');
+    if (q) {
+      source += q;
+    }
+    else {
+      source += 'g/' + this.options.group;
+      switch (this.options.type) {
+        case 'registration':
+          source += '/register';
+          break;
+        case 'forms':
+          source += '/forms';
+          break;
+      }
     }
 
     // Add the type as a query parameter.
@@ -179,6 +208,20 @@ allplayers.embed.client.prototype.init = function() {
             self.proxy.post({event: {name: 'chromePluginReady'}});
           }
           break;
+/* Investigate iframe redirects.
+        case 'redirect':
+          var current = window.location.href;
+          if (current.search(/\?.*q\=([^&]*)/) > 0) {
+            var replaceWith = '$1q=' + event.data + '$3';
+            current.replace(/(.*\?.*)q\=([^&]*)(.*)/, replaceWith);
+          }
+          else {
+            current += (window.location.search) ? '&' : '?';
+            current += 'q=' + event.data;
+          }
+          window.location = current;
+          break;
+*/
       }
     }
   });

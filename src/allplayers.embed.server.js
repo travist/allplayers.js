@@ -135,6 +135,21 @@ allplayers.embed.server.prototype.resize = function() {
     });
   });
 
+/* Investigate iframe redirects...
+  jQuery('a', this.container).each(function() {
+    $(this).click(function(event) {
+      event.preventDefault();
+      var href = $(this).attr('href');
+      var q = href.match(/\:\/\/.*\.allplayers\.com\/(.*)|^\/(.*)/);
+      q = q[1] ? q[1] : q[2];
+      self.proxy.post({event: {
+        name: 'redirect',
+        data: q
+      }});
+    });
+  });
+ */
+
   // Function to send the resize event.
   var self = this;
   var checkHeight = function() {
