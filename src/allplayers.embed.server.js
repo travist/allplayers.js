@@ -49,7 +49,6 @@ allplayers.embed.server.prototype.init = function() {
       clearTimeout(throttle);
     }
     throttle = setTimeout(function() {
-      self.height = 0;
       self.resize();
     }, 500);
   });
@@ -78,12 +77,19 @@ allplayers.embed.server.prototype.init = function() {
             self.queue[event.data.guid](event.data.response);
           }
           break;
+
+        case 'chromePluginReady':
+          window.postMessage(event, '*');
+          break;
       }
     }
   });
 
   // Trigger the resizing events.
   this.resize();
+
+  // Server is now ready.
+  this.proxy.post({event: {'name': 'serverReady'}});
 };
 
 /**

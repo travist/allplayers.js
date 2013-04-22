@@ -59,6 +59,9 @@ allplayers.embed.client.prototype.init = function() {
   // Call the parent.
   allplayers.embed.prototype.init.call(this);
 
+  // Say that the plugin isn't ready.
+  this.pluginReady = false;
+
   // Add the loading and iframe.
   var loading = jQuery(document.createElement('div')).css({
     background: 'url(' + this.options.spinner + ') no-repeat',
@@ -128,15 +131,23 @@ allplayers.embed.client.prototype.init = function() {
     iframe.attr('id')
   );
 
+  var self = this;
+
   // Pass along chrome message responses to the server.
-  window.addEventListener('message', function(event) {
-    if (event.data.name == 'chromeMsgResp') {
-      document.proxy.post({event: event.data});
-    }
-  });
+  if (typeof window.postMessage !== 'undefined') {
+    window.addEventListener('message', function(event) {
+      switch (event.data.name) {
+        case 'chromeMsgResp':
+          self.proxy.post({event: event.data});
+          break;
+        case 'chromePluginReady':
+          self.pluginReady = true;
+          break;
+      }
+    });
+  }
 
   // Add the event listener.
-  var self = this;
   this.proxy.addEventListener(function(e) {
 
     // Switch on the event name.
@@ -146,7 +157,9 @@ allplayers.embed.client.prototype.init = function() {
 
         // Pass along chrome messages.
         case 'chromeMsg':
-          window.postMessage(e.data, '*');
+          if (typeof window.postMessage !== 'undefined') {
+            window.postMessage(event, '*');
+          }
           break;
 
         // Called when the iframe has initalized.
@@ -158,6 +171,13 @@ allplayers.embed.client.prototype.init = function() {
         // Called when the process is complete.
         case 'complete':
           self.options.complete.call(self, event);
+          break;
+
+        // See when the server is ready.
+        case 'serverReady':
+          if (self.pluginReady) {
+            self.proxy.post({event: {name: 'chromePluginReady'}});
+          }
           break;
       }
     }
