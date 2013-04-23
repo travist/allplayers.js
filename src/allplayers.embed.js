@@ -35,4 +35,5 @@ allplayers.embed = function(options, defaults) {
  * Initialize this embed code.
  */
 allplayers.embed.prototype.init = function() {
+  document.proxy = this;
 };

@@ -35,6 +35,7 @@ allplayers.embed = function(options, defaults) {
  * Initialize this embed code.
  */
 allplayers.embed.prototype.init = function() {
+  document.proxy = this;
 };
 var allplayers = allplayers || {embed: {}};
 
@@ -72,6 +73,7 @@ allplayers.embed.server.prototype.init = function() {
   this.container = this.options.getContainer();
   this.height = 0;
   this.heightTimer = null;
+  this.queue = {};
 
   // Keep track of the self pointer.
   var self = this;
@@ -86,20 +88,72 @@ allplayers.embed.server.prototype.init = function() {
       clearTimeout(throttle);
     }
     throttle = setTimeout(function() {
-      self.height = 0;
       self.resize();
     }, 500);
   });
 
   // If we are on the complete page, then say so...
   if (this.options.isComplete()) {
-    this.proxy.post({'event': {
+    this.proxy.post({event: {
       'name': 'complete'
     }});
   }
 
+  // Add an event listener.
+  this.proxy.addEventListener(function(e) {
+
+    // Switch on the event name.
+    var event = e.data.hasOwnProperty('event') ? e.data.event : false;
+    if (event) {
+      switch (event.name) {
+
+        // Handle the message response.
+        case 'chromeMsgResp':
+
+          // Call our callback with the response.
+          if (event.data.hasOwnProperty('guid') &&
+              self.queue.hasOwnProperty(event.data.guid)) {
+            self.queue[event.data.guid](event.data.response);
+          }
+          break;
+
+        case 'chromePluginReady':
+          window.postMessage(event, '*');
+          break;
+      }
+    }
+  });
+
   // Trigger the resizing events.
   this.resize();
+
+  // Server is now ready.
+  this.proxy.post({event: {'name': 'serverReady'}});
+};
+
+/**
+ * Allow to send a chrome extension message and handle the response.
+ *
+ * @param {object} msg The message to send to the extension.
+ * @param {function} callback Callback called when the response is received.
+ */
+allplayers.embed.server.prototype.sendMessage = function(msg, callback) {
+  var s4 = function() {
+    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  };
+  var guid = function() {
+    return s4() + s4() + s4();
+  };
+
+  // Add a message id.
+  msg.guid = guid();
+  this.proxy.post({event: {
+    name: 'chromeMsg',
+    data: msg
+  }});
+
+  // Add the callback to the queue.
+  this.queue[msg.guid] = callback;
 };
 
 /**
@@ -119,6 +173,21 @@ allplayers.embed.server.prototype.resize = function() {
       )
     });
   });
+
+/* Investigate iframe redirects...
+  jQuery('a', this.container).each(function() {
+    $(this).click(function(event) {
+      event.preventDefault();
+      var href = $(this).attr('href');
+      var q = href.match(/\:\/\/.*\.allplayers\.com\/(.*)|^\/(.*)/);
+      q = q[1] ? q[1] : q[2];
+      self.proxy.post({event: {
+        name: 'redirect',
+        data: q
+      }});
+    });
+  });
+ */
 
   // Function to send the resize event.
   var self = this;
