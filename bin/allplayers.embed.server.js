@@ -165,8 +165,8 @@ allplayers.embed.server.prototype.resize = function() {
   jQuery('a[href^="https://www."]', this.container).each(function() {
 
     // Replace the href with platform
-    var href = $(this).attr('href');
-    $(this).attr({
+    var href = jQuery(this).attr('href');
+    jQuery(this).attr({
       'href': href.replace(
         /https:\/\/www.(.*?).allplayers.com/,
         'https://platform.$1.allplayers.com'
@@ -176,9 +176,9 @@ allplayers.embed.server.prototype.resize = function() {
 
 /* Investigate iframe redirects...
   jQuery('a', this.container).each(function() {
-    $(this).click(function(event) {
+    jQuery(this).click(function(event) {
       event.preventDefault();
-      var href = $(this).attr('href');
+      var href = jQuery(this).attr('href');
       var q = href.match(/\:\/\/.*\.allplayers\.com\/(.*)|^\/(.*)/);
       q = q[1] ? q[1] : q[2];
       self.proxy.post({event: {
