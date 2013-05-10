@@ -143,7 +143,7 @@ allplayers.embed.client.prototype.init = function() {
     source = this.options.base + '/';
 
     // See if they provide their own query.
-    var q = allplayers.embed.client.getParam('q');
+    var q = allplayers.embed.client.getParam('apq');
     if (q) {
       source += q;
     }
@@ -172,6 +172,10 @@ allplayers.embed.client.prototype.init = function() {
       source = source.replace(/\&$/, '');
     }
   }
+
+  // Add the embed source to the url.
+  source += (source.search(/\?/) === -1) ? '?' : '&';
+  source += 'embedsource=' + encodeURIComponent(window.location.href);
 
   // Add the iframe ID to the iframe source.
   source += '#' + iframeId;
