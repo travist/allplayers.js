@@ -2660,13 +2660,17 @@ var allplayers = allplayers || {};
         }
         else {
           // Flag this noad as including all children below if it has children.
-          if (this.children.length > 0) {
+          if (this.has_children > 0 && state) {
             this.include_children = true;
-            if (state) {
-              $('input[name="' + name + '"]').attr(
-                'name',
-                name + '-include-below'
-              );
+            $('input[name="' + name + '"]').attr(
+              'name',
+              name + '-include-below'
+            );
+
+            // Make sure all children below are deselected.
+            var i = this.children.length;
+            while (i--) {
+              this.children[i].selectChildren(false, done);
             }
           }
         }
@@ -3592,10 +3596,7 @@ var allplayers = allplayers || {};
               var span = $(document.createElement('span'));
 
               // If including children below, add text to the title to say so.
-              if (!params.deepLoad &&
-                  node.has_children &&
-                  node.link !== undefined && node.link[0] !== undefined &&
-                  node.link[0].className.indexOf('expanded') === -1) {
+              if (!params.deepLoad && node.include_children) {
                 span.text(node.title + ' (All below)');
               }
               else {
@@ -3614,6 +3615,9 @@ var allplayers = allplayers || {};
 
                   // Prevent the default.
                   event.preventDefault();
+
+                  // Get the node data.
+                  node = this.parentNode.nodeData;
 
                   // Remove the choice.
                   $('li#choice_' + node.id, choices).remove();
