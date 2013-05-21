@@ -3592,10 +3592,7 @@ var allplayers = allplayers || {};
               var span = $(document.createElement('span'));
 
               // If including children below, add text to the title to say so.
-              if (!params.deepLoad &&
-                  node.has_children &&
-                  node.link !== undefined && node.link[0] !== undefined &&
-                  node.link[0].className.indexOf('expanded') === -1) {
+              if (!params.deepLoad && node.include_children) {
                 span.text(node.title + ' (All below)');
               }
               else {
