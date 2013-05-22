@@ -2666,12 +2666,6 @@ var allplayers = allplayers || {};
               'name',
               name + '-include-below'
             );
-
-            // Make sure all children below are deselected.
-            var i = this.children.length;
-            while (i--) {
-              this.children[i].selectChildren(false, done);
-            }
           }
         }
 
