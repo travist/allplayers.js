@@ -162,8 +162,17 @@ allplayers.embed.client.prototype.init = function() {
     // Add the type as a query parameter.
     this.options.query.embedtype = this.options.type;
 
+    // Define our own isEmptyObject function.
+    var isEmptyObject = function(obj) {
+      var name;
+      for (name in obj) {
+        return false;
+      }
+      return true;
+    };
+
     // If they have some query options then add them here.
-    if (!jQuery.isEmptyObject(this.options.query)) {
+    if (!isEmptyObject(this.options.query)) {
       source += '?';
       for (var param in this.options.query) {
         source += param + '=' + encodeURIComponent(this.options.query[param]);
