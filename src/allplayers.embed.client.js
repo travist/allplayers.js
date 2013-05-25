@@ -145,7 +145,7 @@ allplayers.embed.client.prototype.init = function() {
 
   // Add the embed source to the url.
   source += (source.search(/\?/) === -1) ? '?' : '&';
-  source += 'embedsource=' + encodeURIComponent(window.location.href);
+  source += 'embedsource=' + $.base64('btoa', window.location.href, true);
 
   // Add the iframe ID to the iframe source.
   source += '#' + iframeId;
