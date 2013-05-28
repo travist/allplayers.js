@@ -121,7 +121,7 @@ allplayers.embed.client.prototype.init = function() {
     }
 
     // Add the type as a query parameter.
-    this.options.query.embedtype = this.options.type;
+    this.options.query.etyp = this.options.type;
 
     // Define our own isEmptyObject function.
     var isEmptyObject = function(obj) {
@@ -145,7 +145,7 @@ allplayers.embed.client.prototype.init = function() {
 
   // Add the embed source to the url.
   source += (source.search(/\?/) === -1) ? '?' : '&';
-  source += 'embedsource=' + encodeURIComponent(window.location.href);
+  source += 'esrc=' + $.base64('btoa', window.location.href, true);
 
   // Add the iframe ID to the iframe source.
   source += '#' + iframeId;

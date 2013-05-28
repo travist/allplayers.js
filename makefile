@@ -13,17 +13,20 @@ files =	drupal.api.js/bin/drupal.api.js\
 	lib/treeselect/lib/jquery.moreorless.js/jquery.moreorless.js\
 	lib/treeselect/bin/jquery.treeselect.js\
 	lib/group_select/js/group_select.js\
-	lib/group_finder/js/group_finder.js\
+	lib/group_finder/js/group_finder.js
 
 lintfiles = src/allplayers.date.js\
 	src/allplayers.event.js\
 	src/allplayers.group.js\
 	src/allplayers.location.js\
 	src/allplayers.calendar.js\
+	src/allplayers.embed.js\
+	src/allplayers.embed.server.js\
+	src/allplayers.embed.client.js\
 	lib/treeselect/lib/jquery.moreorless.js/jquery.moreorless.js\
 	lib/treeselect/bin/jquery.treeselect.js\
 	lib/group_select/js/group_select.js\
-	lib/group_finder/js/group_finder.js\
+	lib/group_finder/js/group_finder.js
 
 docfiles = drupal.api.js/src/drupal.api.js\
 	drupal.api.js/src/drupal.system.js\
@@ -40,6 +43,7 @@ embedserverfiles = src/allplayers.embed.js\
 	src/allplayers.embed.server.js
 
 embedclientfiles = src/allplayers.embed.js\
+	lib/jquery.base64.js/jquery.base64.js\
 	src/allplayers.embed.client.js
 
 .DEFAULT_GOAL := all
@@ -78,7 +82,6 @@ getporthole:
 	@curl https://raw.github.com/ternarylabs/porthole/master/src/porthole.min.js > lib/porthole.min.js
 
 embedserver: ${embedserverfiles}
-	gjslint $^
 	@echo "Generating allplayers.embed.server.js"
 	@cat > bin/allplayers.embed.server.js lib/porthole.min.js $^
 	@echo "Generating allplayers.embed.server.min.js"
@@ -91,7 +94,6 @@ embedserver: ${embedserverfiles}
 	  > bin/allplayers.embed.server.min.js
 
 embedclient: ${embedclientfiles}
-	gjslint $^
 	@echo "Generating allplayers.embed.client.js"
 	@cat > bin/allplayers.embed.client.js lib/porthole.min.js $^
 	@echo "Generating allplayers.embed.client.min.js"
