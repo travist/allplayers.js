@@ -93,6 +93,15 @@ allplayers.embed.client.prototype.init = function() {
   // Add the iframe.
   var iframeId = this.context.attr('id') + '_iframe';
 
+  // Define our own isEmptyObject function.
+  var isEmptyObject = function(obj) {
+    var name;
+    for (name in obj) {
+      return false;
+    }
+    return true;
+  };
+
   // Get the source for the iframe.
   var source = '';
   if (this.options.src) {
@@ -122,29 +131,20 @@ allplayers.embed.client.prototype.init = function() {
 
     // Add the type as a query parameter.
     this.options.query.etyp = this.options.type;
-
-    // Define our own isEmptyObject function.
-    var isEmptyObject = function(obj) {
-      var name;
-      for (name in obj) {
-        return false;
-      }
-      return true;
-    };
-
-    // If they have some query options then add them here.
-    if (!isEmptyObject(this.options.query)) {
-      source += '?';
-      for (var param in this.options.query) {
-        source += param + '=' + encodeURIComponent(this.options.query[param]);
-        source += '&';
-      }
-      source = source.replace(/\&$/, '');
-    }
   }
 
   // Add the embed source to the url.
   source += (source.search(/\?/) === -1) ? '?' : '&';
+
+  // If they have some query options then add them here.
+  if (!isEmptyObject(this.options.query)) {
+    for (var param in this.options.query) {
+      source += param + '=' + encodeURIComponent(this.options.query[param]);
+      source += '&';
+    }
+  }
+
+  // Add the embed source as our last parameter.
   source += 'esrc=' + $.base64('btoa', window.location.href, true);
 
   // Add the iframe ID to the iframe source.
