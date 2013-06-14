@@ -81,6 +81,21 @@ allplayers.embed.server.prototype.init = function() {
         case 'chromePluginReady':
           window.postMessage(event, '*');
           break;
+
+        case 'addStyle':
+          // Inject the style into the page.
+          if (event.data) {
+            // Keep them from escaping the <style> tag.
+            var styles = event.data.replace(/[<>]/g, '');
+            var lastStyle = jQuery('link[type="text/css"]');
+            if (lastStyle.length) {
+              lastStyle = lastStyle.eq(lastStyle.length - 1);
+              lastStyle.after(jQuery(document.createElement('style')).attr({
+                type: 'text/css'
+              }).append(styles));
+            }
+          }
+          break;
       }
     }
   });
