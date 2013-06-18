@@ -202,6 +202,7 @@ allplayers.embed.client = function(options, context) {
     group: 'api',
     query: {},
     src: '',
+    style: '',
     complete: function() {}
   });
 };
@@ -307,7 +308,7 @@ allplayers.embed.client.prototype.init = function() {
   }
 
   // Add the embed source as our last parameter.
-  source += 'esrc=' + $.base64('btoa', window.location.href, true);
+  source += 'esrc=' + jQuery.base64('btoa', window.location.href, true);
 
   // Add the iframe ID to the iframe source.
   source += '#' + iframeId;
@@ -369,6 +370,16 @@ allplayers.embed.client.prototype.init = function() {
         // Called when the iframe has initalized.
         case 'init':
           loading.remove();
+
+          // Add the custom style to the iframe.
+          if (self.options.style) {
+            self.proxy.post({event: {
+              name: 'addStyle',
+              data: self.options.style
+            }});
+          }
+
+          // Set the height
           iframe.height(event.height).attr('height', event.height + 'px');
           break;
 
