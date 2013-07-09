@@ -2671,7 +2671,7 @@ var allplayers = allplayers || {};
 
         // Say this node is now fully selected.
         if (params.selected) {
-          params.selected(this, true);
+          params.selected(this);
         }
 
         // Say we are now done.
