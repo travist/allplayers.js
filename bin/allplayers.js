@@ -2666,8 +2666,7 @@ var allplayers = allplayers || {};
           var i = this.children.length;
           while (i--) {
 
-            // Do not pass in the done callback so that we won't call it
-            // prematurely.
+            // Select all the children.
             this.children[i].selectChildren(state, done, true);
           }
         }
