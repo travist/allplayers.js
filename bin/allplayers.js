@@ -3803,6 +3803,7 @@ var allplayers = allplayers || {};
       gotoPath: '',
       gotoText: '',
       gotoClass: 'allplayers-register-link',
+      gotoFeature: '',
       onRoot: function(root) {
         rootNode = root;
       },
@@ -3866,19 +3867,26 @@ var allplayers = allplayers || {};
 
           // Add a way to provide a generic path.
           if (params.gotoPath && node.data.url && !node.has_goto_link) {
-            node.has_goto_link = true;
 
-            // Add the documnet URL to the end of the register
-            var link = node.data.url + '/' + params.gotoPath;
-            link += '?destination=';
-            link += encodeURIComponent(window.document.URL);
-            link += '&from=' + rootNode.id;
+            // Check to see if they have the feature enabled.
+            if (
+              !params.gotoFeature ||
+              (node.data.features && node.data.features[params.gotoFeature])
+            ) {
+              node.has_goto_link = true;
 
-            // Add a goto link to the group finder.
-            node.link.after($(document.createElement('a')).attr({
-              'class': params.gotoClass,
-              href: link
-            }).text(params.gotoText));
+              // Add the documnet URL to the end of the register
+              var link = node.data.url + '/' + params.gotoPath;
+              link += '?destination=';
+              link += encodeURIComponent(window.document.URL);
+              link += '&from=' + rootNode.id;
+
+              // Add a goto link to the group finder.
+              node.link.after($(document.createElement('a')).attr({
+                'class': params.gotoClass,
+                href: link
+              }).text(params.gotoText));
+            }
           }
 
           if (params.show_url_link && node.data.url && !node.has_url_link) {
