@@ -3469,7 +3469,7 @@ var allplayers = allplayers || {};
               'type': 'button',
               'value': params.search_text
             });
-            search_btn.addClass('chosentree-search-btn');
+            search_btn.addClass('button chosentree-search-btn');
             search_btn.bind('click', function(event) {
               event.preventDefault();
               doSearch(input.val());
@@ -3830,7 +3830,7 @@ var allplayers = allplayers || {};
 
                 // Add a registration link to the group finder.
                 node.link.after($(document.createElement('a')).attr({
-                  'class': 'allplayers-register-link',
+                  'class': 'button tiny allplayers-register-link',
                   href: link
                 }).text(node.data.register_text));
               }
