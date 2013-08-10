@@ -28,13 +28,10 @@ allplayers.embed.client = function(options, context) {
   // Store the context.
   this.context = context;
 
-  var spinner = 'https://www.allplayers.com';
-  spinner += '/sites/all/themes/allplayers960/images/loading.gif';
-
   // Call the allplayers.embed constructor.
   allplayers.embed.call(this, options, {
-    spinner: spinner,
-    loading: 'loading...',
+    spinner: '',
+    loading: 'Loading',
     base: 'https://platform.allplayers.com',
     type: 'registration',
     group: 'api',
@@ -78,14 +75,21 @@ allplayers.embed.client.prototype.init = function() {
   // Call the parent.
   allplayers.embed.prototype.init.call(this);
 
+  // Set the spinner if it isn't set.
+  if (!this.options.spinner) {
+    this.options.spinner = this.options.base;
+    this.options.spinner += '/sites/all/themes/basic_foundation';
+    this.options.spinner += '/images/loader.gif';
+  }
+
   // Say that the plugin isn't ready.
   this.pluginReady = false;
 
   // Add the loading and iframe.
   var loading = jQuery(document.createElement('div')).css({
-    background: 'url(' + this.options.spinner + ') no-repeat',
-    margin: '0 5px',
-    paddingLeft: '20px'
+    background: 'url(' + this.options.spinner + ') no-repeat 83px 23px',
+    padding: '20px',
+    width: '120px'
   });
 
   // Add the loading text.
@@ -232,20 +236,6 @@ allplayers.embed.client.prototype.init = function() {
             self.proxy.post({event: {name: 'chromePluginReady'}});
           }
           break;
-/* Investigate iframe redirects.
-        case 'redirect':
-          var current = window.location.href;
-          if (current.search(/\?.*q\=([^&]*)/) > 0) {
-            var replaceWith = '$1q=' + event.data + '$3';
-            current.replace(/(.*\?.*)q\=([^&]*)(.*)/, replaceWith);
-          }
-          else {
-            current += (window.location.search) ? '&' : '?';
-            current += 'q=' + event.data;
-          }
-          window.location = current;
-          break;
-*/
       }
     }
   });
