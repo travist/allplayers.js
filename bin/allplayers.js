@@ -3830,7 +3830,7 @@ var allplayers = allplayers || {};
 
                 // Add a registration link to the group finder.
                 node.link.after($(document.createElement('a')).attr({
-                  'class': 'button tiny allplayers-register-link',
+                  'class': 'button small allplayers-register-link',
                   href: link
                 }).text(node.data.register_text));
               }
