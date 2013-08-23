@@ -249,9 +249,9 @@ allplayers.embed.client.prototype.init = function() {
 
   // Add the loading and iframe.
   var loading = jQuery(document.createElement('div')).css({
-    background: 'url(' + this.options.spinner + ') no-repeat 83px 23px',
-    padding: '20px',
-    width: '120px'
+    background: 'url(' + this.options.spinner + ') no-repeat 10px 13px',
+    padding: '10px 10px 10px 60px',
+    width: '100%'
   });
 
   // Add the loading text.
