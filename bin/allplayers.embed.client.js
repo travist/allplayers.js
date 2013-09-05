@@ -271,29 +271,24 @@ allplayers.embed.client.prototype.init = function() {
 
   // Get the source for the iframe.
   var source = '';
-  if (this.options.src) {
+
+  // See if they provide their own query.
+  var q = allplayers.embed.client.getParam('apq');
+  if (q) {
+    source = this.options.base + '/' + q;
+  }
+  else if (this.options.src) {
     source = this.options.src;
   }
   else {
-
-    // Start the source out on the base.
-    source = this.options.base + '/';
-
-    // See if they provide their own query.
-    var q = allplayers.embed.client.getParam('apq');
-    if (q) {
-      source += q;
-    }
-    else {
-      source += 'g/' + this.options.group;
-      switch (this.options.type) {
-        case 'registration':
-          source += '/register';
-          break;
-        case 'forms':
-          source += '/forms';
-          break;
-      }
+    source = this.options.base + '/g/' + this.options.group;
+    switch (this.options.type) {
+      case 'registration':
+        source += '/register';
+        break;
+      case 'forms':
+        source += '/forms';
+        break;
     }
 
     // Add the type as a query parameter.
