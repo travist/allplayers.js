@@ -1762,7 +1762,8 @@ allplayers.group.prototype.constructor = allplayers.group;
 
 /** Declare the event api. */
 allplayers.group.api = jQuery.extend(new drupal.api(), {
-  resource: 'groups'
+  resource: (window.location.hostname.indexOf('store') == -1) ?
+    'groups' : 'group_stores'
 });
 
 /**
@@ -3749,6 +3750,7 @@ var allplayers = allplayers || {};
           depth: params.depth,
           include_group_info: params.include_group_info,
           include_hidden: params.include_hidden,
+          root_uuid: params.root_uuid,
           inclusive: 1
         }, function(node) {
           var root = getTreeNode(node);
