@@ -3694,7 +3694,8 @@ var allplayers = allplayers || {};
       sort: 'asc',
       include_group_info: 0,
       include_hidden: 0,
-      onRoot: null
+      onRoot: null,
+      relative_link: false
     },params);
 
     // Set the sort direction.
@@ -3751,7 +3752,8 @@ var allplayers = allplayers || {};
           include_group_info: params.include_group_info,
           include_hidden: params.include_hidden,
           root_uuid: params.root_uuid,
-          inclusive: 1
+          inclusive: 1,
+          path: params.relative_link ? window.location.pathname : ''
         }, function(node) {
           var root = getTreeNode(node);
           if (params.onRoot) {
