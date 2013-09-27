@@ -23,7 +23,8 @@ allplayers.group.prototype.constructor = allplayers.group;
 
 /** Declare the event api. */
 allplayers.group.api = jQuery.extend(new drupal.api(), {
-  resource: 'groups'
+  resource: (window.location.hostname.indexOf('store') == -1) ?
+    'groups' : 'group_stores'
 });
 
 /**
