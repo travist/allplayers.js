@@ -1,5 +1,7 @@
-var allplayers = allplayers || {};
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {};
 
+(function(window, document, allplayers, undefined) {
 /**
  * Create the embedded class.
  *
@@ -37,3 +39,4 @@ allplayers.embed = function(options, defaults) {
 allplayers.embed.prototype.init = function() {
   document.proxy = this;
 };
+}(window, document, window.allplayers));
