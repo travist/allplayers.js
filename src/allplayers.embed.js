@@ -16,7 +16,7 @@ allplayers.embed = function(options, defaults) {
     var self = this;
 
     // Add the proxy default.
-    defaults.proxy = 'https://www.allplayers.com';
+    defaults.proxy = options.base | 'https://platform.allplayers.com';
     defaults.proxy += '/sites/all/libraries/porthole/src/proxy.html';
 
     // Set the defaults.
