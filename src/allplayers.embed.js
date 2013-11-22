@@ -1,5 +1,7 @@
-var allplayers = allplayers || {};
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {};
 
+(function(window, document, allplayers, undefined) {
 /**
  * Create the embedded class.
  *
@@ -14,7 +16,7 @@ allplayers.embed = function(options, defaults) {
     var self = this;
 
     // Add the proxy default.
-    defaults.proxy = 'https://www.allplayers.com';
+    defaults.proxy = options.base | 'https://platform.allplayers.com';
     defaults.proxy += '/sites/all/libraries/porthole/src/proxy.html';
 
     // Set the defaults.
@@ -37,3 +39,4 @@ allplayers.embed = function(options, defaults) {
 allplayers.embed.prototype.init = function() {
   document.proxy = this;
 };
+}(window, document, window.allplayers));
