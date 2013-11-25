@@ -1,534 +1,445 @@
-/*
-    json2.js
-    2013-05-26
-
-    Public Domain.
-
-    NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
-
-    See http://www.JSON.org/js.html
-
-
-    This code should be minified before deployment.
-    See http://javascript.crockford.com/jsmin.html
-
-    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO
-    NOT CONTROL.
-
-
-    This file creates a global JSON object containing two methods: stringify
-    and parse.
-
-        JSON.stringify(value, replacer, space)
-            value       any JavaScript value, usually an object or array.
-
-            replacer    an optional parameter that determines how object
-                        values are stringified for objects. It can be a
-                        function or an array of strings.
-
-            space       an optional parameter that specifies the indentation
-                        of nested structures. If it is omitted, the text will
-                        be packed without extra whitespace. If it is a number,
-                        it will specify the number of spaces to indent at each
-                        level. If it is a string (such as '\t' or '&nbsp;'),
-                        it contains the characters used to indent at each level.
-
-            This method produces a JSON text from a JavaScript value.
-
-            When an object value is found, if the object contains a toJSON
-            method, its toJSON method will be called and the result will be
-            stringified. A toJSON method does not serialize: it returns the
-            value represented by the name/value pair that should be serialized,
-            or undefined if nothing should be serialized. The toJSON method
-            will be passed the key associated with the value, and this will be
-            bound to the value
-
-            For example, this would serialize Dates as ISO strings.
-
-                Date.prototype.toJSON = function (key) {
-                    function f(n) {
-                        // Format integers to have at least two digits.
-                        return n < 10 ? '0' + n : n;
-                    }
-
-                    return this.getUTCFullYear()   + '-' +
-                         f(this.getUTCMonth() + 1) + '-' +
-                         f(this.getUTCDate())      + 'T' +
-                         f(this.getUTCHours())     + ':' +
-                         f(this.getUTCMinutes())   + ':' +
-                         f(this.getUTCSeconds())   + 'Z';
-                };
-
-            You can provide an optional replacer method. It will be passed the
-            key and value of each member, with this bound to the containing
-            object. The value that is returned from your method will be
-            serialized. If your method returns undefined, then the member will
-            be excluded from the serialization.
-
-            If the replacer parameter is an array of strings, then it will be
-            used to select the members to be serialized. It filters the results
-            such that only members with keys listed in the replacer array are
-            stringified.
-
-            Values that do not have JSON representations, such as undefined or
-            functions, will not be serialized. Such values in objects will be
-            dropped; in arrays they will be replaced with null. You can use
-            a replacer function to replace those with JSON values.
-            JSON.stringify(undefined) returns undefined.
-
-            The optional space parameter produces a stringification of the
-            value that is filled with line breaks and indentation to make it
-            easier to read.
-
-            If the space parameter is a non-empty string, then that string will
-            be used for indentation. If the space parameter is a number, then
-            the indentation will be that many spaces.
-
-            Example:
-
-            text = JSON.stringify(['e', {pluribus: 'unum'}]);
-            // text is '["e",{"pluribus":"unum"}]'
-
-
-            text = JSON.stringify(['e', {pluribus: 'unum'}], null, '\t');
-            // text is '[\n\t"e",\n\t{\n\t\t"pluribus": "unum"\n\t}\n]'
-
-            text = JSON.stringify([new Date()], function (key, value) {
-                return this[key] instanceof Date ?
-                    'Date(' + this[key] + ')' : value;
-            });
-            // text is '["Date(---current time---)"]'
-
-
-        JSON.parse(text, reviver)
-            This method parses a JSON text to produce an object or array.
-            It can throw a SyntaxError exception.
-
-            The optional reviver parameter is a function that can filter and
-            transform the results. It receives each of the keys and values,
-            and its return value is used instead of the original value.
-            If it returns what it received, then the structure is not modified.
-            If it returns undefined then the member is deleted.
-
-            Example:
-
-            // Parse the text. Values that look like ISO date strings will
-            // be converted to Date objects.
-
-            myData = JSON.parse(text, function (key, value) {
-                var a;
-                if (typeof value === 'string') {
-                    a =
-/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
-                    if (a) {
-                        return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
-                            +a[5], +a[6]));
-                    }
-                }
-                return value;
-            });
-
-            myData = JSON.parse('["Date(09/09/2001)"]', function (key, value) {
-                var d;
-                if (typeof value === 'string' &&
-                        value.slice(0, 5) === 'Date(' &&
-                        value.slice(-1) === ')') {
-                    d = new Date(value.slice(5, -1));
-                    if (d) {
-                        return d;
-                    }
-                }
-                return value;
-            });
-
-
-    This is a reference implementation. You are free to copy, modify, or
-    redistribute.
-*/
-
-/*jslint evil: true, regexp: true */
-
-/*members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
-    call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
-    getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
-    lastIndex, length, parse, prototype, push, replace, slice, stringify,
-    test, toJSON, toString, valueOf
-*/
-
-
-// Create a JSON object only if one does not already exist. We create the
-// methods in a closure to avoid creating global variables.
-
-if (typeof JSON !== 'object') {
-    JSON = {};
-}
-
-(function () {
-    'use strict';
-
-    function f(n) {
-        // Format integers to have at least two digits.
-        return n < 10 ? '0' + n : n;
-    }
-
-    if (typeof Date.prototype.toJSON !== 'function') {
-
-        Date.prototype.toJSON = function () {
-
-            return isFinite(this.valueOf())
-                ? this.getUTCFullYear()     + '-' +
-                    f(this.getUTCMonth() + 1) + '-' +
-                    f(this.getUTCDate())      + 'T' +
-                    f(this.getUTCHours())     + ':' +
-                    f(this.getUTCMinutes())   + ':' +
-                    f(this.getUTCSeconds())   + 'Z'
-                : null;
-        };
-
-        String.prototype.toJSON      =
-            Number.prototype.toJSON  =
-            Boolean.prototype.toJSON = function () {
-                return this.valueOf();
-            };
-    }
-
-    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-        gap,
-        indent,
-        meta = {    // table of character substitutions
-            '\b': '\\b',
-            '\t': '\\t',
-            '\n': '\\n',
-            '\f': '\\f',
-            '\r': '\\r',
-            '"' : '\\"',
-            '\\': '\\\\'
-        },
-        rep;
-
-
-    function quote(string) {
-
-// If the string contains no control characters, no quote characters, and no
-// backslash characters, then we can safely slap some quotes around it.
-// Otherwise we must also replace the offending characters with safe escape
-// sequences.
-
-        escapable.lastIndex = 0;
-        return escapable.test(string) ? '"' + string.replace(escapable, function (a) {
-            var c = meta[a];
-            return typeof c === 'string'
-                ? c
-                : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-        }) + '"' : '"' + string + '"';
-    }
-
-
-    function str(key, holder) {
-
-// Produce a string from holder[key].
-
-        var i,          // The loop counter.
-            k,          // The member key.
-            v,          // The member value.
-            length,
-            mind = gap,
-            partial,
-            value = holder[key];
-
-// If the value has a toJSON method, call it to obtain a replacement value.
-
-        if (value && typeof value === 'object' &&
-                typeof value.toJSON === 'function') {
-            value = value.toJSON(key);
-        }
-
-// If we were called with a replacer function, then call the replacer to
-// obtain a replacement value.
-
-        if (typeof rep === 'function') {
-            value = rep.call(holder, key, value);
-        }
-
-// What happens next depends on the value's type.
-
-        switch (typeof value) {
-        case 'string':
-            return quote(value);
-
-        case 'number':
-
-// JSON numbers must be finite. Encode non-finite numbers as null.
-
-            return isFinite(value) ? String(value) : 'null';
-
-        case 'boolean':
-        case 'null':
-
-// If the value is a boolean or null, convert it to a string. Note:
-// typeof null does not produce 'null'. The case is included here in
-// the remote chance that this gets fixed someday.
-
-            return String(value);
-
-// If the type is 'object', we might be dealing with an object or an array or
-// null.
-
-        case 'object':
-
-// Due to a specification blunder in ECMAScript, typeof null is 'object',
-// so watch out for that case.
-
-            if (!value) {
-                return 'null';
-            }
-
-// Make an array to hold the partial results of stringifying this object value.
-
-            gap += indent;
-            partial = [];
-
-// Is the value an array?
-
-            if (Object.prototype.toString.apply(value) === '[object Array]') {
-
-// The value is an array. Stringify every element. Use null as a placeholder
-// for non-JSON values.
-
-                length = value.length;
-                for (i = 0; i < length; i += 1) {
-                    partial[i] = str(i, value) || 'null';
-                }
-
-// Join all of the elements together, separated with commas, and wrap them in
-// brackets.
-
-                v = partial.length === 0
-                    ? '[]'
-                    : gap
-                    ? '[\n' + gap + partial.join(',\n' + gap) + '\n' + mind + ']'
-                    : '[' + partial.join(',') + ']';
-                gap = mind;
-                return v;
-            }
-
-// If the replacer is an array, use it to select the members to be stringified.
-
-            if (rep && typeof rep === 'object') {
-                length = rep.length;
-                for (i = 0; i < length; i += 1) {
-                    if (typeof rep[i] === 'string') {
-                        k = rep[i];
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
-                }
-            } else {
-
-// Otherwise, iterate through all of the keys in the object.
-
-                for (k in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, k)) {
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
-                }
-            }
-
-// Join all of the member texts together, separated with commas,
-// and wrap them in braces.
-
-            v = partial.length === 0
-                ? '{}'
-                : gap
-                ? '{\n' + gap + partial.join(',\n' + gap) + '\n' + mind + '}'
-                : '{' + partial.join(',') + '}';
-            gap = mind;
-            return v;
-        }
-    }
-
-// If the JSON object does not yet have a stringify method, give it one.
-
-    if (typeof JSON.stringify !== 'function') {
-        JSON.stringify = function (value, replacer, space) {
-
-// The stringify method takes a value and an optional replacer, and an optional
-// space parameter, and returns a JSON text. The replacer can be a function
-// that can replace values, or an array of strings that will select the keys.
-// A default replacer method can be provided. Use of the space parameter can
-// produce text that is more easily readable.
-
-            var i;
-            gap = '';
-            indent = '';
-
-// If the space parameter is a number, make an indent string containing that
-// many spaces.
-
-            if (typeof space === 'number') {
-                for (i = 0; i < space; i += 1) {
-                    indent += ' ';
-                }
-
-// If the space parameter is a string, it will be used as the indent string.
-
-            } else if (typeof space === 'string') {
-                indent = space;
-            }
-
-// If there is a replacer, it must be a function or an array.
-// Otherwise, throw an error.
-
-            rep = replacer;
-            if (replacer && typeof replacer !== 'function' &&
-                    (typeof replacer !== 'object' ||
-                    typeof replacer.length !== 'number')) {
-                throw new Error('JSON.stringify');
-            }
-
-// Make a fake root object containing our value under the key of ''.
-// Return the result of stringifying the value.
-
-            return str('', {'': value});
-        };
-    }
-
-
-// If the JSON object does not yet have a parse method, give it one.
-
-    if (typeof JSON.parse !== 'function') {
-        JSON.parse = function (text, reviver) {
-
-// The parse method takes a text and an optional reviver function, and returns
-// a JavaScript value if the text is a valid JSON text.
-
-            var j;
-
-            function walk(holder, key) {
-
-// The walk method is used to recursively walk the resulting structure so
-// that modifications can be made.
-
-                var k, v, value = holder[key];
-                if (value && typeof value === 'object') {
-                    for (k in value) {
-                        if (Object.prototype.hasOwnProperty.call(value, k)) {
-                            v = walk(value, k);
-                            if (v !== undefined) {
-                                value[k] = v;
-                            } else {
-                                delete value[k];
-                            }
-                        }
-                    }
-                }
-                return reviver.call(holder, key, value);
-            }
-
-
-// Parsing happens in four stages. In the first stage, we replace certain
-// Unicode characters with escape sequences. JavaScript handles many characters
-// incorrectly, either silently deleting them, or treating them as line endings.
-
-            text = String(text);
-            cx.lastIndex = 0;
-            if (cx.test(text)) {
-                text = text.replace(cx, function (a) {
-                    return '\\u' +
-                        ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-                });
-            }
-
-// In the second stage, we run the text against regular expressions that look
-// for non-JSON patterns. We are especially concerned with '()' and 'new'
-// because they can cause invocation, and '=' because it can cause mutation.
-// But just to be safe, we want to reject all unexpected forms.
-
-// We split the second stage into 4 regexp operations in order to work around
-// crippling inefficiencies in IE's and Safari's regexp engines. First we
-// replace the JSON backslash pairs with '@' (a non-JSON character). Second, we
-// replace all simple value tokens with ']' characters. Third, we delete all
-// open brackets that follow a colon or comma or that begin the text. Finally,
-// we look to see that the remaining characters are only whitespace or ']' or
-// ',' or ':' or '{' or '}'. If that is so, then the text is safe for eval.
-
-            if (/^[\],:{}\s]*$/
-                    .test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@')
-                        .replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
-                        .replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
-
-// In the third stage we use the eval function to compile the text into a
-// JavaScript structure. The '{' operator is subject to a syntactic ambiguity
-// in JavaScript: it can begin a block or an object literal. We wrap the text
-// in parens to eliminate the ambiguity.
-
-                j = eval('(' + text + ')');
-
-// In the optional fourth stage, we recursively walk the new structure, passing
-// each name/value pair to a reviver function for possible transformation.
-
-                return typeof reviver === 'function'
-                    ? walk({'': j}, '')
-                    : j;
-            }
-
-// If the text is not JSON parseable, then a SyntaxError is thrown.
-
-            throw new SyntaxError('JSON.parse');
-        };
-    }
-}());
-(function(){var a=false,b=/xyz/.test(function(){xyz})?/\b_super\b/:/.*/;this.Class=function(){};Class.extend=function(g){var f=this.prototype;a=true;var e=new this();a=false;for(var d in g){e[d]=typeof g[d]=="function"&&typeof f[d]=="function"&&b.test(g[d])?(function(h,i){return function(){var k=this._super;this._super=f[h];var j=i.apply(this,arguments);this._super=k;return j}})(d,g[d]):g[d]}function c(){if(!a&&this.init){this.init.apply(this,arguments)}}c.prototype=e;c.prototype.constructor=c;c.extend=arguments.callee;return c}})();(function(c){var b={trace:function(d){if(c.console!==undefined){c.console.log("Porthole: "+d)}},error:function(d){if(c.console!==undefined){c.console.error("Porthole: "+d)}}};b.WindowProxy=function(){};b.WindowProxy.prototype={post:function(e,d){},addEventListener:function(d){},removeEventListener:function(d){}};b.WindowProxyBase=Class.extend({init:function(d){if(d===undefined){d=""}this.targetWindowName=d;this.origin=c.location.protocol+"//"+c.location.host;this.eventListeners=[]},getTargetWindowName:function(){return this.targetWindowName},getOrigin:function(){return this.origin},getTargetWindow:function(){return b.WindowProxy.getTargetWindow(this.targetWindowName)},post:function(e,d){if(d===undefined){d="*"}this.dispatchMessage({data:e,sourceOrigin:this.getOrigin(),targetOrigin:d,sourceWindowName:c.name,targetWindowName:this.getTargetWindowName()})},addEventListener:function(d){this.eventListeners.push(d);return d},removeEventListener:function(g){var d;try{d=this.eventListeners.indexOf(g);this.eventListeners.splice(d,1)}catch(h){this.eventListeners=[]}},dispatchEvent:function(f){var d;for(d=0;d<this.eventListeners.length;d++){try{this.eventListeners[d](f)}catch(g){}}}});b.WindowProxyLegacy=b.WindowProxyBase.extend({init:function(d,e){this._super(e);if(d!==null){this.proxyIFrameName=this.targetWindowName+"ProxyIFrame";this.proxyIFrameLocation=d;this.proxyIFrameElement=this.createIFrameProxy()}else{this.proxyIFrameElement=null;throw new Error("proxyIFrameUrl can't be null")}},createIFrameProxy:function(){var d=document.createElement("iframe");d.setAttribute("id",this.proxyIFrameName);d.setAttribute("name",this.proxyIFrameName);d.setAttribute("src",this.proxyIFrameLocation);d.setAttribute("frameBorder","1");d.setAttribute("scrolling","auto");d.setAttribute("width",30);d.setAttribute("height",30);d.setAttribute("style","position: absolute; left: -100px; top:0px;");if(d.style.setAttribute){d.style.setAttribute("cssText","position: absolute; left: -100px; top:0px;")}document.body.appendChild(d);return d},dispatchMessage:function(e){var d=c.encodeURIComponent;if(this.proxyIFrameElement){var f=this.proxyIFrameLocation+"#"+d(b.WindowProxy.serialize(e));this.proxyIFrameElement.setAttribute("src",f);this.proxyIFrameElement.height=this.proxyIFrameElement.height>50?50:100}}});b.WindowProxyHTML5=b.WindowProxyBase.extend({init:function(d,e){this._super(e);this.eventListenerCallback=null},dispatchMessage:function(d){this.getTargetWindow().postMessage(b.WindowProxy.serialize(d),d.targetOrigin)},addEventListener:function(e){if(this.eventListeners.length===0){var d=this;this.eventListenerCallback=function(f){d.eventListener(d,f)};c.addEventListener("message",this.eventListenerCallback,false)}return this._super(e)},removeEventListener:function(d){this._super(d);if(this.eventListeners.length===0){c.removeEventListener("message",this.eventListenerCallback);this.eventListenerCallback=null}},eventListener:function(e,d){var f=b.WindowProxy.unserialize(d.data);if(f&&(e.targetWindowName==""||f.sourceWindowName==e.targetWindowName)){e.dispatchEvent(new b.MessageEvent(f.data,d.origin,e))}}});if(typeof c.postMessage!=="function"){b.trace("Using legacy browser support");b.WindowProxy=b.WindowProxyLegacy.extend({})}else{b.trace("Using built-in browser support");b.WindowProxy=b.WindowProxyHTML5.extend({})}b.WindowProxy.serialize=function(d){if(typeof JSON==="undefined"){throw new Error("Porthole serialization depends on JSON!")}return JSON.stringify(d)};b.WindowProxy.unserialize=function(g){if(typeof JSON==="undefined"){throw new Error("Porthole unserialization dependens on JSON!")}try{var d=JSON.parse(g)}catch(f){return false}return d};b.WindowProxy.getTargetWindow=function(d){if(d===""){return top}else{if(d==="top"||d==="parent"){return c[d]}}return parent.frames[d]};b.MessageEvent=function a(f,d,e){this.data=f;this.origin=d;this.source=e};b.WindowProxyDispatcher={forwardMessageEvent:function(i){var g,h=c.decodeURIComponent,f,d;if(document.location.hash.length>0){g=b.WindowProxy.unserialize(h(document.location.hash.substr(1)));f=b.WindowProxy.getTargetWindow(g.targetWindowName);d=b.WindowProxyDispatcher.findWindowProxyObjectInWindow(f,g.sourceWindowName);if(d){if(d.origin===g.targetOrigin||g.targetOrigin==="*"){d.dispatchEvent(new b.MessageEvent(g.data,g.sourceOrigin,d))}else{b.error("Target origin "+d.origin+" does not match desired target of "+g.targetOrigin)}}else{b.error("Could not find window proxy object on the target window")}}},findWindowProxyObjectInWindow:function(d,g){var f;if(d.RuntimeObject){d=d.RuntimeObject()}if(d){for(f in d){if(d.hasOwnProperty(f)){try{if(d[f]!==null&&typeof d[f]==="object"&&d[f] instanceof d.Porthole.WindowProxy&&d[f].getTargetWindowName()===g){return d[f]}}catch(h){}}}}return null},start:function(){if(c.addEventListener){c.addEventListener("resize",b.WindowProxyDispatcher.forwardMessageEvent,false)}else{if(document.body.attachEvent){c.attachEvent("onresize",b.WindowProxyDispatcher.forwardMessageEvent)}else{b.error("Cannot attach resize event")}}}};if(typeof c.exports!=="undefined"){c.exports.Porthole=b}else{c.Porthole=b}})(this);/** The global allplayers object. */
+/**
+ The MIT License
+
+ Copyright (c) 2010 Daniel Park (http://metaweb.com, http://postmessage.freebaseapps.com)
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ **/
+var NO_JQUERY = {};
+(function(window, $, undefined) {
+
+     if (!("console" in window)) {
+         var c = window.console = {};
+         c.log = c.warn = c.error = c.debug = function(){};
+     }
+
+     if ($ === NO_JQUERY) {
+         // jQuery is optional
+         $ = {
+             fn: {},
+             extend: function() {
+                 var a = arguments[0];
+                 for (var i=1,len=arguments.length; i<len; i++) {
+                     var b = arguments[i];
+                     for (var prop in b) {
+                         a[prop] = b[prop];
+                     }
+                 }
+                 return a;
+             }
+         };
+     }
+
+     $.fn.pm = function() {
+         console.log("usage: \nto send:    $.pm(options)\nto receive: $.pm.bind(type, fn, [origin])");
+         return this;
+     };
+
+     // send postmessage
+     $.pm = window.pm = function(options) {
+         pm.send(options);
+     };
+
+     // bind postmessage handler
+     $.pm.bind = window.pm.bind = function(type, fn, origin, hash, async_reply) {
+         pm.bind(type, fn, origin, hash, async_reply === true);
+     };
+
+     // unbind postmessage handler
+     $.pm.unbind = window.pm.unbind = function(type, fn) {
+         pm.unbind(type, fn);
+     };
+
+     // default postmessage origin on bind
+     $.pm.origin = window.pm.origin = null;
+
+     // default postmessage polling if using location hash to pass postmessages
+     $.pm.poll = window.pm.poll = 200;
+
+     var pm = {
+
+         send: function(options) {
+             var o = $.extend({}, pm.defaults, options),
+             target = o.target;
+             if (!o.target) {
+                 console.warn("postmessage target window required");
+                 return;
+             }
+             if (!o.type) {
+                 console.warn("postmessage type required");
+                 return;
+             }
+             var msg = {data:o.data, type:o.type};
+             if (o.success) {
+                 msg.callback = pm._callback(o.success);
+             }
+             if (o.error) {
+                 msg.errback = pm._callback(o.error);
+             }
+             if (("postMessage" in target) && !o.hash) {
+                 pm._bind();
+                 target.postMessage(JSON.stringify(msg), o.origin || '*');
+             }
+             else {
+                 pm.hash._bind();
+                 pm.hash.send(o, msg);
+             }
+         },
+
+         bind: function(type, fn, origin, hash, async_reply) {
+           pm._replyBind ( type, fn, origin, hash, async_reply );
+         },
+       
+         _replyBind: function(type, fn, origin, hash, isCallback) {
+           if (("postMessage" in window) && !hash) {
+               pm._bind();
+           }
+           else {
+               pm.hash._bind();
+           }
+           var l = pm.data("listeners.postmessage");
+           if (!l) {
+               l = {};
+               pm.data("listeners.postmessage", l);
+           }
+           var fns = l[type];
+           if (!fns) {
+               fns = [];
+               l[type] = fns;
+           }
+           fns.push({fn:fn, callback: isCallback, origin:origin || $.pm.origin});
+         },
+
+         unbind: function(type, fn) {
+             var l = pm.data("listeners.postmessage");
+             if (l) {
+                 if (type) {
+                     if (fn) {
+                         // remove specific listener
+                         var fns = l[type];
+                         if (fns) {
+                             var m = [];
+                             for (var i=0,len=fns.length; i<len; i++) {
+                                 var o = fns[i];
+                                 if (o.fn !== fn) {
+                                     m.push(o);
+                                 }
+                             }
+                             l[type] = m;
+                         }
+                     }
+                     else {
+                         // remove all listeners by type
+                         delete l[type];
+                     }
+                 }
+                 else {
+                     // unbind all listeners of all type
+                     for (var i in l) {
+                       delete l[i];
+                     }
+                 }
+             }
+         },
+
+         data: function(k, v) {
+             if (v === undefined) {
+                 return pm._data[k];
+             }
+             pm._data[k] = v;
+             return v;
+         },
+
+         _data: {},
+
+         _CHARS: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split(''),
+
+         _random: function() {
+             var r = [];
+             for (var i=0; i<32; i++) {
+                 r[i] = pm._CHARS[0 | Math.random() * 32];
+             };
+             return r.join("");
+         },
+
+         _callback: function(fn) {
+             var cbs = pm.data("callbacks.postmessage");
+             if (!cbs) {
+                 cbs = {};
+                 pm.data("callbacks.postmessage", cbs);
+             }
+             var r = pm._random();
+             cbs[r] = fn;
+             return r;
+         },
+
+         _bind: function() {
+             // are we already listening to message events on this w?
+             if (!pm.data("listening.postmessage")) {
+                 if (window.addEventListener) {
+                     window.addEventListener("message", pm._dispatch, false);
+                 }
+                 else if (window.attachEvent) {
+                     window.attachEvent("onmessage", pm._dispatch);
+                 }
+                 pm.data("listening.postmessage", 1);
+             }
+         },
+
+         _dispatch: function(e) {
+             //console.log("$.pm.dispatch", e, this);
+             try {
+                 var msg = JSON.parse(e.data);
+             }
+             catch (ex) {
+                 console.warn("postmessage data invalid json: ", ex);
+                 return;
+             }
+             if (!msg.type) {
+                 console.warn("postmessage message type required");
+                 return;
+             }
+             var cbs = pm.data("callbacks.postmessage") || {},
+             cb = cbs[msg.type];
+             if (cb) {
+                 cb(msg.data);
+             }
+             else {
+                 var l = pm.data("listeners.postmessage") || {};
+                 var fns = l[msg.type] || [];
+                 for (var i=0,len=fns.length; i<len; i++) {
+                     var o = fns[i];
+                     if (o.origin && o.origin !== '*' && e.origin !== o.origin) {
+                         console.warn("postmessage message origin mismatch", e.origin, o.origin);
+                         if (msg.errback) {
+                             // notify post message errback
+                             var error = {
+                                 message: "postmessage origin mismatch",
+                                 origin: [e.origin, o.origin]
+                             };
+                             pm.send({target:e.source, data:error, type:msg.errback});
+                         }
+                         continue;
+                     }
+
+                     function sendReply ( data ) {
+                       if (msg.callback) {
+                           pm.send({target:e.source, data:data, type:msg.callback});
+                       }
+                     }
+                     
+                     try {
+                         if ( o.callback ) {
+                           o.fn(msg.data, sendReply, e);
+                         } else {
+                           sendReply ( o.fn(msg.data, e) );
+                         }
+                     }
+                     catch (ex) {
+                         if (msg.errback) {
+                             // notify post message errback
+                             pm.send({target:e.source, data:ex, type:msg.errback});
+                         } else {
+                             throw ex;
+                         }
+                     }
+                 };
+             }
+         }
+     };
+
+     // location hash polling
+     pm.hash = {
+
+         send: function(options, msg) {
+             //console.log("hash.send", target_window, options, msg);
+             var target_window = options.target,
+             target_url = options.url;
+             if (!target_url) {
+                 console.warn("postmessage target window url is required");
+                 return;
+             }
+             target_url = pm.hash._url(target_url);
+             var source_window,
+             source_url = pm.hash._url(window.location.href);
+             if (window == target_window.parent) {
+                 source_window = "parent";
+             }
+             else {
+                 try {
+                     for (var i=0,len=parent.frames.length; i<len; i++) {
+                         var f = parent.frames[i];
+                         if (f == window) {
+                             source_window = i;
+                             break;
+                         }
+                     };
+                 }
+                 catch(ex) {
+                     // Opera: security error trying to access parent.frames x-origin
+                     // juse use window.name
+                     source_window = window.name;
+                 }
+             }
+             if (source_window == null) {
+                 console.warn("postmessage windows must be direct parent/child windows and the child must be available through the parent window.frames list");
+                 return;
+             }
+             var hashmessage = {
+                 "x-requested-with": "postmessage",
+                 source: {
+                     name: source_window,
+                     url: source_url
+                 },
+                 postmessage: msg
+             };
+             var hash_id = "#x-postmessage-id=" + pm._random();
+             target_window.location = target_url + hash_id + encodeURIComponent(JSON.stringify(hashmessage));
+         },
+
+         _regex: /^\#x\-postmessage\-id\=(\w{32})/,
+
+         _regex_len: "#x-postmessage-id=".length + 32,
+
+         _bind: function() {
+             // are we already listening to message events on this w?
+             if (!pm.data("polling.postmessage")) {
+                 setInterval(function() {
+                                 var hash = "" + window.location.hash,
+                                 m = pm.hash._regex.exec(hash);
+                                 if (m) {
+                                     var id = m[1];
+                                     if (pm.hash._last !== id) {
+                                         pm.hash._last = id;
+                                         pm.hash._dispatch(hash.substring(pm.hash._regex_len));
+                                     }
+                                 }
+                             }, $.pm.poll || 200);
+                 pm.data("polling.postmessage", 1);
+             }
+         },
+
+         _dispatch: function(hash) {
+             if (!hash) {
+                 return;
+             }
+             try {
+                 hash = JSON.parse(decodeURIComponent(hash));
+                 if (!(hash['x-requested-with'] === 'postmessage' &&
+                       hash.source && hash.source.name != null && hash.source.url && hash.postmessage)) {
+                     // ignore since hash could've come from somewhere else
+                     return;
+                 }
+             }
+             catch (ex) {
+                 // ignore since hash could've come from somewhere else
+                 return;
+             }
+             var msg = hash.postmessage,
+             cbs = pm.data("callbacks.postmessage") || {},
+             cb = cbs[msg.type];
+             if (cb) {
+                 cb(msg.data);
+             }
+             else {
+                 var source_window;
+                 if (hash.source.name === "parent") {
+                     source_window = window.parent;
+                 }
+                 else {
+                     source_window = window.frames[hash.source.name];
+                 }
+                 var l = pm.data("listeners.postmessage") || {};
+                 var fns = l[msg.type] || [];
+                 for (var i=0,len=fns.length; i<len; i++) {
+                     var o = fns[i];
+                     if (o.origin) {
+                         var origin = /https?\:\/\/[^\/]*/.exec(hash.source.url)[0];
+                         if (o.origin !== '*' && origin !== o.origin) {
+                             console.warn("postmessage message origin mismatch", origin, o.origin);
+                             if (msg.errback) {
+                                 // notify post message errback
+                                 var error = {
+                                     message: "postmessage origin mismatch",
+                                     origin: [origin, o.origin]
+                                 };
+                                 pm.send({target:source_window, data:error, type:msg.errback, hash:true, url:hash.source.url});
+                             }
+                             continue;
+                         }
+                     }
+
+                     function sendReply ( data ) {
+                       if (msg.callback) {
+                         pm.send({target:source_window, data:data, type:msg.callback, hash:true, url:hash.source.url});
+                       }
+                     }
+                     
+                     try {
+                         if ( o.callback ) {
+                           o.fn(msg.data, sendReply);
+                         } else {
+                           sendReply ( o.fn(msg.data) );
+                         }
+                     }
+                     catch (ex) {
+                         if (msg.errback) {
+                             // notify post message errback
+                             pm.send({target:source_window, data:ex, type:msg.errback, hash:true, url:hash.source.url});
+                         } else {
+                             throw ex;
+                         }
+                     }
+                 };
+             }
+         },
+
+         _url: function(url) {
+             // url minus hash part
+             return (""+url).replace(/#.*$/, "");
+         }
+
+     };
+
+     $.extend(pm, {
+                  defaults: {
+                      target: null,  /* target window (required) */
+                      url: null,     /* target window url (required if no window.postMessage or hash == true) */
+                      type: null,    /* message type (required) */
+                      data: null,    /* message data (required) */
+                      success: null, /* success callback (optional) */
+                      error: null,   /* error callback (optional) */
+                      origin: "*",   /* postmessage origin (optional) */
+                      hash: false    /* use location hash for message passing (optional) */
+                  }
+              });
+
+ })(this, typeof jQuery === "undefined" ? NO_JQUERY : jQuery);
+
+/**
+ * http://www.JSON.org/json2.js
+ **/
+if (! ("JSON" in window && window.JSON)){JSON={}}(function(){function f(n){return n<10?"0"+n:n}if(typeof Date.prototype.toJSON!=="function"){Date.prototype.toJSON=function(key){return this.getUTCFullYear()+"-"+f(this.getUTCMonth()+1)+"-"+f(this.getUTCDate())+"T"+f(this.getUTCHours())+":"+f(this.getUTCMinutes())+":"+f(this.getUTCSeconds())+"Z"};String.prototype.toJSON=Number.prototype.toJSON=Boolean.prototype.toJSON=function(key){return this.valueOf()}}var cx=/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,escapable=/[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,gap,indent,meta={"\b":"\\b","\t":"\\t","\n":"\\n","\f":"\\f","\r":"\\r",'"':'\\"',"\\":"\\\\"},rep;function quote(string){escapable.lastIndex=0;return escapable.test(string)?'"'+string.replace(escapable,function(a){var c=meta[a];return typeof c==="string"?c:"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})+'"':'"'+string+'"'}function str(key,holder){var i,k,v,length,mind=gap,partial,value=holder[key];if(value&&typeof value==="object"&&typeof value.toJSON==="function"){value=value.toJSON(key)}if(typeof rep==="function"){value=rep.call(holder,key,value)}switch(typeof value){case"string":return quote(value);case"number":return isFinite(value)?String(value):"null";case"boolean":case"null":return String(value);case"object":if(!value){return"null"}gap+=indent;partial=[];if(Object.prototype.toString.apply(value)==="[object Array]"){length=value.length;for(i=0;i<length;i+=1){partial[i]=str(i,value)||"null"}v=partial.length===0?"[]":gap?"[\n"+gap+partial.join(",\n"+gap)+"\n"+mind+"]":"["+partial.join(",")+"]";gap=mind;return v}if(rep&&typeof rep==="object"){length=rep.length;for(i=0;i<length;i+=1){k=rep[i];if(typeof k==="string"){v=str(k,value);if(v){partial.push(quote(k)+(gap?": ":":")+v)}}}}else{for(k in value){if(Object.hasOwnProperty.call(value,k)){v=str(k,value);if(v){partial.push(quote(k)+(gap?": ":":")+v)}}}}v=partial.length===0?"{}":gap?"{\n"+gap+partial.join(",\n"+gap)+"\n"+mind+"}":"{"+partial.join(",")+"}";gap=mind;return v}}if(typeof JSON.stringify!=="function"){JSON.stringify=function(value,replacer,space){var i;gap="";indent="";if(typeof space==="number"){for(i=0;i<space;i+=1){indent+=" "}}else{if(typeof space==="string"){indent=space}}rep=replacer;if(replacer&&typeof replacer!=="function"&&(typeof replacer!=="object"||typeof replacer.length!=="number")){throw new Error("JSON.stringify")}return str("",{"":value})}}if(typeof JSON.parse!=="function"){JSON.parse=function(text,reviver){var j;function walk(holder,key){var k,v,value=holder[key];if(value&&typeof value==="object"){for(k in value){if(Object.hasOwnProperty.call(value,k)){v=walk(value,k);if(v!==undefined){value[k]=v}else{delete value[k]}}}}return reviver.call(holder,key,value)}cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(a){return"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})}if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,"@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,"]").replace(/(?:^|:|,)(?:\s*\[)+/g,""))){j=eval("("+text+")");return typeof reviver==="function"?walk({"":j},""):j}throw new SyntaxError("JSON.parse")}}}());
+/** The global allplayers object. */
 window.allplayers = window.allplayers || {};
 
 (function(window, document, allplayers, undefined) {
-/**
- * Create the embedded class.
- *
- * @param {object} options The options for this embed library.
- * @param {object} defaults The default params for this libarary.
- * @this The allplayers.embed object.
- */
-allplayers.embed = function(options, defaults) {
-  if (defaults) {
-
-    // Keep track of the self pointer.
-    var self = this;
-
-    // Add the proxy default.
-    defaults.proxy = options.base | 'https://platform.allplayers.com';
-    defaults.proxy += '/sites/all/libraries/porthole/src/proxy.html';
-
-    // Set the defaults.
-    options = options || {};
-    for (var name in defaults) {
-      if (!options.hasOwnProperty(name)) {
-        options[name] = defaults[name];
-      }
-    }
-
-    // Set the options and initialize.
-    this.options = options;
-    this.init();
-  }
-};
-
-/**
- * Initialize this embed code.
- */
-allplayers.embed.prototype.init = function() {
-  document.proxy = this;
-};
-}(window, document, window.allplayers));
-/** The global allplayers object. */
-window.allplayers = window.allplayers || {embed: {}};
-(function(window, document, allplayers, $, undefined) {
 
   /*
    * Copyright (c) 2010 Nick Galbreath
@@ -555,20 +466,125 @@ window.allplayers = window.allplayers || {embed: {}};
    * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
    * OTHER DEALINGS IN THE SOFTWARE.
    */
-  base64 = {};
+
+  /* base64 encode/decode compatible with window.btoa/atob
+   *
+   * window.atob/btoa is a Firefox extension to convert binary data (the "b")
+   * to base64 (ascii, the "a").
+   *
+   * It is also found in Safari and Chrome.  It is not available in IE.
+   *
+   * if (!window.btoa) window.btoa = base64.encode
+   * if (!window.atob) window.atob = base64.decode
+   *
+   * The original spec's for atob/btoa are a bit lacking
+   * https://developer.mozilla.org/en/DOM/window.atob
+   * https://developer.mozilla.org/en/DOM/window.btoa
+   *
+   * window.btoa and base64.encode takes a string where charCodeAt is [0,255]
+   * If any character is not [0,255], then an DOMException(5) is thrown.
+   *
+   * window.atob and base64.decode take a base64-encoded string
+   * If the input length is not a multiple of 4, or contains invalid characters
+   *   then an DOMException(5) is thrown.
+   */
+  var base64 = {};
   base64.PADCHAR = '=';
   base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789+/';
+
+  base64.makeDOMException = function() {
+    // sadly in FF,Safari,Chrome you can't make a DOMException
+    var e, tmp;
+
+    try {
+      return new DOMException(DOMException.INVALID_CHARACTER_ERR);
+    } catch (tmp) {
+      // not available, just passback a duck-typed equiv
+      // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error
+      // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/prototype
+      var ex = new Error('DOM Exception 5');
+
+      // ex.number and ex.description is IE-specific.
+      ex.code = ex.number = 5;
+      ex.name = ex.description = 'INVALID_CHARACTER_ERR';
+
+      // Safari/Chrome output format
+      ex.toString = function() {
+        return 'Error: ' + ex.name + ': ' + ex.message;
+      };
+      return ex;
+    }
+  };
+
+  base64.getbyte64 = function(s, i) {
+    // This is oddly fast, except on Chrome/V8.
+    //  Minimal or no improvement in performance by using a
+    //   object with properties mapping chars to value (eg. 'A': 0)
+    var idx = base64.ALPHA.indexOf(s.charAt(i));
+    if (idx === -1) {
+      throw base64.makeDOMException();
+    }
+    return idx;
+  };
+
+  base64.decode = function(s) {
+    // convert to string
+    s = '' + s;
+    var getbyte64 = base64.getbyte64;
+    var pads, i, b10;
+    var imax = s.length;
+    if (imax === 0) {
+      return s;
+    }
+
+    if (imax % 4 !== 0) {
+      throw base64.makeDOMException();
+    }
+
+    pads = 0;
+    if (s.charAt(imax - 1) === base64.PADCHAR) {
+      pads = 1;
+      if (s.charAt(imax - 2) === base64.PADCHAR) {
+        pads = 2;
+      }
+      // either way, we want to ignore this last block
+      imax -= 4;
+    }
+
+    var x = [];
+    for (i = 0; i < imax; i += 4) {
+      b10 = (getbyte64(s, i) << 18) | (getbyte64(s, i + 1) << 12) |
+        (getbyte64(s, i + 2) << 6) | getbyte64(s, i + 3);
+      x.push(String.fromCharCode(b10 >> 16, (b10 >> 8) & 0xff, b10 & 0xff));
+    }
+
+    switch (pads) {
+      case 1:
+        b10 = (getbyte64(s, i) << 18);
+        b10 |= (getbyte64(s, i + 1) << 12);
+        b10 |= (getbyte64(s, i + 2) << 6);
+        x.push(String.fromCharCode(b10 >> 16, (b10 >> 8) & 0xff));
+        break;
+      case 2:
+        b10 = (getbyte64(s, i) << 18) | (getbyte64(s, i + 1) << 12);
+        x.push(String.fromCharCode(b10 >> 16));
+        break;
+    }
+    return x.join('');
+  };
+
   base64.getbyte = function(s, i) {
     var x = s.charCodeAt(i);
     if (x > 255) {
-      throw 'INVALID_CHARACTER_ERR: DOM Exception 5';
+      throw base64.makeDOMException();
     }
     return x;
   };
+
   base64.encode = function(s) {
-    if (arguments.length != 1) {
-      throw 'SyntaxError: Not enough arguments';
+    if (arguments.length !== 1) {
+      throw new SyntaxError('Not enough arguments');
     }
     var padchar = base64.PADCHAR;
     var alpha = base64.ALPHA;
@@ -582,7 +598,7 @@ window.allplayers = window.allplayers || {embed: {}};
 
     var imax = s.length - s.length % 3;
 
-    if (s.length == 0) {
+    if (s.length === 0) {
       return s;
     }
     for (i = 0; i < imax; i += 3) {
@@ -609,6 +625,62 @@ window.allplayers = window.allplayers || {embed: {}};
     return x.join('');
   };
 
+  allplayers.base64 = base64;
+
+/**
+ * Create the embedded class.
+ *
+ * @param {object} options The options for this embed library.
+ * @param {object} defaults The default params for this libarary.
+ * @this The allplayers.embed object.
+ */
+allplayers.embed = function(options, defaults) {
+  if (defaults) {
+
+    // Keep track of the self pointer.
+    var self = this;
+
+    // Set the defaults.
+    options = options || {};
+    for (var name in defaults) {
+      if (!options.hasOwnProperty(name)) {
+        options[name] = defaults[name];
+      }
+    }
+
+    // Set the options and initialize.
+    this.options = options;
+    this.init();
+  }
+};
+
+/**
+ * Return the value of a parameter.
+ *
+ * @param {string} name The name of the parameter to get.
+ * @return {string} The value of the parameter.
+ */
+allplayers.embed.getParam = function(name) {
+  name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
+  var regexS = '[\\?&]' + name + '=([^&#]*)';
+  var regex = new RegExp(regexS);
+  var results = regex.exec(window.location.search);
+  if (results == null) {
+    return '';
+  }
+  else {
+    return decodeURIComponent(results[1].replace(/\+/g, ' '));
+  }
+};
+
+/**
+ * Initialize this embed code.
+ */
+allplayers.embed.prototype.init = function() {};
+}(window, document, window.allplayers));
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {embed: {}};
+(function(window, document, allplayers, $, undefined) {
   if ($ && !$.fn.allplayers_client) {
 
     /**
@@ -659,31 +731,18 @@ window.allplayers = window.allplayers || {embed: {}};
   allplayers.embed.client.prototype.constructor = allplayers.embed.client;
 
   /**
-   * Return the value of a parameter.
-   *
-   * @param {string} name The name of the parameter to get.
-   * @return {string} The value of the parameter.
-   */
-  allplayers.embed.client.getParam = function(name) {
-    name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
-    var regexS = '[\\?&]' + name + '=([^&#]*)';
-    var regex = new RegExp(regexS);
-    var results = regex.exec(window.location.search);
-    if (results == null) {
-      return '';
-    }
-    else {
-      return decodeURIComponent(results[1].replace(/\+/g, ' '));
-    }
-  };
-
-  /**
    * Initialize the allplayer embed library.
    */
   allplayers.embed.client.prototype.init = function() {
 
     // Call the parent.
     allplayers.embed.prototype.init.call(this);
+
+    // Get the base URL of the embed page.
+    this.baseURL = 'https://platform.allplayers.com';
+    if (this.options.base) {
+      this.baseURL = this.options.base;
+    }
 
     // Say we are loading.
     this.isLoading = true;
@@ -727,7 +786,7 @@ window.allplayers = window.allplayers || {embed: {}};
     var source = '';
 
     // See if they provide their own query.
-    var q = allplayers.embed.client.getParam('apq');
+    var q = allplayers.embed.getParam('apq');
     if (q) {
       source = this.options.base + '/' + q;
     }
@@ -762,7 +821,10 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // Add the embed source as our last parameter.
     var esrc = !!this.options.esrc ? this.options.esrc : window.location.href;
-    source += 'esrc=' + base64.encode(esrc);
+    source += 'esrc=' + allplayers.base64.encode(esrc);
+
+    // Add the ehost to the source.
+    source += 'ehost=' + allplayers.base64.encode(window.location.origin);
 
     // Used for callbacks.
     var self = this;
@@ -864,70 +926,66 @@ window.allplayers = window.allplayers || {embed: {}};
     this.context.append(loading);
     this.context.append(iframe);
 
-    // Get the proxy.
-    this.proxy = new Porthole.WindowProxy(
-      this.options.proxy,
-      iframe.attr('id')
-    );
+    // Get the iframe object.
+    var iframeObj = iframe.eq(0)[0];
 
-    // Pass along chrome message responses to the server.
-    if (window.addEventListener) {
-      window.addEventListener('message', function(event) {
-        switch (event.data.name) {
-          case 'chromeMsgResp':
-            self.proxy.post({event: event.data});
-            break;
-          case 'chromePluginReady':
-            self.pluginReady = true;
-            break;
-        }
+    // The chrome plugin is ready.
+    $.pm.bind('chromePluginReady', function() {
+      self.pluginReady = true;
+    });
+
+    // Pass along chrome message responses.
+    $.pm.bind('chromeMsgResp', function(data) {
+      $.pm({
+        target: window.frames,
+        url: self.baseURL,
+        type: 'chromeMsgResp',
+        data: data
       });
-    }
+    });
 
-    // Add the event listener.
-    this.proxy.addEventListener(function(e) {
+    // Pass along the chrome messages.
+    $.pm.bind('chromeMsg', function(data) {
+      $.pm({
+        target: window,
+        type: 'chromeMsg',
+        data: data
+      });
+    });
 
-      // Switch on the event name.
-      var event = e.data.hasOwnProperty('event') ? e.data.event : false;
-      if (event) {
-        switch (event.name) {
+    // The init message.
+    $.pm.bind('init', function(data) {
+      self.isLoading = false;
+      loading.remove();
 
-          // Pass along chrome messages.
-          case 'chromeMsg':
-            if (window.postMessage) {
-              window.postMessage(event, '*');
-            }
-            break;
+      // Add the custom style to the iframe.
+      if (self.options.style) {
+        $.pm({
+          target: window.frames,
+          url: self.baseURL,
+          type: 'addStyle',
+          data: self.options.style
+        });
+      }
 
-          // Called when the iframe has initalized.
-          case 'init':
-            self.isLoading = false;
-            loading.remove();
+      // Set the height
+      iframe.height(data.height).attr('height', data.height + 'px');
+      return data;
+    });
 
-            // Add the custom style to the iframe.
-            if (self.options.style) {
-              self.proxy.post({event: {
-                name: 'addStyle',
-                data: self.options.style
-              }});
-            }
+    // The complete message.
+    $.pm.bind('complete', function(data) {
+      self.options.complete.call(self, data);
+    });
 
-            // Set the height
-            iframe.height(event.height).attr('height', event.height + 'px');
-            break;
-
-          // Called when the process is complete.
-          case 'complete':
-            self.options.complete.call(self, event);
-            break;
-
-          // See when the server is ready.
-          case 'serverReady':
-            if (self.pluginReady) {
-              self.proxy.post({event: {name: 'chromePluginReady'}});
-            }
-            break;
-        }
+    // The server ready message.
+    $.pm.bind('serverReady', function(data) {
+      if (self.pluginReady) {
+        $.pm({
+          target: window.frames,
+          url: self.baseURL,
+          type: 'chromePluginReady'
+        });
       }
     });
   };
