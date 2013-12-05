@@ -33,6 +33,10 @@ allplayers.embed.server.prototype.init = function() {
   // Call the parent.
   allplayers.embed.prototype.init.call(this);
 
+  // Get the ehost from the parent window.
+  this.ehost = allplayers.embed.getParam('ehost');
+  this.ehost = allplayers.base64.decode(this.ehost);
+
   this.container = this.options.getContainer();
   this.height = 0;
   this.heightTimer = null;
@@ -40,9 +44,6 @@ allplayers.embed.server.prototype.init = function() {
 
   // Keep track of the self pointer.
   var self = this;
-
-  // Send document stats via porthole message.
-  this.proxy = new Porthole.WindowProxy(this.options.proxy);
 
   // Bind to the document resize event.
   var throttle = null;
@@ -57,47 +58,40 @@ allplayers.embed.server.prototype.init = function() {
 
   // If we are on the complete page, then say so...
   if (this.options.isComplete()) {
-    this.proxy.post({event: {
-      'name': 'complete'
-    }});
+    $.pm({
+      target: window.parent,
+      url: this.ehost,
+      type: 'complete'
+    });
   }
 
-  // Add an event listener.
-  this.proxy.addEventListener(function(e) {
+  // Add the chrome message response.
+  $.pm.bind('chromeMsgResp', function(data) {
+    if (data.hasOwnProperty('guid') &&
+      self.queue.hasOwnProperty(data.guid)) {
+      self.queue[data.guid](data.response);
+    }
+  });
 
-    // Switch on the event name.
-    var event = e.data.hasOwnProperty('event') ? e.data.event : false;
-    if (event) {
-      switch (event.name) {
+  // Pass along the chrome plugin ready message.
+  $.pm.bind('chromePluginReady', function(data) {
+    $.pm({
+      target: window,
+      type: 'chromePluginReady'
+    });
+  });
 
-        // Handle the message response.
-        case 'chromeMsgResp':
-
-          // Call our callback with the response.
-          if (event.data.hasOwnProperty('guid') &&
-              self.queue.hasOwnProperty(event.data.guid)) {
-            self.queue[event.data.guid](event.data.response);
-          }
-          break;
-
-        case 'chromePluginReady':
-          window.postMessage(event, '*');
-          break;
-
-        case 'addStyle':
-          // Inject the style into the page.
-          if (event.data) {
-            // Keep them from escaping the <style> tag.
-            var styles = event.data.replace(/[<>]/g, '');
-            var lastStyle = $('link[type="text/css"]');
-            if (lastStyle.length) {
-              lastStyle = lastStyle.eq(lastStyle.length - 1);
-              lastStyle.after($(document.createElement('style')).attr({
-                type: 'text/css'
-              }).append(styles));
-            }
-          }
-          break;
+  // Add the styles to the page.
+  $.pm.bind('addStyle', function(data) {
+    if (data) {
+      // Keep them from escaping the <style> tag.
+      var styles = data.replace(/[<>]/g, '');
+      var lastStyle = $('link[type="text/css"]');
+      if (lastStyle.length) {
+        lastStyle = lastStyle.eq(lastStyle.length - 1);
+        lastStyle.after($(document.createElement('style')).attr({
+          type: 'text/css'
+        }).append(styles));
       }
     }
   });
@@ -106,7 +100,11 @@ allplayers.embed.server.prototype.init = function() {
   this.resize();
 
   // Server is now ready.
-  this.proxy.post({event: {'name': 'serverReady'}});
+  $.pm({
+    target: window.parent,
+    url: this.ehost,
+    type: 'serverReady'
+  });
 };
 
 /**
@@ -125,10 +123,12 @@ allplayers.embed.server.prototype.sendMessage = function(msg, callback) {
 
   // Add a message id.
   msg.guid = guid();
-  this.proxy.post({event: {
-    name: 'chromeMsg',
+  $.pm({
+    target: window.parent,
+    type: 'chromeMsg',
+    url: this.ehost,
     data: msg
-  }});
+  });
 
   // Add the callback to the queue.
   this.queue[msg.guid] = callback;
@@ -160,16 +160,17 @@ allplayers.embed.server.prototype.resize = function() {
     var newHeight = self.container.outerHeight(true);
     if (self.height !== newHeight) {
 
-      // Set the height.
-      self.height = newHeight;
-
       // Send the event to resize the iframe.
-      self.proxy.post({
-        'height': self.height,
-        'event': {
-          'name': 'init',
-          'height' : self.height,
-          'id' : window.location.hash
+      $.pm({
+        target: window.parent,
+        url: self.ehost,
+        type: 'init',
+        data: {
+          height: newHeight,
+          id: window.location.hash
+        },
+        success: function(data) {
+          self.height = data.height;
         }
       });
     }

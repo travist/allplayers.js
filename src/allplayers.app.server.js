@@ -50,31 +50,21 @@ allplayers.app.server.prototype = new allplayers.app();
 allplayers.app.server.prototype.constructor = allplayers.app.server;
 
 /**
- * Return the value of a parameter.
- *
- * @param {string} name The name of the parameter to get.
- * @return {string} The value of the parameter.
- */
-allplayers.app.server.getParam = function(name) {
-  name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
-  var regexS = '[\\?&]' + name + '=([^&#]*)';
-  var regex = new RegExp(regexS);
-  var results = regex.exec(window.location.search);
-  if (results == null) {
-    return '';
-  }
-  else {
-    return decodeURIComponent(results[1].replace(/\+/g, ' '));
-  }
-};
-
-/**
  * Initialize the allplayer app library.
  */
 allplayers.app.server.prototype.init = function() {
 
   // Call the parent.
   allplayers.app.prototype.init.call(this);
+
+  // Get the base URL of the embed page.
+  this.baseURL = 'https://platform.allplayers.com';
+  if (this.options.base) {
+    this.baseURL = this.options.base;
+  }
+
+  // Say we are loading.
+  this.isLoading = true;
 
   // Set the spinner if it isn't set.
   if (!this.options.spinner) {
@@ -112,7 +102,7 @@ allplayers.app.server.prototype.init = function() {
   var source = '';
 
   // See if they provide their own query.
-  var q = allplayers.app.server.getParam('apq');
+  var q = allplayers.app.getParam('apq');
   if (q) {
     source = this.options.base + '/' + q;
   }
@@ -148,6 +138,9 @@ allplayers.app.server.prototype.init = function() {
   // Add the iframe ID to the iframe source.
   source += '#' + iframeId;
 
+  // Used for callbacks.
+  var self = this;
+
   var iframe = jQuery(document.createElement('iframe')).attr({
     id: iframeId,
     name: iframeId,
@@ -165,74 +158,70 @@ allplayers.app.server.prototype.init = function() {
   this.context.append(loading);
   this.context.append(iframe);
 
-  // Get the proxy.
-  this.proxy = new Porthole.WindowProxy(
-    this.options.proxy,
-    iframe.attr('id')
-  );
+  // Get the iframe object.
+  var iframeObj = iframe.eq(0)[0];
 
-  var self = this;
-
-  // Pass along chrome message responses to the server.
-  if (typeof window.postMessage !== 'undefined') {
-    window.addEventListener('message', function(event) {
-      switch (event.data.name) {
-        case 'chromeMsgResp':
-          self.proxy.post({event: event.data});
-          break;
-        case 'chromePluginReady':
-          self.pluginReady = true;
-          break;
-      }
-    });
-  }
-
-  // Add the event listener.
-  this.proxy.addEventListener(function(e) {
-
-    // Switch on the event name.
-    var event = e.data.hasOwnProperty('event') ? e.data.event : false;
-    if (event) {
-      switch (event.name) {
-
-        // Pass along chrome messages.
-        case 'chromeMsg':
-          if (typeof window.postMessage !== 'undefined') {
-            window.postMessage(event, '*');
-          }
-          break;
-
-        // Called when the iframe has initalized.
-        case 'init':
-          loading.remove();
-
-          // Set the height
-          iframe.height(event.height).attr('height', event.height + 'px');
-          break;
-
-        // Called when the client wants to add a product.
-        case 'addProduct':
-          // Add the returned data to the form and submit.
-          $('<input>').attr({
-            type: 'hidden',
-            name: 'add-product[]',
-            value: JSON.stringify(event.params)
-          }).appendTo('form');
-          $('#edit-next').val('Continue');
-          break;
-
-        // See when the server is ready.
-        case 'clientReady':
-          if (self.pluginReady) {
-            self.proxy.post({event: {name: 'chromePluginReady'}});
-          }
-          // Send them the registration object.
-          self.proxy.post({
-            event: {name: 'getRegistration'},
-            reg: self.options.reg
-          });
-          break;
-      }
-    }
+  // The chrome plugin is ready.
+  $.pm.bind('chromePluginReady', function() {
+    self.pluginReady = true;
   });
+
+  // Pass along chrome message responses.
+  $.pm.bind('chromeMsgResp', function(data) {
+    $.pm({
+      target: window.frames,
+      url: self.baseURL,
+      type: 'chromeMsgResp',
+      data: data
+    });
+  });
+
+  // Pass along the chrome messages.
+  $.pm.bind('chromeMsg', function(data) {
+    $.pm({
+      target: window,
+      type: 'chromeMsg',
+      data: data
+    });
+  });
+
+  // The init message.
+  $.pm.bind('init', function(data) {
+    self.isLoading = false;
+    loading.remove();
+
+    // Set the height
+    iframe.height(data.height).attr('height', data.height + 'px');
+    return data;
+  });
+
+  // The addProduct message.
+  $.pm.bind('addProduct', function(data) {
+    // Add the returned data to the form and submit.
+    $('<input>').attr({
+      type: 'hidden',
+      name: 'add-product[]',
+      value: JSON.stringify(data)
+    }).appendTo('form');
+    $('#edit-next').val('Continue');
+  });
+
+  // The client ready message.
+  $.pm.bind('clientReady', function(data) {
+    if (self.pluginReady) {
+      $.pm({
+        target: window.frames,
+        url: self.baseURL,
+        type: 'chromePluginReady'
+      });
+    }
+    // Send them the registration object.
+    $.pm({
+      target: window.frames,
+      url: self.baseURL,
+      type: 'getRegistration',
+      data: self.options.reg
+    });
+  });
+
 };

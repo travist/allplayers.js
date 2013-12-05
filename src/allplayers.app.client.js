@@ -28,6 +28,9 @@ allplayers.app.client.prototype.init = function() {
   // Call the parent.
   allplayers.app.prototype.init.call(this);
 
+  // Get the ehost from the parent window.
+  this.ehost = allplayers.app.getParam('ehost');
+
   this.container = this.options.getContainer();
   this.height = 0;
   this.heightTimer = null;
@@ -36,9 +39,6 @@ allplayers.app.client.prototype.init = function() {
 
   // Keep track of the self pointer.
   var self = this;
-
-  // Send document stats via porthole message.
-  this.proxy = new Porthole.WindowProxy(this.options.proxy);
 
   // Bind to the document resize event.
   var throttle = null;
@@ -51,41 +51,36 @@ allplayers.app.client.prototype.init = function() {
     }, 500);
   });
 
-  // Add an event listener.
-  this.proxy.addEventListener(function(e) {
-
-    // Switch on the event name.
-    var event = e.data.hasOwnProperty('event') ? e.data.event : false;
-    if (event) {
-      switch (event.name) {
-
-        // Handle the message response.
-        case 'chromeMsgResp':
-
-          // Call our callback with the response.
-          if (event.data.hasOwnProperty('guid') &&
-              self.queue.hasOwnProperty(event.data.guid)) {
-            self.queue[event.data.guid](event.data.response);
-          }
-          break;
-
-        case 'chromePluginReady':
-          window.postMessage(event, '*');
-          break;
-
-        case 'getRegistration':
-          // Get the registration data.
-          self.reg = e.data.hasOwnProperty('reg') ? e.data.reg : false;
-          break;
-      }
+  // Add the chrome message response.
+  jQuery.pm.bind('chromeMsgResp', function(data) {
+    if (data.hasOwnProperty('guid') &&
+      self.queue.hasOwnProperty(data.guid)) {
+      self.queue[data.guid](data.response);
     }
+  });
+
+  // Pass along the chrome plugin ready message.
+  jQuery.pm.bind('chromePluginReady', function(data) {
+    jQuery.pm({
+      target: window,
+      type: 'chromePluginReady'
+    });
+  });
+
+  // Get the registration data.
+  jQuery.pm.bind('getRegistration', function(data) {
+    self.reg = data.hasOwnProperty('reg') ? data.reg : false;
   });
 
   // Trigger the resizing events.
   this.resize();
 
-  // Server is now ready.
-  this.proxy.post({event: {'name': 'clientReady'}});
+  // Client is now ready.
+  jQuery.pm({
+    target: window.parent,
+    url: this.ehost,
+    type: 'clientReady'
+  });
 };
 
 /**
@@ -142,13 +137,16 @@ allplayers.app.client.prototype.resize = function() {
       // Set the height.
       self.height = newHeight;
 
-      // Send the event to resize the iframe.
-      self.proxy.post({
-        'height': self.height,
-        'event': {
-          'name': 'init',
-          'height' : self.height,
-          'id' : window.location.hash
+      jQuery.pm({
+        target: window.parent,
+        url: self.ehost,
+        type: 'init',
+        data: {
+          height: newHeight,
+          id: window.location.hash
+        },
+        success: function(data) {
+          self.height = data.height;
         }
       });
     }

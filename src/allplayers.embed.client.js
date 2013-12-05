@@ -1,86 +1,6 @@
 /** The global allplayers object. */
 window.allplayers = window.allplayers || {embed: {}};
 (function(window, document, allplayers, $, undefined) {
-
-  /*
-   * Copyright (c) 2010 Nick Galbreath
-   * http://code.google.com/p/stringencoders/source/browse/#svn/trunk/javascript
-   *
-   * Permission is hereby granted, free of charge, to any person
-   * obtaining a copy of this software and associated documentation
-   * files (the "Software"), to deal in the Software without
-   * restriction, including without limitation the rights to use,
-   * copy, modify, merge, publish, distribute, sublicense, and/or sell
-   * copies of the Software, and to permit persons to whom the
-   * Software is furnished to do so, subject to the following
-   * conditions:
-   *
-   * The above copyright notice and this permission notice shall be
-   * included in all copies or substantial portions of the Software.
-   *
-   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-   * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-   * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-   * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-   * OTHER DEALINGS IN THE SOFTWARE.
-   */
-  base64 = {};
-  base64.PADCHAR = '=';
-  base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789+/';
-  base64.getbyte = function(s, i) {
-    var x = s.charCodeAt(i);
-    if (x > 255) {
-      throw 'INVALID_CHARACTER_ERR: DOM Exception 5';
-    }
-    return x;
-  };
-  base64.encode = function(s) {
-    if (arguments.length != 1) {
-      throw 'SyntaxError: Not enough arguments';
-    }
-    var padchar = base64.PADCHAR;
-    var alpha = base64.ALPHA;
-    var getbyte = base64.getbyte;
-
-    var i, b10;
-    var x = [];
-
-    // convert to string
-    s = '' + s;
-
-    var imax = s.length - s.length % 3;
-
-    if (s.length == 0) {
-      return s;
-    }
-    for (i = 0; i < imax; i += 3) {
-      b10 = (getbyte(s, i) << 16);
-      b10 |= (getbyte(s, i + 1) << 8);
-      b10 |= getbyte(s, i + 2);
-      x.push(alpha.charAt(b10 >> 18));
-      x.push(alpha.charAt((b10 >> 12) & 0x3F));
-      x.push(alpha.charAt((b10 >> 6) & 0x3f));
-      x.push(alpha.charAt(b10 & 0x3f));
-    }
-    switch (s.length - imax) {
-      case 1:
-        b10 = getbyte(s, i) << 16;
-        x.push(alpha.charAt(b10 >> 18) + alpha.charAt((b10 >> 12) & 0x3F) +
-          padchar + padchar);
-        break;
-      case 2:
-        b10 = (getbyte(s, i) << 16) | (getbyte(s, i + 1) << 8);
-        x.push(alpha.charAt(b10 >> 18) + alpha.charAt((b10 >> 12) & 0x3F) +
-          alpha.charAt((b10 >> 6) & 0x3f) + padchar);
-        break;
-    }
-    return x.join('');
-  };
-
   if ($ && !$.fn.allplayers_client) {
 
     /**
@@ -131,31 +51,18 @@ window.allplayers = window.allplayers || {embed: {}};
   allplayers.embed.client.prototype.constructor = allplayers.embed.client;
 
   /**
-   * Return the value of a parameter.
-   *
-   * @param {string} name The name of the parameter to get.
-   * @return {string} The value of the parameter.
-   */
-  allplayers.embed.client.getParam = function(name) {
-    name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
-    var regexS = '[\\?&]' + name + '=([^&#]*)';
-    var regex = new RegExp(regexS);
-    var results = regex.exec(window.location.search);
-    if (results == null) {
-      return '';
-    }
-    else {
-      return decodeURIComponent(results[1].replace(/\+/g, ' '));
-    }
-  };
-
-  /**
    * Initialize the allplayer embed library.
    */
   allplayers.embed.client.prototype.init = function() {
 
     // Call the parent.
     allplayers.embed.prototype.init.call(this);
+
+    // Get the base URL of the embed page.
+    this.baseURL = 'https://platform.allplayers.com';
+    if (this.options.base) {
+      this.baseURL = this.options.base;
+    }
 
     // Say we are loading.
     this.isLoading = true;
@@ -199,7 +106,7 @@ window.allplayers = window.allplayers || {embed: {}};
     var source = '';
 
     // See if they provide their own query.
-    var q = allplayers.embed.client.getParam('apq');
+    var q = allplayers.embed.getParam('apq');
     if (q) {
       source = this.options.base + '/' + q;
     }
@@ -234,7 +141,10 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // Add the embed source as our last parameter.
     var esrc = !!this.options.esrc ? this.options.esrc : window.location.href;
-    source += 'esrc=' + base64.encode(esrc);
+    source += 'esrc=' + allplayers.base64.encode(esrc);
+
+    // Add the ehost to the source.
+    source += 'ehost=' + allplayers.base64.encode(window.location.origin);
 
     // Used for callbacks.
     var self = this;
@@ -336,70 +246,66 @@ window.allplayers = window.allplayers || {embed: {}};
     this.context.append(loading);
     this.context.append(iframe);
 
-    // Get the proxy.
-    this.proxy = new Porthole.WindowProxy(
-      this.options.proxy,
-      iframe.attr('id')
-    );
+    // Get the iframe object.
+    var iframeObj = iframe.eq(0)[0];
 
-    // Pass along chrome message responses to the server.
-    if (window.addEventListener) {
-      window.addEventListener('message', function(event) {
-        switch (event.data.name) {
-          case 'chromeMsgResp':
-            self.proxy.post({event: event.data});
-            break;
-          case 'chromePluginReady':
-            self.pluginReady = true;
-            break;
-        }
+    // The chrome plugin is ready.
+    $.pm.bind('chromePluginReady', function() {
+      self.pluginReady = true;
+    });
+
+    // Pass along chrome message responses.
+    $.pm.bind('chromeMsgResp', function(data) {
+      $.pm({
+        target: window.frames,
+        url: self.baseURL,
+        type: 'chromeMsgResp',
+        data: data
       });
-    }
+    });
 
-    // Add the event listener.
-    this.proxy.addEventListener(function(e) {
+    // Pass along the chrome messages.
+    $.pm.bind('chromeMsg', function(data) {
+      $.pm({
+        target: window,
+        type: 'chromeMsg',
+        data: data
+      });
+    });
 
-      // Switch on the event name.
-      var event = e.data.hasOwnProperty('event') ? e.data.event : false;
-      if (event) {
-        switch (event.name) {
+    // The init message.
+    $.pm.bind('init', function(data) {
+      self.isLoading = false;
+      loading.remove();
 
-          // Pass along chrome messages.
-          case 'chromeMsg':
-            if (window.postMessage) {
-              window.postMessage(event, '*');
-            }
-            break;
+      // Add the custom style to the iframe.
+      if (self.options.style) {
+        $.pm({
+          target: window.frames,
+          url: self.baseURL,
+          type: 'addStyle',
+          data: self.options.style
+        });
+      }
 
-          // Called when the iframe has initalized.
-          case 'init':
-            self.isLoading = false;
-            loading.remove();
+      // Set the height
+      iframe.height(data.height).attr('height', data.height + 'px');
+      return data;
+    });
 
-            // Add the custom style to the iframe.
-            if (self.options.style) {
-              self.proxy.post({event: {
-                name: 'addStyle',
-                data: self.options.style
-              }});
-            }
+    // The complete message.
+    $.pm.bind('complete', function(data) {
+      self.options.complete.call(self, data);
+    });
 
-            // Set the height
-            iframe.height(event.height).attr('height', event.height + 'px');
-            break;
-
-          // Called when the process is complete.
-          case 'complete':
-            self.options.complete.call(self, event);
-            break;
-
-          // See when the server is ready.
-          case 'serverReady':
-            if (self.pluginReady) {
-              self.proxy.post({event: {name: 'chromePluginReady'}});
-            }
-            break;
-        }
+    // The server ready message.
+    $.pm.bind('serverReady', function(data) {
+      if (self.pluginReady) {
+        $.pm({
+          target: window.frames,
+          url: self.baseURL,
+          type: 'chromePluginReady'
+        });
       }
     });
   };

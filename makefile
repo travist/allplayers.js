@@ -55,7 +55,7 @@ appclientfiles = src/allplayers.app.js\
 
 .DEFAULT_GOAL := all
 
-all: makecore jslint js getjson getporthole embedserver embedclient appserver appclient rmporthole
+all: makecore jslint js getpostmessage embedserver embedclient appserver appclient rmpostmessage
 
 makecore:
 	cd drupal.api.js; make -B; cd ..; cd lib/treeselect; make -B; cd ../..;
@@ -85,15 +85,12 @@ js: ${files}
 	  http://closure-compiler.appspot.com/compile \
 	  > bin/allplayers.loader.js
 
-getjson:
-	@curl https://raw.github.com/douglascrockford/JSON-js/master/json2.js > lib/json2.js
-
-getporthole:
-	@curl https://raw.github.com/ternarylabs/porthole/master/src/porthole.min.js > lib/porthole.min.js
+getpostmessage:
+	@curl https://raw.github.com/daepark/postmessage/master/postmessage.js > lib/postmessage.js
 
 embedserver: ${embedserverfiles}
 	@echo "Generating allplayers.embed.server.js"
-	@cat > bin/allplayers.embed.server.js lib/json2.js lib/porthole.min.js $^
+	@cat > bin/allplayers.embed.server.js lib/postmessage.js $^
 	@echo "Generating allplayers.embed.server.min.js"
 	curl -s \
 	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
@@ -105,7 +102,7 @@ embedserver: ${embedserverfiles}
 
 embedclient: ${embedclientfiles}
 	@echo "Generating allplayers.embed.client.js"
-	@cat > bin/allplayers.embed.client.js lib/json2.js lib/porthole.min.js $^
+	@cat > bin/allplayers.embed.client.js lib/postmessage.js $^
 	@echo "Generating allplayers.embed.client.min.js"
 	curl -s \
 	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
@@ -117,7 +114,7 @@ embedclient: ${embedclientfiles}
 
 appserver: ${appserverfiles}
 	@echo "Generating allplayers.app.server.js"
-	@cat > bin/allplayers.app.server.js lib/porthole.min.js $^
+	@cat > bin/allplayers.app.server.js lib/postmessage.js $^
 	@echo "Generating allplayers.app.server.min.js"
 	curl -s \
 	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
@@ -129,7 +126,7 @@ appserver: ${appserverfiles}
 
 appclient: ${appclientfiles}
 	@echo "Generating allplayers.app.client.js"
-	@cat > bin/allplayers.app.client.js lib/porthole.min.js $^
+	@cat > bin/allplayers.app.client.js lib/postmessage.js $^
 	@echo "Generating allplayers.app.client.min.js"
 	curl -s \
 	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
@@ -139,8 +136,8 @@ appclient: ${appclientfiles}
 	  http://closure-compiler.appspot.com/compile \
 	  > bin/allplayers.app.client.min.js
 
-rmporthole:
-	@rm lib/porthole.min.js
+rmpostmessage:
+	@rm lib/postmessage.js
 
 # Create the documentation from source code.
 jsdoc: ${docfiles}
