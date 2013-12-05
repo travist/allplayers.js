@@ -45,7 +45,6 @@ embedserverfiles = src/allplayers.embed.js\
 	src/allplayers.embed.server.js
 
 embedclientfiles = src/allplayers.embed.js\
-	lib/jquery.base64.js/jquery.base64.js\
 	src/allplayers.embed.client.js
 
 appserverfiles = src/allplayers.app.js\
@@ -56,7 +55,7 @@ appclientfiles = src/allplayers.app.js\
 
 .DEFAULT_GOAL := all
 
-all: makecore jslint js getporthole embedserver embedclient appserver appclient rmporthole
+all: makecore jslint js getjson getporthole embedserver embedclient appserver appclient rmporthole
 
 makecore:
 	cd drupal.api.js; make -B; cd ..; cd lib/treeselect; make -B; cd ../..;
@@ -86,12 +85,15 @@ js: ${files}
 	  http://closure-compiler.appspot.com/compile \
 	  > bin/allplayers.loader.js
 
+getjson:
+	@curl https://raw.github.com/douglascrockford/JSON-js/master/json2.js > lib/json2.js
+
 getporthole:
 	@curl https://raw.github.com/ternarylabs/porthole/master/src/porthole.min.js > lib/porthole.min.js
 
 embedserver: ${embedserverfiles}
 	@echo "Generating allplayers.embed.server.js"
-	@cat > bin/allplayers.embed.server.js lib/porthole.min.js $^
+	@cat > bin/allplayers.embed.server.js lib/json2.js lib/porthole.min.js $^
 	@echo "Generating allplayers.embed.server.min.js"
 	curl -s \
 	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
@@ -103,7 +105,7 @@ embedserver: ${embedserverfiles}
 
 embedclient: ${embedclientfiles}
 	@echo "Generating allplayers.embed.client.js"
-	@cat > bin/allplayers.embed.client.js lib/porthole.min.js $^
+	@cat > bin/allplayers.embed.client.js lib/json2.js lib/porthole.min.js $^
 	@echo "Generating allplayers.embed.client.min.js"
 	curl -s \
 	  -d compilation_level=SIMPLE_OPTIMIZATIONS \

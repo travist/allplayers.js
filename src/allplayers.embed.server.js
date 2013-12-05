@@ -1,5 +1,7 @@
-var allplayers = allplayers || {embed: {}};
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {embed: {}};
 
+(function(window, document, allplayers, $, undefined) {
 /**
  * The allplayers embed server.
  *
@@ -9,7 +11,7 @@ var allplayers = allplayers || {embed: {}};
 allplayers.embed.server = function(options) {
   allplayers.embed.call(this, options, {
     getContainer: function() {
-      return jQuery();
+      return $();
     },
     isComplete: function() {
       return false;
@@ -44,7 +46,7 @@ allplayers.embed.server.prototype.init = function() {
 
   // Bind to the document resize event.
   var throttle = null;
-  jQuery(document).bind('DOMSubtreeModified', function() {
+  $(document).bind('DOMSubtreeModified', function() {
     if (throttle) {
       clearTimeout(throttle);
     }
@@ -87,10 +89,10 @@ allplayers.embed.server.prototype.init = function() {
           if (event.data) {
             // Keep them from escaping the <style> tag.
             var styles = event.data.replace(/[<>]/g, '');
-            var lastStyle = jQuery('link[type="text/css"]');
+            var lastStyle = $('link[type="text/css"]');
             if (lastStyle.length) {
               lastStyle = lastStyle.eq(lastStyle.length - 1);
-              lastStyle.after(jQuery(document.createElement('style')).attr({
+              lastStyle.after($(document.createElement('style')).attr({
                 type: 'text/css'
               }).append(styles));
             }
@@ -138,11 +140,11 @@ allplayers.embed.server.prototype.sendMessage = function(msg, callback) {
 allplayers.embed.server.prototype.resize = function() {
 
   // Change all links to reference platform instead of www.
-  jQuery('a[href^="https://www."]', this.container).each(function() {
+  $('a[href^="https://www."]', this.container).each(function() {
 
     // Replace the href with platform
-    var href = jQuery(this).attr('href');
-    jQuery(this).attr({
+    var href = $(this).attr('href');
+    $(this).attr({
       'href': href.replace(
         /https:\/\/www.(.*?).allplayers.com/,
         'https://platform.$1.allplayers.com'
@@ -184,3 +186,4 @@ allplayers.embed.server.prototype.resize = function() {
   // Check the height of the iframe.
   checkHeight();
 };
+}(window, document, window.allplayers, jQuery));
