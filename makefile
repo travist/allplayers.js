@@ -20,6 +20,8 @@ lintfiles = src/allplayers.date.js\
 	src/allplayers.group.js\
 	src/allplayers.location.js\
 	src/allplayers.calendar.js\
+	src/allplayers.app.server.js\
+	src/allplayers.app.client.js\
 	src/allplayers.embed.js\
 	src/allplayers.embed.server.js\
 	src/allplayers.embed.client.js\
@@ -45,9 +47,15 @@ embedserverfiles = src/allplayers.embed.js\
 embedclientfiles = src/allplayers.embed.js\
 	src/allplayers.embed.client.js
 
+appserverfiles = src/allplayers.app.js\
+        src/allplayers.app.server.js
+
+appclientfiles = src/allplayers.app.js\
+        src/allplayers.app.client.js
+
 .DEFAULT_GOAL := all
 
-all: makecore jslint js getpostmessage embedserver embedclient rmpostmessage
+all: makecore jslint js getpostmessage embedserver embedclient appserver appclient rmpostmessage
 
 makecore:
 	cd drupal.api.js; make -B; cd ..; cd lib/treeselect; make -B; cd ../..;
@@ -103,6 +111,30 @@ embedclient: ${embedclientfiles}
 	  --data-urlencode "js_code@bin/allplayers.embed.client.js" \
 	  http://closure-compiler.appspot.com/compile \
 	  > bin/allplayers.embed.client.min.js
+
+appserver: ${appserverfiles}
+	@echo "Generating allplayers.app.server.js"
+	@cat > bin/allplayers.app.server.js lib/postmessage.js $^
+	@echo "Generating allplayers.app.server.min.js"
+	curl -s \
+	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
+	  -d output_format=text \
+	  -d output_info=compiled_code \
+	  --data-urlencode "js_code@bin/allplayers.app.server.js" \
+	  http://closure-compiler.appspot.com/compile \
+	  > bin/allplayers.app.server.min.js
+
+appclient: ${appclientfiles}
+	@echo "Generating allplayers.app.client.js"
+	@cat > bin/allplayers.app.client.js lib/postmessage.js $^
+	@echo "Generating allplayers.app.client.min.js"
+	curl -s \
+	  -d compilation_level=SIMPLE_OPTIMIZATIONS \
+	  -d output_format=text \
+	  -d output_info=compiled_code \
+	  --data-urlencode "js_code@bin/allplayers.app.client.js" \
+	  http://closure-compiler.appspot.com/compile \
+	  > bin/allplayers.app.client.min.js
 
 rmpostmessage:
 	@rm lib/postmessage.js

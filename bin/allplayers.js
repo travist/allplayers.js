@@ -3781,7 +3781,6 @@ var allplayers = allplayers || {};
     });
   };
 })(jQuery);
-
 (function($) {
   // Add the group select widget.
   $.fn.group_finder = function(params) {
