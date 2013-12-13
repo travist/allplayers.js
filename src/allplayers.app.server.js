@@ -197,18 +197,23 @@ allplayers.app.server.prototype.init = function() {
 
   // The addProduct message.
   $.pm.bind('addProduct', function(data) {
-    var exists = false;
-    // Add the returned data to the form and submit.
+    var productExists = false;
+    // Check if the product was already added.
     $('input[name="add-product[]"]').each(function() {
       var product = JSON.parse($(this).val());
       if (data['product_uuid'] == product['product_uuid']) {
+        // Update the product quantity.
         product['quantity'] = parseInt(product['quantity']) +
           parseInt(data['quantity']);
         $(this).val(JSON.stringify(product));
-        exists = true;
+        var productCol = '#add-products-table tbody tr.' + data['product_uuid'];
+        $(productCol + ' td:last').text(product['quantity']);
+        productExists = true;
       }
     });
-    if (!exists && data['product_uuid'] && data['price'] &&
+
+    // If this product hasn't been added yet.
+    if (!productExists && data['product_uuid'] && data['price'] &&
       data['quantity'] && data['title']
     ) {
       $('<input>').attr({
@@ -217,6 +222,20 @@ allplayers.app.server.prototype.init = function() {
         value: JSON.stringify(data)
       }).appendTo('form');
       $('#edit-next').val('Continue');
+      // Add the products table if not already.
+      if ($('#add-products-table').length == 0) {
+        $('<table>').attr({
+          id: 'add-products-table',
+          class: 'sticky-table'
+        }).appendTo('#add-products');
+        $('#add-products-table').append('<thead><tr><th>Added Products</th>' +
+          '<th>Price</th><th>Quantity</th></tr></thead>');
+        $('#add-products-table').append('<tbody></tbody>');
+      }
+      // Add the product to the table.
+      $('#add-products-table tbody').append('<tr class="' +
+        data['product_uuid'] + '"><td>' + data['title'] + '</td><td>' +
+        data['price'] + '</td><td>' + data['quantity'] + '</td></tr>');
     }
   });
 
