@@ -197,13 +197,27 @@ allplayers.app.server.prototype.init = function() {
 
   // The addProduct message.
   $.pm.bind('addProduct', function(data) {
+    var exists = false;
     // Add the returned data to the form and submit.
-    $('<input>').attr({
-      type: 'hidden',
-      name: 'add-product[]',
-      value: JSON.stringify(data)
-    }).appendTo('form');
-    $('#edit-next').val('Continue');
+    $('input[name="add-product[]"]').each(function() {
+      var product = JSON.parse($(this).val());
+      if (data['product_uuid'] == product['product_uuid']) {
+        product['quantity'] = parseInt(product['quantity']) +
+          parseInt(data['quantity']);
+        $(this).val(JSON.stringify(product));
+        exists = true;
+      }
+    });
+    if (!exists && data['product_uuid'] && data['price'] &&
+      data['quantity'] && data['title']
+    ) {
+      $('<input>').attr({
+        type: 'hidden',
+        name: 'add-product[]',
+        value: JSON.stringify(data)
+      }).appendTo('form');
+      $('#edit-next').val('Continue');
+    }
   });
 
   // The client ready message.
