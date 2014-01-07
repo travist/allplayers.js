@@ -551,14 +551,6 @@ allplayers.app.client.prototype.init = function() {
     }
   });
 
-  // Pass along the chrome plugin ready message.
-  jQuery.pm.bind('chromePluginReady', function(data) {
-    jQuery.pm({
-      target: window,
-      type: 'chromePluginReady'
-    });
-  });
-
   // Get the registration data.
   jQuery.pm.bind('getRegistration', function(data) {
     self.reg = data.hasOwnProperty('reg') ? data.reg : false;
