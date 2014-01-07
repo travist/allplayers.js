@@ -246,8 +246,7 @@ window.allplayers = window.allplayers || {embed: {}};
     this.context.append(loading);
     this.context.append(iframe);
 
-    // Get the iframe object.
-    var iframeObj = iframe.eq(0)[0];
+    var serverTarget = null;
 
     // The chrome plugin is ready.
     $.pm.bind('chromePluginReady', function() {
@@ -257,7 +256,7 @@ window.allplayers = window.allplayers || {embed: {}};
     // Pass along chrome message responses.
     $.pm.bind('chromeMsgResp', function(data) {
       $.pm({
-        target: window.frames,
+        target: serverTarget,
         url: self.baseURL,
         type: 'chromeMsgResp',
         data: data
@@ -267,21 +266,23 @@ window.allplayers = window.allplayers || {embed: {}};
     // Pass along the chrome messages.
     $.pm.bind('chromeMsg', function(data) {
       $.pm({
-        target: window,
+        target: serverTarget,
+        url: self.baseURL,
         type: 'chromeMsg',
         data: data
       });
     });
 
     // The init message.
-    $.pm.bind('init', function(data) {
+    $.pm.bind('init', function(data, e) {
+      serverTarget = e.source;
       self.isLoading = false;
       loading.remove();
 
       // Add the custom style to the iframe.
       if (self.options.style) {
         $.pm({
-          target: window.frames,
+          target: e.source,
           url: self.baseURL,
           type: 'addStyle',
           data: self.options.style
@@ -299,10 +300,12 @@ window.allplayers = window.allplayers || {embed: {}};
     });
 
     // The server ready message.
-    $.pm.bind('serverReady', function(data) {
+    $.pm.bind('serverReady', function(data, e) {
+
+      // Say that the chrome plugin is ready.
       if (self.pluginReady) {
         $.pm({
-          target: window.frames,
+          target: e.source,
           url: self.baseURL,
           type: 'chromePluginReady'
         });

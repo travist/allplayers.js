@@ -73,14 +73,6 @@ allplayers.embed.server.prototype.init = function() {
     }
   });
 
-  // Pass along the chrome plugin ready message.
-  $.pm.bind('chromePluginReady', function(data) {
-    $.pm({
-      target: window,
-      type: 'chromePluginReady'
-    });
-  });
-
   // Add the styles to the page.
   $.pm.bind('addStyle', function(data) {
     if (data) {
@@ -158,6 +150,7 @@ allplayers.embed.server.prototype.resize = function() {
 
     // Get the new height of the container.
     var newHeight = self.container.outerHeight(true);
+    newHeight = (newHeight > 100) ? newHeight : 100;
     if (self.height !== newHeight) {
 
       // Send the event to resize the iframe.
