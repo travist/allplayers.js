@@ -824,6 +824,7 @@ window.allplayers = window.allplayers || {embed: {}};
     source += 'esrc=' + allplayers.base64.encode(esrc);
 
     // Add the ehost to the source.
+    source += '&';
     source += 'ehost=' + allplayers.base64.encode(window.location.origin);
 
     // Used for callbacks.
