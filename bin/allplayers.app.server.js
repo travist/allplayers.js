@@ -650,8 +650,7 @@ allplayers.app.server.prototype.init = function() {
   this.context.append(loading);
   this.context.append(iframe);
 
-  // Get the iframe object.
-  var iframeObj = iframe.eq(0)[0];
+  var serverTarget = null;
 
   // The chrome plugin is ready.
   $.pm.bind('chromePluginReady', function() {
@@ -661,7 +660,7 @@ allplayers.app.server.prototype.init = function() {
   // Pass along chrome message responses.
   $.pm.bind('chromeMsgResp', function(data) {
     $.pm({
-      target: window.frames,
+      target: serverTarget,
       url: self.baseURL,
       type: 'chromeMsgResp',
       data: data
@@ -671,14 +670,16 @@ allplayers.app.server.prototype.init = function() {
   // Pass along the chrome messages.
   $.pm.bind('chromeMsg', function(data) {
     $.pm({
-      target: window,
+      target: serverTarget,
+      url: self.baseURL,
       type: 'chromeMsg',
       data: data
     });
   });
 
   // The init message.
-  $.pm.bind('init', function(data) {
+  $.pm.bind('init', function(data, e) {
+    serverTarget = e.source;
     self.isLoading = false;
     loading.remove();
 
@@ -732,17 +733,20 @@ allplayers.app.server.prototype.init = function() {
   });
 
   // The client ready message.
-  $.pm.bind('clientReady', function(data) {
+  $.pm.bind('clientReady', function(data, e) {
+    serverTarget = e.source;
+
     if (self.pluginReady) {
       $.pm({
-        target: window.frames,
+        target: e.source,
         url: self.baseURL,
         type: 'chromePluginReady'
       });
     }
+
     // Send them the registration object.
     $.pm({
-      target: window.frames,
+      target: e.source,
       url: self.baseURL,
       type: 'getRegistration',
       data: self.options.reg
