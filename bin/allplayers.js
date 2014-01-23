@@ -2304,6 +2304,7 @@ var allplayers = allplayers || {};
       onbuild: null,              /** Called when each node is building. */
       postbuild: null,            /** Called when the node is done building. */
       inputName: 'treeselect',    /** The input name. */
+      autoSelectChildren: true,   /** Select chldrn when parent is selected. */
       showRoot: false,            /** Show the root item with a checkbox. */
       selectAll: false,           /** If we wish to see a select all. */
       selectAllText: 'Select All' /** The select all text. */
@@ -2847,13 +2848,17 @@ var allplayers = allplayers || {};
               // Set the checked state based on input.
               node.checked = $(event.target).is(':checked');
 
-              // Expand if deep loading. Collapse if unchecked.
-              if (!node.checked || params.deepLoad) {
-                node.expand(node.checked);
-              }
+              // Only expand/collapse and select children if auto select
+              // children is enabled.
+              if (params.autoSelectChildren) {
+                // Expand if deep loading. Collapse if unchecked.
+                if (!node.checked || params.deepLoad) {
+                  node.expand(node.checked);
+                }
 
-              // Call the select method.
-              node.selectChildren(node.checked);
+                // Call the select method.
+                node.selectChildren(node.checked);
+              }
             };
           })(this));
 
@@ -3818,6 +3823,7 @@ var allplayers = allplayers || {};
       show_url_link: 1,
       showRoot: 0,
       showtree: 1,
+      autoSelectChildren: false,
       gotoPath: '',
       gotoText: '',
       gotoClass: 'allplayers-register-link',
