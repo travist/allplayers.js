@@ -691,45 +691,65 @@ allplayers.app.server.prototype.init = function() {
   // The addProduct message.
   $.pm.bind('addProduct', function(data) {
     var productExists = false;
-    // Check if the product was already added.
-    $('input[name="add-product[]"]').each(function() {
-      var product = JSON.parse($(this).val());
-      if (data['product_uuid'] == product['product_uuid']) {
-        // Update the product quantity.
-        product['quantity'] = parseInt(product['quantity']) +
-          parseInt(data['quantity']);
-        $(this).val(JSON.stringify(product));
-        var productCol = '#add-products-table tbody tr.' + data['product_uuid'];
-        $(productCol + ' td:last').text(product['quantity']);
-        productExists = true;
-      }
-    });
+    (new allplayers.product({uuid: data['product_uuid']})).getProduct(
+      data['product_uuid'],
+      function(result) {
+        // Check if the UUIDs match.
+        if (result.uuid == data['product_uuid']) {
+          // If it is a product or price isn't supplied, use the price assigned
+          // to the product in store.
+          if (result.type == 'product' || data['price'] == 'undefined') {
+            result.price_raw = result.price_raw / 100;
+            data['price'] = accounting.formatMoney(result.price_raw);
+          }
+          data['title'] = result.title;
+          // Check if the product was already added.
+          $('input[name="add-product[]"]').each(function() {
+            var product = JSON.parse($(this).val());
+            if (product && data['product_uuid'] == product['product_uuid']) {
+              // Update the product quantity.
+              product['quantity'] = parseInt(product['quantity']) +
+                parseInt(data['quantity']);
+              $(this).val(JSON.stringify(product));
+              var productCol = '#add-products-table tbody tr.' +
+                data['product_uuid'];
+              $(productCol + ' td:last').text(product['quantity']);
+              productExists = true;
+            }
+          });
 
-    // If this product hasn't been added yet.
-    if (!productExists && data['product_uuid'] && data['price'] &&
-      data['quantity'] && data['title']
-    ) {
-      $('<input>').attr({
-        type: 'hidden',
-        name: 'add-product[]',
-        value: JSON.stringify(data)
-      }).appendTo('form');
-      $('#edit-next').val('Continue');
-      // Add the products table if not already.
-      if ($('#add-products-table').length == 0) {
-        $('<table>').attr({
-          id: 'add-products-table',
-          class: 'sticky-table'
-        }).appendTo('#add-products');
-        $('#add-products-table').append('<thead><tr><th>Added Products</th>' +
-          '<th>Price</th><th>Quantity</th></tr></thead>');
-        $('#add-products-table').append('<tbody></tbody>');
+          // If this product hasn't been added yet.
+          if (!productExists && data['product_uuid'] && data['price'] &&
+            data['quantity'] && data['title']
+          ) {
+            $('<input>').attr({
+              type: 'hidden',
+              name: 'add-product[]',
+              value: JSON.stringify(data)
+            }).appendTo('form');
+            $('#edit-next').val('Continue');
+            // Add the products table if not already.
+            if ($('#add-products-table').length == 0) {
+              $('<table>').attr({
+                id: 'add-products-table',
+                class: 'sticky-table'
+              }).appendTo('#add-products');
+              $('#add-products-table').append('<thead><tr>' +
+                '<th>Added Products</th><th>Price</th><th>Quantity</th></tr>' +
+                '</thead>');
+              $('#add-products-table').append('<tbody></tbody>');
+            }
+            // Add the product to the table.
+            $('#add-products-table tbody').append('<tr class="' +
+              data['product_uuid'] + '"><td>' + data['title'] + '</td><td>' +
+              data['price'] + '</td><td>' + data['quantity'] + '</td></tr>');
+          }
+        }
+        else {
+          alert('There was an error adding the product.');
+        }
       }
-      // Add the product to the table.
-      $('#add-products-table tbody').append('<tr class="' +
-        data['product_uuid'] + '"><td>' + data['title'] + '</td><td>' +
-        data['price'] + '</td><td>' + data['quantity'] + '</td></tr>');
-    }
+    );
   });
 
   // The client ready message.
