@@ -847,6 +847,7 @@ window.allplayers = window.allplayers || {embed: {}};
           'titlebar=no',
           'toolbar=no',
           'status=no',
+          'scrollbars=yes',
           'chrome=yes'
         ];
         eSource += '&clearCache=true&bodyPadding=10&showHelp=1';
