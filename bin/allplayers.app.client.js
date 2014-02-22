@@ -528,6 +528,7 @@ allplayers.app.client.prototype.init = function() {
   this.heightTimer = null;
   this.queue = {};
   this.reg = null;
+  this.checkout = null;
 
   // Keep track of the self pointer.
   var self = this;
@@ -553,7 +554,12 @@ allplayers.app.client.prototype.init = function() {
 
   // Get the registration data.
   jQuery.pm.bind('getRegistration', function(data) {
-    self.reg = data.hasOwnProperty('reg') ? data.reg : false;
+    self.reg = data;
+  });
+
+  // Get the checkout data.
+  jQuery.pm.bind('getCheckout', function(data) {
+    self.checkout = data;
   });
 
   // Trigger the resizing events.

@@ -529,6 +529,7 @@ allplayers.app.server = function(options, context) {
     group: 'api',
     query: {},
     reg: {},
+    checkout: {},
     src: '',
     style: '',
     complete: function() {}
@@ -650,7 +651,7 @@ allplayers.app.server.prototype.init = function() {
   this.context.append(loading);
   this.context.append(iframe);
 
-  var serverTarget = null;
+  this.serverTarget = null;
 
   // The chrome plugin is ready.
   $.pm.bind('chromePluginReady', function() {
@@ -660,7 +661,7 @@ allplayers.app.server.prototype.init = function() {
   // Pass along chrome message responses.
   $.pm.bind('chromeMsgResp', function(data) {
     $.pm({
-      target: serverTarget,
+      target: self.serverTarget,
       url: self.baseURL,
       type: 'chromeMsgResp',
       data: data
@@ -670,7 +671,7 @@ allplayers.app.server.prototype.init = function() {
   // Pass along the chrome messages.
   $.pm.bind('chromeMsg', function(data) {
     $.pm({
-      target: serverTarget,
+      target: self.serverTarget,
       url: self.baseURL,
       type: 'chromeMsg',
       data: data
@@ -679,7 +680,7 @@ allplayers.app.server.prototype.init = function() {
 
   // The init message.
   $.pm.bind('init', function(data, e) {
-    serverTarget = e.source;
+    self.serverTarget = e.source;
     self.isLoading = false;
     loading.remove();
 
@@ -754,7 +755,7 @@ allplayers.app.server.prototype.init = function() {
 
   // The client ready message.
   $.pm.bind('clientReady', function(data, e) {
-    serverTarget = e.source;
+    self.serverTarget = e.source;
 
     if (self.pluginReady) {
       $.pm({
@@ -764,13 +765,40 @@ allplayers.app.server.prototype.init = function() {
       });
     }
 
-    // Send them the registration object.
-    $.pm({
-      target: e.source,
-      url: self.baseURL,
-      type: 'getRegistration',
-      data: self.options.reg
-    });
+    if (self.options.type == 'registration') {
+      // Send them the registration object.
+      $.pm({
+        target: e.source,
+        url: self.baseURL,
+        type: 'getRegistration',
+        data: self.options.reg
+      });
+    }
+    else if (self.options.type == 'checkout') {
+      // Send them the checkout object.
+      $.pm({
+        target: e.source,
+        url: self.baseURL,
+        type: 'getCheckout',
+        data: self.options.checkout
+      });
+    }
   });
 
+  /**
+   * Process a checkout.
+   *
+   * @param {object} checkout The checkout object.
+   * @param {string} src The source.
+   */
+  allplayers.app.server.prototype.init.processCheckout = function(
+    checkout,
+    src) {
+    $.pm({
+      target: self.serverTarget,
+      url: self.baseURL,
+      type: 'processCheckout',
+      data: checkout
+    });
+  };
 };
