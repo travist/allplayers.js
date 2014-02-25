@@ -196,47 +196,105 @@ allplayers.app.server.prototype.init = function() {
     return data;
   });
 
+  /**
+   * Method to ensure that an added product is valid.
+   * @param {object} product
+   *   The product to be added to the registration.
+   *
+   * @return {boolean}
+   *   If this product is a valid product.
+   */
+  var productValid = function(product) {
+    return product['product_uuid'] &&
+      product['price'] &&
+      product['quantity'] &&
+      product['title'];
+  };
+
+  /**
+   * Returns the product input.
+   *
+   * @param {string} uuid
+   *   The uuid for the product input.
+   *
+   * @return {object}
+   *   The jQuery object of the product input.
+   */
+  var productInput = function(uuid) {
+    return $('input[product="' + uuid + '"]');
+  };
+
   // The addProduct message.
   $.pm.bind('addProduct', function(data) {
-    var productExists = false;
-    // Check if the product was already added.
-    $('input[name="add-product[]"]').each(function() {
-      var product = JSON.parse($(this).val());
-      if (data['product_uuid'] == product['product_uuid']) {
-        // Update the product quantity.
-        product['quantity'] = parseInt(product['quantity']) +
-          parseInt(data['quantity']);
-        $(this).val(JSON.stringify(product));
-        var productCol = '#add-products-table tbody tr.' + data['product_uuid'];
-        $(productCol + ' td:last').text(product['quantity']);
-        productExists = true;
-      }
-    });
+    var uuid = data['product_uuid'];
+    var product = productInput(uuid).val();
 
-    // If this product hasn't been added yet.
-    if (!productExists && data['product_uuid'] && data['price'] &&
-      data['quantity'] && data['title']
-    ) {
+    // If a product was already found.
+    if (product) {
+
+      // Update the quantity.
+      product = JSON.parse(product);
+      product['quantity'] = parseInt(product['quantity']);
+      product['quantity'] += parseInt(data['quantity']);
+      productInput(uuid).val(JSON.stringify(product));
+      var productCol = '#add-product-display-' + uuid;
+      $(productCol + ' td:last').text(product['quantity']);
+    }
+
+    // Make sure the product is valid.
+    else if (productValid(data)) {
+
+      // Create the input for the new product.
       $('<input>').attr({
         type: 'hidden',
+        product: uuid,
         name: 'add-product[]',
         value: JSON.stringify(data)
-      }).appendTo('form');
+      }).appendTo('form#og-registration-register-app');
+
+      // Change the next button value.
       $('#edit-next').val('Continue');
+
       // Add the products table if not already.
       if ($('#add-products-table').length == 0) {
         $('<table>').attr({
           id: 'add-products-table',
           class: 'sticky-table'
         }).appendTo('#add-products');
-        $('#add-products-table').append('<thead><tr><th>Added Products</th>' +
-          '<th>Price</th><th>Quantity</th></tr></thead>');
-        $('#add-products-table').append('<tbody></tbody>');
+
+        // Create the products table.
+        $('#add-products-table').append(
+          '<thead>' +
+            '<tr>' +
+              '<th>Added Products</th>' +
+              '<th>Price</th>' +
+              '<th>Quantity</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody></tbody>'
+        );
       }
+
       // Add the product to the table.
-      $('#add-products-table tbody').append('<tr class="' +
-        data['product_uuid'] + '"><td>' + data['title'] + '</td><td>' +
-        data['price'] + '</td><td>' + data['quantity'] + '</td></tr>');
+      $('#add-products-table tbody').append(
+        '<tr id="add-product-display-' + uuid + '">' +
+          '<td>' + data['title'] + '</td>' +
+          '<td>' + data['price'] + '</td>' +
+          '<td>' + data['quantity'] + '</td>' +
+        '</tr>'
+      );
+    }
+  });
+
+  // The remove product message.
+  $.pm.bind('removeProduct', function(data) {
+    var uuid = data['product_uuid'];
+    var product = productInput(uuid).val();
+    if (product) {
+
+      // Remove the input and table field.
+      productInput(uuid).remove();
+      $('#add-product-display-' + uuid).remove();
     }
   });
 
