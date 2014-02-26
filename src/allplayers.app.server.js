@@ -198,6 +198,7 @@ allplayers.app.server.prototype.init = function() {
 
   /**
    * Method to ensure that an added product is valid.
+   *
    * @param {object} product
    *   The product to be added to the registration.
    *
