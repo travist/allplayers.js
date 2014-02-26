@@ -37,6 +37,7 @@ allplayers.app.client.prototype.init = function() {
   this.queue = {};
   this.reg = null;
   this.checkout = null;
+  this.type = 'registration';
 
   // Keep track of the self pointer.
   var self = this;
@@ -63,11 +64,13 @@ allplayers.app.client.prototype.init = function() {
   // Get the registration data.
   jQuery.pm.bind('getRegistration', function(data) {
     self.reg = data;
+    self.type = 'registration';
   });
 
   // Get the checkout data.
   jQuery.pm.bind('getCheckout', function(data) {
     self.checkout = data;
+    self.type = 'checkout';
   });
 
   // Trigger the resizing events.
