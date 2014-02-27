@@ -9,6 +9,7 @@ files =	drupal.api.js/bin/drupal.api.js\
 	src/allplayers.event.js\
 	src/allplayers.group.js\
 	src/allplayers.location.js\
+	src/allplayers.product.js\
 	src/allplayers.calendar.js\
 	lib/treeselect/lib/jquery.moreorless.js/jquery.moreorless.js\
 	lib/treeselect/bin/jquery.treeselect.js\
@@ -19,6 +20,7 @@ lintfiles = src/allplayers.date.js\
 	src/allplayers.event.js\
 	src/allplayers.group.js\
 	src/allplayers.location.js\
+	src/allplayers.product.js\
 	src/allplayers.calendar.js\
 	src/allplayers.app.server.js\
 	src/allplayers.app.client.js\
@@ -39,6 +41,7 @@ docfiles = drupal.api.js/src/drupal.api.js\
 	src/allplayers.event.js\
 	src/allplayers.group.js\
 	src/allplayers.location.js\
+	src/allplayers.product.js\
 	src/allplayers.calendar.js
 
 embedserverfiles = src/allplayers.embed.js\
