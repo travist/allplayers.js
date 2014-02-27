@@ -745,12 +745,15 @@ var allplayers = allplayers || {app: {}};
             // Make sure the product is valid.
             else if (productValid(data)) {
 
-              // If it is a product or price isn't supplied, use the price
-              // assigned to the product in store.
-              if (result.type == 'product' || data['price'] == 'undefined') {
-                var price = result.price_raw / 100;
-                data['price'] = accounting.formatMoney(price);
+              // If it is a product with a value greater than $0, or price isn't
+              // supplied, use the price  assigned to the product in store.
+              if (
+                data['price'] == 'undefined' ||
+                (result.type == 'product' && result.price_raw > 0)
+              ) {
+                data['price'] = result.price_raw / 100;
               }
+              data['price'] = accounting.formatMoney(data['price']);
               data['title'] = result.title;
 
               // Create the input for the new product.
