@@ -495,7 +495,7 @@ var allplayers = allplayers || {app: {}};
               var uuid = data['product_uuid'];
               var product = productInput(uuid).val();
               var existingProducts = $('#add-existing-products-' +
-                data['order_id']).val();
+                self.options.checkout.order_id).val();
 
               // If a product was already found.
               if (product) {
@@ -526,7 +526,7 @@ var allplayers = allplayers || {app: {}};
                 data = productUpdateTotal(data);
               }
               existingProducts = addCheckoutProducts(existingProducts, data);
-              $('#add-existing-products-' + data['order_id'])
+              $('#add-existing-products-' + self.options.checkout.order_id)
                 .val(JSON.stringify(existingProducts));
             }
             else {
@@ -542,10 +542,11 @@ var allplayers = allplayers || {app: {}};
         data['title'] += ' (Adhoc)';
 
         // Add the product info to the list of adhoc products to create.
-        var adhocProducts = $('#add-adhoc-products-' + data['order_id']).val();
+        var adhocProducts = $('#add-adhoc-products-' +
+          self.options.checkout.order_id).val();
         adhocProducts = addCheckoutProducts(adhocProducts, data);
 
-        $('#add-adhoc-products-' + data['order_id'])
+        $('#add-adhoc-products-' + self.options.checkout.order_id)
           .val(JSON.stringify(adhocProducts));
       }
     });
