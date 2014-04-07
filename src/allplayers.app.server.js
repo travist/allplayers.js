@@ -256,8 +256,10 @@ var allplayers = allplayers || {app: {}};
     /**
      * Add a product to the list of products.
      *
-     * @param {array} products The array of already added products.
-     * @param {object} product The product to add.
+     * @param {array} products
+     *   The array of already added products.
+     * @param {object} product
+     *   The product to add.
      *
      * @return {array}
      *   The updated list of products.
@@ -301,10 +303,14 @@ var allplayers = allplayers || {app: {}};
     /**
      * Process a checkout.
      *
-     * @param {object} checkout The checkout object.
-     * @param {array} adhocProducts Array of adhoc products.
-     * @param {array} existingProducts Array of existing products.
-     * @param {string} src The source.
+     * @param {object} checkout
+     *   The checkout object.
+     * @param {array} adhocProducts
+     *   Array of adhoc products.
+     * @param {array} existingProducts
+     *   Array of existing products.
+     * @param {string} src
+     *   The source.
      */
     allplayers.app.server.prototype.init.processCheckout = function(
       checkout,
@@ -321,6 +327,13 @@ var allplayers = allplayers || {app: {}};
         orderTotal += existingProducts[i].price_raw;
       }
 
+      // Determine how much the user paid.
+      var paid = orderTotal;
+      var partialPayment = '#edit-commerce-payment-payment-details-amount';
+      if ($(partialPayment)) {
+        paid = parseFloat($(partialPayment).val()) * 100;
+      }
+
       // Tell the client to process the checkout.
       $.pm({
         target: self.serverTarget,
@@ -330,7 +343,8 @@ var allplayers = allplayers || {app: {}};
           checkout: checkout,
           adhocProducts: adhocProducts,
           existingProducts: existingProducts,
-          orderTotal: orderTotal
+          orderTotal: orderTotal,
+          paid: paid
         }
       });
     };
@@ -390,10 +404,11 @@ var allplayers = allplayers || {app: {}};
       }
 
       // Update the order total.
-      var total = $('td.component-total').text();
+      var componentTotal = $('td.component-total');
+      var total = componentTotal.text();
       total = accounting.unformat(total) + (product['price_raw'] / 100);
       total = accounting.formatMoney(total);
-      $('td.component-total').text(total);
+      componentTotal.text(total);
     };
 
     // The addProduct action.
