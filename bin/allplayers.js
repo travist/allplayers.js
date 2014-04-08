@@ -3866,7 +3866,9 @@ var allplayers = allplayers || {};
       };
 
       // Setup the input ID.
-      params.inputId = 'chosentree-select-' + params.uuid;
+      if (!params.hasOwnProperty('inputId')) {
+        params.inputId = 'chosentree-select-' + params.uuid;
+      }
 
       // Create the chosentree item.
       $(this).chosentree(params);
