@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: src/allplayers.date.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: src/allplayers.date.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>/** The allplayers namespace. */
+var allplayers = allplayers || {};
+
+/**
+ * @constructor
+ * @class The date class wraps up the AllPlayers Date-Time object used in
+ * several parameters for Event creation, etc.
+ *
+ * &lt;p>&lt;strong>Usage:&lt;/strong>&lt;/p>
+ * &lt;pre>&lt;code>
+ *   var start = new Date('2010-09-01T00:00:00');  // Start on 9-1-2011
+ *   var end = new Date('2012-09-20T00:00:00');    // End on 9-20-2012
+ *   var repeat = {
+ *     interval:1,                            // The repeat interval.
+ *     freq:'DAILY',                          // Repeat Daily
+ *     until:new Date('2012-09-04T00:00:00'), // Go until 9-4-2012
+ *     bymonth: ['1'],                        // January
+ *     bymonthday: ['3'],                     // 3rd of the month.
+ *     byday: [
+ *       'SU' => 'SU',                        // Sunday
+ *       '+1MO' => '+1MO',                    // First Monday of the Month
+ *       '+2WED' => '+2WED',                  // 2nd Wed of the month
+ *     ],
+ *     exdate: [
+ *       '2011-09-04T00:00:00'                // Except 9-4-2011
+ *       '2011-10-03T00:00:00'                // Except 10-3-2011
+ *     ],
+ *     rdate: [
+ *       '2011-09-01T00:00:00'                // Add 9-1-2011
+ *       '2011-10-04T00:00:00'                // ADD 10-4-2011
+ *     ]
+ *   };
+ *
+ *   // Create a new AllPlayers Date object.
+ *   var date = new allplayers.date(start, end, repeat);
+ *
+ *   // Add additional exceptions.
+ *   date.addException('2011-09-10T00:00:00');
+ *
+ *   // Add additional dates.
+ *   date.addRDate('2011-10-10T00:00:00');
+ * &lt;/code>&lt;/pre>
+ *
+ * @param {Date} start The start date.
+ * @param {Date} end The end date.
+ * @param {object} repeat The repeat rule. In the following form.
+ */
+allplayers.date = function(start, end, repeat) {
+
+  /**
+   * Creates a new date based on a parameter which could be a string, Date
+   * object, or nothing...
+   *
+   * @param {optional} date Either a date string, Date object, or nothing...
+   * @return {Date} A JavaScript Date object.
+   */
+  this.newDate = function(date) {
+    if (typeof date === 'string') {
+      return new Date(date);
+    }
+    else if (typeof date === 'object') {
+      return date;
+    }
+    else {
+      return new Date();
+    }
+  };
+
+  /** The start date */
+  this.start = this.newDate(start);
+
+  /** The end date */
+  this.end = this.newDate(end);
+
+  /** The repeat rule */
+  this.repeat = repeat ? {
+    interval: (repeat.interval ? repeat.interval : 1),
+    freq: (repeat.freq ? repeat.freq : 'DAILY'),
+    until: this.newDate(repeat.until),
+    bymonth: (repeat.bymonth ? repeat.bymonth : []),
+    bymonthday: (repeat.bymonthday ? repeat.bymonthday : []),
+    byday: (repeat.byday ? repeat.byday : []),
+    exdate: (repeat.exdate ? repeat.exdate : []),
+    rdate: (repeat.rdate ? repeat.rdate : [])
+  } : null;
+};
+
+// Need to fix the Date prototype to allow toISOString.
+if (!Date.prototype.toISOString) {
+  var padzero = function(n) {
+    return n &lt; 10 ? '0' + n : n;
+  };
+  var pad2zeros = function(n) {
+    if (n &lt; 100) {
+      n = '0' + n;
+    }
+    if (n &lt; 10) {
+      n = '0' + n;
+    }
+    return n;
+  };
+
+  /**
+   * Provide a toISOString method to the Date prototype.
+   *
+   * @return {string} An ISO string representation of the date object.
+   */
+  Date.prototype.toISOString = function() {
+    var ISOString = this.getUTCFullYear() + '-';
+    ISOString += padzero(this.getUTCMonth() + 1) + '-';
+    ISOString += padzero(this.getUTCDate()) + 'T';
+    ISOString += padzero(this.getUTCHours()) + ':';
+    ISOString += padzero(this.getUTCMinutes()) + ':';
+    ISOString += padzero(this.getUTCSeconds()) + '.';
+    ISOString += pad2zeros(this.getUTCMilliseconds()) + 'Z';
+    return ISOString;
+  };
+}
+
+/**
+ * Updates the date start and end dates and repeat rule.
+ *
+ * @param {Date} start The new start date.
+ * @param {Date} end The new end date.
+ * @param {object} repeat The new repeat rule.
+ */
+allplayers.date.prototype.update = function(start, end, repeat) {
+  this.start = start ? this.newDate(start) : this.start;
+  this.end = end ? this.newDate(end) : this.end;
+  if (repeat) {
+    repeat.until = this.newDate(repeat.until);
+    jQuery.extend(this.repeat, repeat);
+  }
+};
+
+/**
+ * Adds a generic new date to repeat rule.
+ *
+ * @param {string} param The repeat rule parameter to set.
+ * @param {optional} date Either a date string, Date object, or nothing...
+ */
+allplayers.date.prototype.addDate = function(param, date) {
+
+  // Normalize the date parameter.
+  date = this.newDate(date);
+
+  // Add this date.
+  this.repeat[param].push(date);
+};
+
+/**
+ * Add's an exception date to the repeat rule.
+ *
+ * @param {Date} except An exception date to remove from the repeat rule.
+ */
+allplayers.date.prototype.addException = function(except) {
+
+  // Add an exception.
+  this.addDate('except', except);
+};
+
+/**
+ * Adds an additional date to the repeat rule.
+ *
+ * @param {Date} addition An additional date to add to the repeat rule.
+ */
+allplayers.date.prototype.addRDate = function(addition) {
+
+  // Add an addition.
+  this.addDate('rdate', addition);
+};
+
+/**
+ * Returns the object which will be passed to the services API.
+ *
+ * @return {object} The JSON object representation of this object.
+ */
+allplayers.date.prototype.get = function() {
+  var i = 0;
+  var obj = {
+    start: this.start.toISOString(),
+    end: this.end.toISOString()
+  };
+
+  // If there is a repeat rule, then add that to the object.
+  if (this.repeat) {
+    obj.repeat = {
+      interval: this.repeat.interval,
+      freq: this.repeat.freq,
+      until: this.repeat.until.toISOString(),
+      bymonth: this.repeat.bymonth,
+      bymonthday: this.repeat.bymonthday,
+      byday: this.repeat.byday,
+      exdate: [],
+      rdate: []
+    };
+
+    // Iterate through the exdate and rdate and add the date strings.
+    i = this.repeat.exdate.length;
+    while (i--) {
+      obj.repeat.exdate.push(this.repeat.exdate[i].toISOString());
+    }
+
+    i = this.repeat.rdate.length;
+    while (i--) {
+      obj.repeat.rdate.push(this.repeat.rdate[i].toISOString());
+    }
+  }
+
+  return obj;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="allplayers.calendar.html">calendar</a></li><li><a href="allplayers.date.html">date</a></li><li><a href="allplayers.event.html">event</a></li><li><a href="allplayers.group.html">group</a></li><li><a href="allplayers.location.html">location</a></li><li><a href="allplayers.product.html">product</a></li><li><a href="drupal.entity.html">entity</a></li><li><a href="drupal.node.html">node</a></li><li><a href="drupal.system.html">system</a></li><li><a href="drupal.user.html">user</a></li></ul><h3>Global</h3><ul><li><a href="global.html#allplayers">allplayers</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#drupal">drupal</a></li><li><a href="global.html#endpoint">endpoint</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getURL">getURL</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#loading">loading</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#resource">resource</a></li><li><a href="global.html#save">save</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Mon Apr 14 2014 14:29:13 GMT-0500 (CDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

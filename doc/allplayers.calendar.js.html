@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: src/allplayers.calendar.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: src/allplayers.calendar.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>/** The allplayers namespace. */
+var allplayers = allplayers || {};
+
+(function($) {
+
+  /** The default options. */
+  var defaults = {
+    dialog: '#calendar-dialog-form'
+  };
+
+  // Store all the calendar instances.
+  allplayers.calendars = {};
+
+  // Add a way to instanciate using jQuery prototype.
+  if (!$.fn.allplayers_calendar) {
+    $.fn.allplayers_calendar = function(options) {
+      return $(this).each(function() {
+        if (!allplayers.calendars[$(this).selector]) {
+          new allplayers.calendar($(this), options);
+        }
+      });
+    };
+  }
+
+  /**
+   * @class The AllPlayers calendar JavaScript API
+   *
+   * &lt;p>&lt;strong>Usage:&lt;/strong>
+   * &lt;pre>&lt;code>
+   *
+   *   // Create a calendar
+   *   var player = $("#calendar").apcicalendar({
+   *
+   *   });
+   *
+   * &lt;/code>&lt;/pre>
+   * &lt;/p>
+   *
+   * @param {object} context The jQuery context.
+   * @param {object} options This components options.
+   */
+  allplayers.calendar = function(context, options) {
+
+    // Make sure we provide default options...
+    var _this = this;
+    options = $.extend(defaults, options, {
+      header: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'month,agendaWeek,agendaDay'
+      },
+      editable: true,
+      dayClick: function(date, allDay, jsEvent, view) {
+        console.log(date);
+        console.log(allDay);
+        console.log(jsEvent);
+        console.log(view);
+      },
+      eventClick: function(event, jsEvent, view) {
+        console.log(event);
+        console.log(jsEvent);
+        console.log(view);
+        //_this.dialog.show().dialog();
+      },
+      eventDrop: function(event, jsEvent, ui, view) {
+
+        // Save this event.
+        event.obj.update(event);
+        event.obj.save();
+      },
+      eventResizeStop: function(event, jsEvent, ui, view) {
+
+        // Save this event.
+        event.obj.update(event);
+        event.obj.save();
+      },
+      events: function(start, end, callback) {
+        _this.getEvents(start, end, callback);
+      }
+    });
+
+    /** The calendar dialog to edit events */
+    this.dialog = $(options.dialog, context).hide();
+
+    // Store this player instance.
+    allplayers.calendars[options.id] = this;
+
+    // TO-DO: MAKE IT SO THAT WE DON'T NEED A GROUP TO GET EVENTS
+    this.uuid = '';
+
+    // Create the fullcalendar.
+    context.fullCalendar(options);
+  };
+
+  allplayers.calendar.prototype.onEventClick = function() {
+    console.log('Event has been clicked');
+  };
+
+  allplayers.calendar.prototype.getUUID = function(callback) {
+    if (this.uuid) {
+      callback.call(this);
+    }
+    else {
+      var _this = this;
+      var query = {search: 'Spring Soccer 2011'};
+      allplayers.api.searchGroups(query, function(groups) {
+        _this.uuid = groups[0].uuid;
+        callback.call(_this);
+      });
+    }
+  };
+
+  /**
+   * Get's all the events in this calendar.
+   *
+   * @param {Date} start The start timeframe.
+   * @param {Date} end The end timeframe.
+   * @param {function} callback The callback function to return the events.
+   */
+  allplayers.calendar.prototype.getEvents = function(start, end, callback) {
+
+    // Format the start and end strings according to the AllPlayers API.
+    var startString = start.getFullYear() + '-';
+    startString += (start.getMonth() + 1) + '-';
+    startString += start.getDate();
+
+    var endString = end.getFullYear() + '-';
+    endString += (end.getMonth() + 1) + '-';
+    endString += end.getDate();
+
+    this.getUUID(function() {
+      allplayers.api.getGroupEvents(this.uuid, {
+        start: startString,
+        end: endString,
+        fields: '*',
+        limit: 0,
+        offset: 0
+      }, function(events) {
+
+        // Iterate through the events and make them allplayers.event's
+        var i = events.length;
+        while (i--) {
+          events[i].id = events[i].uuid;
+          events[i].obj = new allplayers.event(events[i]);
+        }
+
+        // Add this to the events for the calendar.
+        callback(events);
+      });
+    });
+  };
+
+}(jQuery));
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="allplayers.calendar.html">calendar</a></li><li><a href="allplayers.date.html">date</a></li><li><a href="allplayers.event.html">event</a></li><li><a href="allplayers.group.html">group</a></li><li><a href="allplayers.location.html">location</a></li><li><a href="allplayers.product.html">product</a></li><li><a href="drupal.entity.html">entity</a></li><li><a href="drupal.node.html">node</a></li><li><a href="drupal.system.html">system</a></li><li><a href="drupal.user.html">user</a></li></ul><h3>Global</h3><ul><li><a href="global.html#allplayers">allplayers</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#drupal">drupal</a></li><li><a href="global.html#endpoint">endpoint</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getURL">getURL</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#loading">loading</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#resource">resource</a></li><li><a href="global.html#save">save</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Mon Apr 14 2014 14:29:13 GMT-0500 (CDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

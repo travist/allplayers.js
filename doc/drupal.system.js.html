@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: drupal.api.js/src/drupal.system.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: drupal.api.js/src/drupal.system.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>// The drupal namespace.
+var drupal = drupal || {};
+
+/*!
+ * Modified from...
+ *
+ * jQuery Cookie Plugin
+ * https://github.com/carhartl/jquery-cookie
+ *
+ * Copyright 2011, Klaus Hartl
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://www.opensource.org/licenses/mit-license.php
+ * http://www.opensource.org/licenses/GPL-2.0
+ */
+/**
+ * Add a way to store cookies.
+ *
+ * @param {string} key The key for the cookie.
+ * @param {string} value The value of the cookie.
+ * @param {object} options The options for the cookie storage.
+ * @return {string} The results of the storage.
+ */
+drupal.cookie = function(key, value, options) {
+
+  // key and at least value given, set cookie...
+  if (arguments.length > 1 &&
+     (!/Object/.test(Object.prototype.toString.call(value)) ||
+      value === null ||
+      value === undefined)) {
+    options = $.extend({}, options);
+
+    if (value === null || value === undefined) {
+      options.expires = -1;
+    }
+
+    if (typeof options.expires === 'number') {
+      var days = options.expires, t = options.expires = new Date();
+      t.setDate(t.getDate() + days);
+    }
+
+    value = String(value);
+
+    // use expires attribute, max-age is not supported by IE
+    return (document.cookie = [encodeURIComponent(key), '=',
+    options.raw ? value : encodeURIComponent(value),
+    options.expires ? '; expires=' + options.expires.toUTCString() : '',
+    options.path ? '; path=' + options.path : '',
+    options.domain ? '; domain=' + options.domain : '',
+    options.secure ? '; secure' : ''].join(''));
+  }
+
+  // key and possibly options given, get cookie...
+  options = value || {};
+  var decode = options.raw ? function(s) {
+    return s;
+  } : decodeURIComponent;
+
+  var pairs = document.cookie.split('; ');
+  for (var i = 0, pair; pair = pairs[i] && pairs[i].split('='); i++) {
+    if (decode(pair[0]) === key)
+      return decode(pair[1] || '');
+  }
+  return null;
+};
+
+/**
+ * @constructor
+ * @class The system class
+ *
+ * @param {function} callback The function to be called once the system has
+ * connected.
+ * @param {object} options Options used to govern functionality.
+ */
+drupal.system = function(callback, options) {
+  drupal.entity.call(this, {}, callback, options);
+};
+
+/** Derive from entity. */
+drupal.system.prototype = new drupal.entity();
+
+/** Reset the constructor. */
+drupal.system.prototype.constructor = drupal.system;
+
+/** Declare the system api. */
+drupal.system.api = jQuery.extend(new drupal.api(), {
+  resource: 'system'
+});
+
+/**
+ * Sets the object.
+ *
+ * @param {object} object The object which contains the data.
+ */
+drupal.system.prototype.set = function(object) {
+  drupal.entity.prototype.set.call(this, object);
+
+  /** The name of this entity. */
+  this.entityName = 'system';
+
+  /** Set the api. */
+  this.api = drupal.system.api;
+
+  /** Set current user. */
+  this.user = new drupal.user(object.user);
+  this.user.setSession(object.session_name, object.sessid);
+};
+
+/**
+ * Returns the object.
+ *
+ * @return {object} The object to send to the Services endpoint.
+ */
+drupal.system.prototype.get = function() {
+  return jQuery.extend(drupal.entity.prototype.get.call(this), {
+    user: this.user.get()
+  });
+};
+
+/**
+ * Loads the server.
+ *
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.load = function(callback) {
+
+  // Connect to the server.
+  this.api.execute('connect', null, (function(system) {
+    return function(object) {
+      system.update(object, callback);
+    };
+  })(this));
+};
+
+/**
+ * Get a variable from the server.
+ *
+ * @param {string} name The variable you wish to retrieve.
+ * @param {string} def The default value of the variable.
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.get_variable = function(name, def, callback) {
+  this.api.execute('get_variable', {
+    name: name,
+    'default': def
+  }, callback);
+};
+
+/**
+ * Set a variable on the server.
+ *
+ * @param {string} name The variable you wish to set.
+ * @param {string} value The value of the variable.
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.set_variable = function(name, value, callback) {
+  this.api.execute('set_variable', {
+    name: name,
+    value: value
+  }, callback);
+};
+
+/**
+ * Delete a variable on the server.
+ *
+ * @param {string} name The variable you wish to set.
+ * @param {function} callback The callback function.
+ */
+drupal.system.prototype.del_variable = function(name, callback) {
+  this.api.execute('del_variable', {
+    name: name
+  }, callback);
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="allplayers.calendar.html">calendar</a></li><li><a href="allplayers.date.html">date</a></li><li><a href="allplayers.event.html">event</a></li><li><a href="allplayers.group.html">group</a></li><li><a href="allplayers.location.html">location</a></li><li><a href="allplayers.product.html">product</a></li><li><a href="drupal.entity.html">entity</a></li><li><a href="drupal.node.html">node</a></li><li><a href="drupal.system.html">system</a></li><li><a href="drupal.user.html">user</a></li></ul><h3>Global</h3><ul><li><a href="global.html#allplayers">allplayers</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#drupal">drupal</a></li><li><a href="global.html#endpoint">endpoint</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getURL">getURL</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#loading">loading</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#resource">resource</a></li><li><a href="global.html#save">save</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Mon Apr 14 2014 14:29:13 GMT-0500 (CDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

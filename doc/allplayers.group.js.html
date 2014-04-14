@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: src/allplayers.group.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: src/allplayers.group.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source"><code>/** The allplayers namespace. */
+var allplayers = allplayers || {};
+
+/**
+ * @constructor
+ * @extends drupal.entity
+ * @class The AllPlayers event class
+ *
+ * @param {object} object The node object.
+ * @param {function} callback The function to be called once the node has
+ * been retrieved from the server.
+ * @param {object} options Options used to govern functionality.
+ */
+allplayers.group = function(object, callback, options) {
+  drupal.node.call(this, object, callback, options);
+};
+
+/** Derive from node. */
+allplayers.group.prototype = new drupal.node();
+
+/** Reset the constructor. */
+allplayers.group.prototype.constructor = allplayers.group;
+
+/** Declare the event api. */
+allplayers.group.api = jQuery.extend(new drupal.api(), {
+  resource: (window.location.hostname.indexOf('store') == -1) ?
+    'groups' : 'group_stores'
+});
+
+/**
+ * Returns an index of groups.
+ *
+ * @param {object} query The query parameters.
+ * @param {function} callback The callback function.
+ * @param {object} options Options used to govern functionality.
+ */
+allplayers.group.index = function(query, callback, options) {
+  drupal.entity.index(allplayers.group, query, callback, options);
+};
+
+/**
+ * Sets the object.
+ *
+ * @param {object} object The object which contains the data.
+ */
+allplayers.group.prototype.set = function(object) {
+  drupal.node.prototype.set.call(this, object);
+
+  /** The name of this entity. */
+  this.entityName = 'group';
+
+  /** Set the api. */
+  this.api = allplayers.group.api;
+
+  /** Set the id based on the uuid of the object. */
+  this.id = object.uuid || object.id || this.id || '';
+
+  /** See if this group has children. */
+  var has_value = object.hasOwnProperty('has_children');
+  this.has_children = has_value ? object.has_children : !!this.has_children;
+
+  /** A {@link allplayers.location} object. */
+  this.location = object.location || this.location || new allplayers.location();
+
+  // Set the values for this entity.
+  this.setProperties({
+    activity_level: 0,
+    list_in_directory: 0,
+    active: false,
+    registration_fees_enabled: '',
+    approved_for_payment: '',
+    accept_amex: '',
+    primary_color: '',
+    secondary_color: '',
+    node_status: 0,
+    logo: '',
+    url: '',
+    groups_above_uuid: [],
+    registration_link: '',
+    registration_text: ''
+  }, object);
+};
+
+/**
+ * Returns the object to send to Services.
+ *
+ * @return {object} The object to send to the Services endpoint.
+ */
+allplayers.group.prototype.get = function() {
+  return jQuery.extend(drupal.node.prototype.get.call(this), {
+    location: this.location.get(),
+    activity_level: this.activity_level,
+    list_in_directory: this.list_in_directory,
+    active: this.active,
+    registration_fees_enabled: this.registration_fees_enabled,
+    approved_for_payment: this.approved_for_payment,
+    accept_amex: this.accept_amex,
+    primary_color: this.primary_color,
+    secondary_color: this.secondary_color,
+    node_status: this.node_status,
+    logo: this.logo,
+    uri: this.uri,
+    url: this.url,
+    groups_above_uuid: this.groups_above_uuid,
+    registration_link: this.registration_link,
+    registration_text: this.registration_text
+  });
+};
+
+/**
+ * Returns the events for this group.
+ *
+ * @param {object} query An object of the following parameters.
+ * &lt;ul>
+ * &lt;li>&lt;strong>start&lt;/strong> - The start date to get the events.&lt;/li>
+ * &lt;li>&lt;strong>end&lt;/strong> - The end date to get the events.&lt;/li>
+ * &lt;li>&lt;strong>fields&lt;/strong> - The fields to get.&lt;/li>
+ * &lt;li>&lt;strong>limit&lt;/strong> - The limit of events to get.&lt;/li>
+ * &lt;li>&lt;strong>offset&lt;/strong> - The offset of events for pagination.&lt;/li>
+ * &lt;/ul>
+ *
+ * @param {function} callback The callback function to get the events.
+ */
+allplayers.group.prototype.getEvents = function(query, callback) {
+
+  // Get the events within this group.
+  this.api.get(this, 'events', query, function(events) {
+
+    // Iterate through the events and create an event object out of them.
+    for (var i in events) {
+      events[i] = new allplayers.event(events[i]);
+    }
+
+    // Call the callback.
+    callback(events);
+  }, true);
+};
+
+/**
+ * Returns the upcoming events for this group.
+ *
+ * @param {object} query An object of the following parameters.
+ * &lt;ul>
+ * &lt;li>&lt;strong>start&lt;/strong> - The start date to get the events.&lt;/li>
+ * &lt;li>&lt;strong>end&lt;/strong> - The end date to get the events.&lt;/li>
+ * &lt;li>&lt;strong>fields&lt;/strong> - The fields to get.&lt;/li>
+ * &lt;li>&lt;strong>limit&lt;/strong> - The limit of events to get.&lt;/li>
+ * &lt;li>&lt;strong>offset&lt;/strong> - The offset of events for pagination.&lt;/li>
+ * &lt;/ul>
+ *
+ * @param {function} callback The callback function to get the events.
+ */
+allplayers.group.prototype.getUpcomingEvents = function(query, callback) {
+
+  // Get the events within this group.
+  this.api.get(this, 'events/upcoming', query, function(events) {
+
+    // Iterate through the events and create an event object out of them.
+    for (var i in events) {
+      events[i] = new allplayers.event(events[i]);
+    }
+
+    // Call the callback.
+    callback(events);
+  }, true);
+};
+
+/**
+ * Returns a hierachy tree of all the subgroups within this group.
+ *
+ * @param {object} query The query to add to the subgroups tree call.
+ * @param {function} callback The callback function to get the subgroup tree.
+ */
+allplayers.group.prototype.getGroupTree = function(query, callback) {
+
+  // Get the subgroups tree.
+  this.api.get(this, 'subgroups/tree', query, callback, false);
+};
+
+/**
+ * Provide a tree search.
+ *
+ * @param {string} query The search string to use when searching.
+ * @param {function} callback The callback function for this search.
+ */
+allplayers.group.prototype.find = function(query, callback) {
+
+  // Search the subgroups.
+  this.api.get(this, 'subgroups/find', {'query': query}, callback);
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="allplayers.calendar.html">calendar</a></li><li><a href="allplayers.date.html">date</a></li><li><a href="allplayers.event.html">event</a></li><li><a href="allplayers.group.html">group</a></li><li><a href="allplayers.location.html">location</a></li><li><a href="allplayers.product.html">product</a></li><li><a href="drupal.entity.html">entity</a></li><li><a href="drupal.node.html">node</a></li><li><a href="drupal.system.html">system</a></li><li><a href="drupal.user.html">user</a></li></ul><h3>Global</h3><ul><li><a href="global.html#allplayers">allplayers</a></li><li><a href="global.html#call">call</a></li><li><a href="global.html#drupal">drupal</a></li><li><a href="global.html#endpoint">endpoint</a></li><li><a href="global.html#execute">execute</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getURL">getURL</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#loading">loading</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#resource">resource</a></li><li><a href="global.html#save">save</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a> on Mon Apr 14 2014 14:29:13 GMT-0500 (CDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
