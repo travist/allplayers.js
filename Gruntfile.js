@@ -8,7 +8,6 @@ module.exports = function(grunt) {
     'src/allplayers.location.js',
     'src/allplayers.product.js',
     'src/allplayers.calendar.js',
-    'lib/treeselect/lib/jquery.moreorless.js/jquery.moreorless.js',
     'lib/treeselect/bin/jquery.treeselect.js',
     'lib/group_select/js/group_select.js',
     'lib/group_finder/js/group_finder.js'

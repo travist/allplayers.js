@@ -2597,35 +2597,38 @@ var allplayers = allplayers || {};
           node.setBusy(true, busyloadingall);
         }
 
+        // Load children at a specific index.
+        var loadChildren = function(index) {
+          return function() {
+
+            // Load this childs children...
+            node.children[index].loadAll(function() {
+
+              // Decrement the child count.
+              count--;
+
+              // If all children are done loading, call the callback.
+              if (!count) {
+
+                // Callback that we are done loading this tree.
+                if (callback) {
+                  callback.call(node, node);
+                }
+
+                // Make this node busy.
+                if (!hideBusy) {
+                  node.setBusy(false, busyloadingall);
+                }
+              }
+            }, operation, hideBusy, ids);
+          };
+        };
+
         // Iterate through each child.
         while (i--) {
 
           // Load recurssion on a separate thread.
-          setTimeout((function(index) {
-            return function() {
-
-              // Load this childs children...
-              node.children[index].loadAll(function() {
-
-                // Decrement the child count.
-                count--;
-
-                // If all children are done loading, call the callback.
-                if (!count) {
-
-                  // Callback that we are done loading this tree.
-                  if (callback) {
-                    callback.call(node, node);
-                  }
-
-                  // Make this node busy.
-                  if (!hideBusy) {
-                    node.setBusy(false, busyloadingall);
-                  }
-                }
-              }, operation, hideBusy, ids);
-            };
-          })(i), 2);
+          setTimeout(loadChildren(i), 2);
         }
       });
     };
@@ -3025,6 +3028,27 @@ var allplayers = allplayers || {};
         // Get the number of children.
         var numChildren = this.children.length;
 
+        // Function to append children.
+        var appendChildren = function(treenode, index) {
+          return function() {
+
+            // Add the child tree to the list.
+            treenode.children[index].build(function(child) {
+
+              // Decrement the number of children loaded.
+              numChildren--;
+
+              // Append the child to the list.
+              treenode.childlist.append(child.display);
+
+              // If there are no more chlidren, then say we are done.
+              if (!numChildren) {
+                done.call(treenode, treenode.childlist);
+              }
+            });
+          };
+        };
+
         // Now if there are children, iterate and build them.
         for (var i in this.children) {
 
@@ -3043,25 +3067,7 @@ var allplayers = allplayers || {};
             }));
 
             // Set timeout to help with recursion.
-            setTimeout((function(treenode, index) {
-              return function() {
-
-                // Add the child tree to the list.
-                treenode.children[index].build(function(child) {
-
-                  // Decrement the number of children loaded.
-                  numChildren--;
-
-                  // Append the child to the list.
-                  treenode.childlist.append(child.display);
-
-                  // If there are no more chlidren, then say we are done.
-                  if (!numChildren) {
-                    done.call(treenode, treenode.childlist);
-                  }
-                });
-              };
-            })(this, i), 2);
+            setTimeout(appendChildren(this, i), 2);
           }
         }
       }
@@ -3081,7 +3087,7 @@ var allplayers = allplayers || {};
       var left = 5, elem = null;
 
       // Create the list display.
-      if (this.display.length == 0) {
+      if (this.display.length === 0) {
         this.display = this.build_treenode();
       }
       else if (this.root) {
@@ -3091,7 +3097,7 @@ var allplayers = allplayers || {};
       }
 
       // Now append the input.
-      if ((this.input.length == 0) &&
+      if ((this.input.length === 0) &&
           (elem = this.build_input(left)) &&
           (elem.length > 0)) {
 
@@ -3101,13 +3107,13 @@ var allplayers = allplayers || {};
       }
 
       // Now create the +/- sign if needed.
-      if (this.span.length == 0) {
+      if (this.span.length === 0) {
         this.display.append(this.build_span(left));
         left += params.colwidth;
       }
 
       // Now append the node title.
-      if (this.link.length == 0) {
+      if (this.link.length === 0) {
         this.display.append(this.build_title(left));
       }
 
@@ -3136,7 +3142,7 @@ var allplayers = allplayers || {};
 
         // Check if this node is excluded, and hide if so.
         if (typeof this.exclude[this.id] !== 'undefined') {
-          if ($('.treenode-input', this.display).length == 0) {
+          if ($('.treenode-input', this.display).length === 0) {
             this.display.hide();
           }
         }
@@ -3148,7 +3154,7 @@ var allplayers = allplayers || {};
       };
 
       // Append the children.
-      if (this.childlist.length == 0) {
+      if (this.childlist.length === 0) {
         this.build_children(function(children) {
           if (children.length > 0) {
             this.display.append(children);
@@ -3203,9 +3209,26 @@ var allplayers = allplayers || {};
             var numNodes = nodes.length;
 
             // If no nodes were returned then return nothing.
-            if (nodes.length == 0) {
+            if (nodes.length === 0) {
               callback(results, true);
             }
+
+            // Build a node.
+            var buildNode = function(id) {
+
+              // Decrement the counter.
+              numNodes--;
+
+              // Add the node to the results.
+              results[id] = treenode;
+
+              // If no more nodes are loading, then callback.
+              if (!numNodes) {
+
+                // Callback with the search results.
+                callback(results, true);
+              }
+            };
 
             for (var id in nodes) {
 
@@ -3219,21 +3242,7 @@ var allplayers = allplayers || {};
               loadedNodes[treenode.id] = treenode.id;
 
               // Build the node.
-              treenode.build(function() {
-
-                // Decrement the counter.
-                numNodes--;
-
-                // Add the node to the results.
-                results[id] = treenode;
-
-                // If no more nodes are loading, then callback.
-                if (!numNodes) {
-
-                  // Callback with the search results.
-                  callback(results, true);
-                }
-              });
+              treenode.build(buildNode(id));
             }
           });
         }
@@ -3318,7 +3327,7 @@ var allplayers = allplayers || {};
       root.loadNode(function(node) {
 
         // Check the length of children in this node.
-        if (node.children.length == 0) {
+        if (node.children.length === 0) {
 
           // If the root node does not have any children, then hide.
           node.display.hide();
@@ -3410,7 +3419,7 @@ var allplayers = allplayers || {};
       // Show or hide the tree.
       var showTree = function(show, tween) {
         tween = tween || 'fast';
-        if (show && (root == null || root.has_children)) {
+        if (show && (!root || root.has_children)) {
           treewrapper.addClass('treevisible').show('fast');
         }
         else {
@@ -3500,7 +3509,7 @@ var allplayers = allplayers || {};
                   }
 
                   // Add class if input checkbox is enabled.
-                  if (params.inputName != '') {
+                  if (params.inputName !== '') {
                     root.childlist.addClass('input-enabled');
                   }
                   else {
@@ -3642,7 +3651,7 @@ var allplayers = allplayers || {};
             if (node.checked) {
 
               // If the choice is already selected, remove it.
-              if (selected_choice.length != 0) {
+              if (selected_choice.length !== 0) {
                 selected_choice.remove();
               }
 
@@ -3661,6 +3670,24 @@ var allplayers = allplayers || {};
 
             // Set the chosentree value.
             chosentree.value = {};
+
+            // Callback to close the chosen selector.
+            var closeChosen = function(node) {
+              return function(event) {
+
+                // Prevent the default.
+                event.preventDefault();
+
+                // Get the node data.
+                node = this.parentNode.nodeData;
+
+                // Remove the choice.
+                $('li#choice_' + node.id, choices).remove();
+
+                // Deselect this node.
+                node.selectChildren(false);
+              };
+            };
 
             // Iterate through all the selected nodes.
             for (var id in selectedNodes) {
@@ -3691,26 +3718,12 @@ var allplayers = allplayers || {};
 
               // Don't allow them to remove the root element unless it is
               // visible and has children.
+              var close = '';
               if (!node.root || (node.showRoot && node.has_children)) {
-                var close = $(document.createElement('a'));
+                close = $(document.createElement('a'));
                 close.addClass('search-choice-close');
-                close.attr('href', 'javascript:void(0)');
-
-                // Bind when someone clicks on the close button.
-                close.bind('click', function(event) {
-
-                  // Prevent the default.
-                  event.preventDefault();
-
-                  // Get the node data.
-                  node = this.parentNode.nodeData;
-
-                  // Remove the choice.
-                  $('li#choice_' + node.id, choices).remove();
-
-                  // Deselect this node.
-                  node.selectChildren(false);
-                });
+                close.attr('href', '#');
+                close.bind('click', closeChosen(node));
               }
 
               // Add this to the choices.
@@ -3731,7 +3744,7 @@ var allplayers = allplayers || {};
               selectedNodes = {};
 
               // Don't show the default value if the root has not children.
-              if (input && node.children.length == 0) {
+              if (input && node.children.length === 0) {
                 input.attr({'value': ''});
               }
 
