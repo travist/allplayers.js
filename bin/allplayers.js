@@ -1527,10 +1527,10 @@ allplayers.date = function(start, end, repeat) {
 
 // Need to fix the Date prototype to allow toISOString.
 if (!Date.prototype.toISOString) {
-  function padzero(n) {
+  var padzero = function(n) {
     return n < 10 ? '0' + n : n;
-  }
-  function pad2zeros(n) {
+  };
+  var pad2zeros = function(n) {
     if (n < 100) {
       n = '0' + n;
     }
@@ -1538,7 +1538,7 @@ if (!Date.prototype.toISOString) {
       n = '0' + n;
     }
     return n;
-  }
+  };
 
   /**
    * Provide a toISOString method to the Date prototype.
@@ -3819,7 +3819,8 @@ var allplayers = allplayers || {};
         var child = null;
         for (var id in node.below) {
           if (node.below.hasOwnProperty(id)) {
-            if (child = getTreeNode(node.below[id])) {
+            child = getTreeNode(node.below[id]);
+            if (child) {
               treenode.children.push(child);
             }
           }
@@ -3906,6 +3907,7 @@ var allplayers = allplayers || {};
         rootNode = root;
       },
       onbuild: function(node) {
+        var link = '';
 
         // If they wish to include the registration link...
         if (params.include_group_info) {
@@ -3921,7 +3923,7 @@ var allplayers = allplayers || {};
                 }
 
                 // Add the documnet URL to the end of the register
-                var link = node.data.register_link;
+                link = node.data.register_link;
                 link += '?destination=';
                 link += encodeURIComponent(window.document.URL);
                 link += '&from=' + rootNode.id;
@@ -3974,7 +3976,7 @@ var allplayers = allplayers || {};
               node.has_goto_link = true;
 
               // Add the documnet URL to the end of the register
-              var link = node.data.url + '/' + params.gotoPath;
+              link = node.data.url + '/' + params.gotoPath;
               link += '?destination=';
               link += encodeURIComponent(window.document.URL);
               link += '&from=' + rootNode.id;

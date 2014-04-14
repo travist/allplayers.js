@@ -87,10 +87,10 @@ allplayers.date = function(start, end, repeat) {
 
 // Need to fix the Date prototype to allow toISOString.
 if (!Date.prototype.toISOString) {
-  function padzero(n) {
+  var padzero = function(n) {
     return n < 10 ? '0' + n : n;
-  }
-  function pad2zeros(n) {
+  };
+  var pad2zeros = function(n) {
     if (n < 100) {
       n = '0' + n;
     }
@@ -98,7 +98,7 @@ if (!Date.prototype.toISOString) {
       n = '0' + n;
     }
     return n;
-  }
+  };
 
   /**
    * Provide a toISOString method to the Date prototype.
