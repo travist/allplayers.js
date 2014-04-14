@@ -906,86 +906,136 @@ var allplayers = allplayers || {app: {}};
     // The addProduct action.
     $.pm.bind('addProduct', function(data) {
 
-      (new allplayers.product({uuid: data['product_uuid']})).getProduct(
-        data['product_uuid'],
-        function(result) {
-          // Check if the UUIDs match.
-          if (result.uuid == data['product_uuid']) {
-            var uuid = data['product_uuid'];
-            var product = productInput(uuid).val();
-
-            // If a product was already found.
-            if (product) {
-
-              // Update the quantity.
-              product = JSON.parse(product);
-              product['quantity'] = parseInt(product['quantity']);
-              product['quantity'] += parseInt(data['quantity']);
-              productInput(uuid).val(JSON.stringify(product));
-              var productCol = '#add-product-display-' + uuid;
-              $(productCol + ' td:last').text(product['quantity']);
-            }
-
-            // Make sure the product is valid.
-            else if (productValid(data)) {
-
-              // If it is a product with a value greater than $0, or price isn't
-              // supplied, use the price  assigned to the product in store.
-              if (
-                data['price'] == 'undefined' ||
-                (result.type == 'product' && result.price_raw > 0)
-              ) {
-                data['price'] = result.price_raw / 100;
-              }
+      // If the product is existing.
+      if (data && data['product_uuid']) {
+        (new allplayers.product({uuid: data['product_uuid']})).getProduct(
+          data['product_uuid'],
+          function(result) {
+            // Check if the UUIDs match.
+            if (result.uuid == data['product_uuid']) {
+              var uuid = data['product_uuid'];
+              var product = productInput(uuid).val();
               data['title'] = result.title;
-              data = productUpdateTotal(data);
 
-              // Create the input for the new product.
-              $('<input>').attr({
-                type: 'hidden',
-                product: uuid,
-                name: 'add-product[]',
-                value: JSON.stringify(data)
-              }).appendTo('form#og-registration-register-app');
+              // If a product was already found.
+              if (product) {
 
-              // Change the next button value.
-              $('#edit-next').val('Continue');
+                // Update the quantity.
+                product = JSON.parse(product);
+                product['quantity'] = parseInt(product['quantity']);
+                product['quantity'] += parseInt(data['quantity']);
+                productInput(uuid).val(JSON.stringify(product));
+                var productCol = '#add-product-display-' + uuid;
+                $(productCol + ' td:last').text(product['quantity']);
+              }
 
-              // Add the products table if not already.
-              if ($('#add-products-table').length == 0) {
-                $('<table>').attr({
-                  id: 'add-products-table',
-                  class: 'sticky-table'
-                }).appendTo('#add-products');
+              // Make sure the product is valid.
+              else if (productValid(data)) {
 
-                // Create the products table.
-                $('#add-products-table').append(
-                  '<thead>' +
-                    '<tr>' +
-                      '<th>Added Products</th>' +
-                      '<th>Price</th>' +
-                      '<th>Quantity</th>' +
-                    '</tr>' +
-                  '</thead>' +
-                  '<tbody></tbody>'
+                // If it is a product with a value greater than $0, or price
+                // isn't supplied, use the price  assigned to the product in
+                // store.
+                if (
+                  data['price'] == 'undefined' ||
+                  (result.type == 'product' && result.price_raw > 0)
+                ) {
+                  data['price'] = result.price_raw / 100;
+                }
+                data = productUpdateTotal(data);
+
+                // Create the input for the new product.
+                $('<input>').attr({
+                  type: 'hidden',
+                  product: uuid,
+                  name: 'add-product[]',
+                  value: JSON.stringify(data)
+                }).appendTo('form#og-registration-register-app');
+
+                // Change the next button value.
+                $('#edit-next').val('Continue');
+
+                // Add the products table if not already.
+                if ($('#add-products-table').length == 0) {
+                  $('<table>').attr({
+                    id: 'add-products-table',
+                    class: 'sticky-table'
+                  }).appendTo('#add-products');
+
+                  // Create the products table.
+                  $('#add-products-table').append(
+                    '<thead>' +
+                      '<tr>' +
+                        '<th>Added Products</th>' +
+                        '<th>Price</th>' +
+                        '<th>Quantity</th>' +
+                      '</tr>' +
+                    '</thead>' +
+                    '<tbody></tbody>'
+                  );
+                }
+
+                // Add the product to the table.
+                $('#add-products-table tbody').append(
+                  '<tr id="add-product-display-' + uuid + '">' +
+                    '<td>' + data['title'] + '</td>' +
+                    '<td>' + data['price'] + '</td>' +
+                    '<td>' + data['quantity'] + '</td>' +
+                  '</tr>'
                 );
               }
-
-              // Add the product to the table.
-              $('#add-products-table tbody').append(
-                '<tr id="add-product-display-' + uuid + '">' +
-                  '<td>' + data['title'] + '</td>' +
-                  '<td>' + data['price'] + '</td>' +
-                  '<td>' + data['quantity'] + '</td>' +
-                '</tr>'
-              );
+            }
+            else {
+              alert('There was an error adding the product.');
             }
           }
-          else {
-            alert('There was an error adding the product.');
-          }
+        );
+      }
+      // The product is an adhoc product.
+      else {
+        // Update the product total price.
+        data = productUpdateTotal(data);
+        data['title'] += ' (Adhoc)';
+
+        // Create the input for the new product.
+        $('<input>').attr({
+          type: 'hidden',
+          product: '',
+          name: 'add-product[]',
+          value: JSON.stringify(data)
+        }).appendTo('form#og-registration-register-app');
+
+        // Change the next button value.
+        $('#edit-next').val('Continue');
+
+        // Add the products table if not already.
+        if ($('#add-products-table').length == 0) {
+          $('<table>').attr({
+            id: 'add-products-table',
+            class: 'sticky-table'
+          }).appendTo('#add-products');
+
+          // Create the products table.
+          $('#add-products-table').append(
+            '<thead>' +
+              '<tr>' +
+                '<th>Added Products</th>' +
+                '<th>Price</th>' +
+                '<th>Quantity</th>' +
+              '</tr>' +
+            '</thead>' +
+            '<tbody></tbody>'
+          );
         }
-      );
+
+        // Add the product to the table.
+        $('#add-products-table tbody').append(
+          '<tr>' +
+            '<td>' + data['title'] + '</td>' +
+            '<td>' + data['price'] + '</td>' +
+            '<td>' + data['quantity'] + '</td>' +
+          '</tr>'
+        );
+      }
     });
 
     // The addCheckoutProduct action.
