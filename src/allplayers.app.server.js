@@ -65,9 +65,6 @@ var allplayers = allplayers || {app: {}};
       this.baseURL = this.options.base;
     }
 
-    // Say we are loading.
-    this.isLoading = true;
-
     // Set the spinner if it isn't set.
     if (!this.options.spinner) {
       this.options.spinner = this.options.base;
@@ -75,30 +72,8 @@ var allplayers = allplayers || {app: {}};
       this.options.spinner += '/images/loader.gif';
     }
 
-    // Say that the plugin isn't ready.
-    this.pluginReady = false;
-
-    // Add the loading and iframe.
-    var loading = $(document.createElement('div')).css({
-      background: 'url(' + this.options.spinner + ') no-repeat 10px 13px',
-      padding: '10px 10px 10px 60px',
-      width: '100%'
-    });
-
-    // Add the loading text.
-    loading.append(this.options.loading);
-
     // Add the iframe.
     var iframeId = this.context.attr('id') + '_iframe';
-
-    // Define our own isEmptyObject function.
-    var isEmptyObject = function(obj) {
-      var name;
-      for (name in obj) {
-        return false;
-      }
-      return true;
-    };
 
     // Get the source for the iframe.
     var source = '';
@@ -130,72 +105,47 @@ var allplayers = allplayers || {app: {}};
     source += (source.search(/\?/) === -1) ? '?' : '&';
 
     // If they have some query options then add them here.
-    if (!isEmptyObject(this.options.query)) {
+    if (!$.SeamlessBase.isEmptyObject(this.options.query)) {
       for (var param in this.options.query) {
         source += param + '=' + encodeURIComponent(this.options.query[param]);
         source += '&';
       }
     }
 
-    // Add the iframe ID to the iframe source.
-    source += '#' + iframeId;
+    // Add the ehost to the source.
+    source += 'ehost=' + allplayers.base64.encode(window.location.origin);
 
-    // Used for callbacks.
+    // Get the iframe object.
     var self = this;
-
     var iframe = $(document.createElement('iframe')).attr({
       id: iframeId,
       name: iframeId,
-      scrolling: 'no',
-      seamless: 'seamless',
-      width: '100%',
-      height: '0px',
       src: source
-    }).css({
-      border: 'none',
-      overflowY: 'hidden'
     });
 
-    // Create the loading element.
-    this.context.append(loading);
+    // Add the iframe.
     this.context.append(iframe);
 
-    this.serverTarget = null;
-
-    // The chrome plugin is ready.
-    $.pm.bind('chromePluginReady', function() {
-      self.pluginReady = true;
-    });
-
-    // Pass along chrome message responses.
-    $.pm.bind('chromeMsgResp', function(data) {
-      $.pm({
-        target: self.serverTarget,
-        url: self.baseURL,
-        type: 'chromeMsgResp',
-        data: data
-      });
-    });
-
-    // Pass along the chrome messages.
-    $.pm.bind('chromeMsg', function(data) {
-      $.pm({
-        target: self.serverTarget,
-        url: self.baseURL,
-        type: 'chromeMsg',
-        data: data
-      });
-    });
-
-    // The init message.
-    $.pm.bind('init', function(data, e) {
-      self.serverTarget = e.source;
-      self.isLoading = false;
-      loading.remove();
-
-      // Set the height
-      iframe.height(data.height).attr('height', data.height + 'px');
-      return data;
+    // Make the iframe seamless.
+    iframe = iframe.seamless({
+      spinner: this.options.spinner,
+      styles: this.options.style,
+      onConnect: function(data) {
+        if (self.options.type == 'registration') {
+          // Send them the registration object.
+          iframe.send({
+            type: 'getRegistration',
+            data: self.options.reg
+          });
+        }
+        else if (self.options.type == 'checkout') {
+          // Send them the checkout object.
+          iframe.send({
+            type: 'getCheckout',
+            data: self.options.checkout
+          });
+        }
+      }
     });
 
     /**
@@ -316,7 +266,8 @@ var allplayers = allplayers || {app: {}};
       checkout,
       adhocProducts,
       existingProducts,
-      src) {
+      src
+    ) {
 
       // Calculate the order total with the added adhoc/existing products.
       var orderTotal = checkout.commerce_order_total.und[0].amount;
@@ -335,9 +286,7 @@ var allplayers = allplayers || {app: {}};
       }
 
       // Tell the client to process the checkout.
-      $.pm({
-        target: self.serverTarget,
-        url: self.baseURL,
+      iframe.send({
         type: 'processCheckout',
         data: {
           checkout: checkout,
@@ -412,7 +361,7 @@ var allplayers = allplayers || {app: {}};
     };
 
     // The addProduct action.
-    $.pm.bind('addProduct', function(data) {
+    iframe.receive('addProduct', function(data) {
 
       (new allplayers.product({uuid: data.product_uuid})).getProduct(
         data.product_uuid,
@@ -497,7 +446,7 @@ var allplayers = allplayers || {app: {}};
     });
 
     // The addCheckoutProduct action.
-    $.pm.bind('addCheckoutProduct', function(data) {
+    iframe.receive('addCheckoutProduct', function(data) {
 
       // If the product is existing.
       if (data && data.product_uuid) {
@@ -567,7 +516,7 @@ var allplayers = allplayers || {app: {}};
     });
 
     // The remove product message.
-    $.pm.bind('removeProduct', function(data) {
+    iframe.receive('removeProduct', function(data) {
       var uuid = data.product_uuid;
       var product = productInput(uuid).val();
       if (product) {
@@ -575,38 +524,6 @@ var allplayers = allplayers || {app: {}};
         // Remove the input and table field.
         productInput(uuid).remove();
         $('#add-product-display-' + uuid).remove();
-      }
-    });
-
-    // The client ready message.
-    $.pm.bind('clientReady', function(data, e) {
-      self.serverTarget = e.source;
-
-      if (self.pluginReady) {
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'chromePluginReady'
-        });
-      }
-
-      if (self.options.type == 'registration') {
-        // Send them the registration object.
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'getRegistration',
-          data: self.options.reg
-        });
-      }
-      else if (self.options.type == 'checkout') {
-        // Send them the checkout object.
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'getCheckout',
-          data: self.options.checkout
-        });
       }
     });
   };

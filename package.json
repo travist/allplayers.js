@@ -1,6 +1,10 @@
 {
   "name": "allplayers.js",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AllPlayers/allplayers.js.git"
+  },
   "devDependencies": {
     "grunt": "~0.4.4",
     "grunt-jsdoc": "~0.5.4",

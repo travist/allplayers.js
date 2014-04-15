@@ -436,60 +436,579 @@ var NO_JQUERY = {};
  * http://www.JSON.org/json2.js
  **/
 if (! ("JSON" in window && window.JSON)){JSON={}}(function(){function f(n){return n<10?"0"+n:n}if(typeof Date.prototype.toJSON!=="function"){Date.prototype.toJSON=function(key){return this.getUTCFullYear()+"-"+f(this.getUTCMonth()+1)+"-"+f(this.getUTCDate())+"T"+f(this.getUTCHours())+":"+f(this.getUTCMinutes())+":"+f(this.getUTCSeconds())+"Z"};String.prototype.toJSON=Number.prototype.toJSON=Boolean.prototype.toJSON=function(key){return this.valueOf()}}var cx=/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,escapable=/[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,gap,indent,meta={"\b":"\\b","\t":"\\t","\n":"\\n","\f":"\\f","\r":"\\r",'"':'\\"',"\\":"\\\\"},rep;function quote(string){escapable.lastIndex=0;return escapable.test(string)?'"'+string.replace(escapable,function(a){var c=meta[a];return typeof c==="string"?c:"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})+'"':'"'+string+'"'}function str(key,holder){var i,k,v,length,mind=gap,partial,value=holder[key];if(value&&typeof value==="object"&&typeof value.toJSON==="function"){value=value.toJSON(key)}if(typeof rep==="function"){value=rep.call(holder,key,value)}switch(typeof value){case"string":return quote(value);case"number":return isFinite(value)?String(value):"null";case"boolean":case"null":return String(value);case"object":if(!value){return"null"}gap+=indent;partial=[];if(Object.prototype.toString.apply(value)==="[object Array]"){length=value.length;for(i=0;i<length;i+=1){partial[i]=str(i,value)||"null"}v=partial.length===0?"[]":gap?"[\n"+gap+partial.join(",\n"+gap)+"\n"+mind+"]":"["+partial.join(",")+"]";gap=mind;return v}if(rep&&typeof rep==="object"){length=rep.length;for(i=0;i<length;i+=1){k=rep[i];if(typeof k==="string"){v=str(k,value);if(v){partial.push(quote(k)+(gap?": ":":")+v)}}}}else{for(k in value){if(Object.hasOwnProperty.call(value,k)){v=str(k,value);if(v){partial.push(quote(k)+(gap?": ":":")+v)}}}}v=partial.length===0?"{}":gap?"{\n"+gap+partial.join(",\n"+gap)+"\n"+mind+"}":"{"+partial.join(",")+"}";gap=mind;return v}}if(typeof JSON.stringify!=="function"){JSON.stringify=function(value,replacer,space){var i;gap="";indent="";if(typeof space==="number"){for(i=0;i<space;i+=1){indent+=" "}}else{if(typeof space==="string"){indent=space}}rep=replacer;if(replacer&&typeof replacer!=="function"&&(typeof replacer!=="object"||typeof replacer.length!=="number")){throw new Error("JSON.stringify")}return str("",{"":value})}}if(typeof JSON.parse!=="function"){JSON.parse=function(text,reviver){var j;function walk(holder,key){var k,v,value=holder[key];if(value&&typeof value==="object"){for(k in value){if(Object.hasOwnProperty.call(value,k)){v=walk(value,k);if(v!==undefined){value[k]=v}else{delete value[k]}}}}return reviver.call(holder,key,value)}cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(a){return"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})}if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,"@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,"]").replace(/(?:^|:|,)(?:\s*\[)+/g,""))){j=eval("("+text+")");return typeof reviver==="function"?walk({"":j},""):j}throw new SyntaxError("JSON.parse")}}}());
-var allplayers = allplayers || {};
+(function(window, document, $, undefined) {
+  // Base seamless functionality between parent and child.
+  $.SeamlessBase = {
 
-/**
- * Create the app class.
- *
- * @param {object} options The options for this app library.
- * @param {object} defaults The default params for this libarary.
- * @this The allplayers.app object.
- */
-allplayers.app = function(options, defaults) {
-  if (defaults) {
-
-    // Keep track of the self pointer.
-    var self = this;
-
-    // Set the defaults.
-    options = options || {};
-    for (var name in defaults) {
-      if (!options.hasOwnProperty(name)) {
-        options[name] = defaults[name];
+    /**
+     * Returns the value of a query parameter.
+     *
+     * @param string name
+     *   The name of the query parameter to retrieve.
+     *
+     * @param string from
+     *   The string to get the query parameter from.
+     *
+     * @returns {string}
+     *   The value of the query parameter.
+     */
+    getParam: function(name, from) {
+      from = from || window.location.search;
+      var regexS = '[?&]' + name + '=([^&#]*)';
+      var regex = new RegExp(regexS);
+      var results = regex.exec(from);
+      if (results === null) {
+        return '';
       }
+      else {
+        return decodeURIComponent(results[1].replace(/\+/g, ' '));
+      }
+    },
+
+    /**
+     * Determine if an object is empty.
+     *
+     * @param object obj
+     *   The object to check to see if it is empty.
+     */
+    isEmptyObject: function(obj) {
+      var name;
+      for (name in obj) {
+        return false;
+      }
+      return true;
+    }
+  };
+})(window, document, jQuery);
+(function(window, document, $, undefined) {
+  /**
+   * Create a seamless connection between parent and child frames.
+   *
+   * @param target
+   * @param url
+   * @constructor
+   */
+  $.SeamlessConnection = function(target, url) {
+    this.id = 0;
+    this.target = target;
+    this.url = url;
+    this.active = false;
+    this.queue = [];
+  };
+
+  /**
+   * Send a message to the connected frame.
+   *
+   * @param pm
+   */
+  $.SeamlessConnection.prototype.send = function(pm) {
+
+    // Only send if the target is set.
+    if (this.active && this.target) {
+
+      // Normalize the data.
+      if (!pm.hasOwnProperty('data')) {
+        pm = {data: pm};
+      }
+
+      // Set the other parameters.
+      pm.target = this.target;
+      pm.url = this.url;
+      pm.type = pm.type || 'seamless_data';
+      pm.data = pm.data || {};
+      pm.data.__id = this.id;
+      $.pm(pm);
+    }
+    else {
+
+      // Add this to the queue.
+      this.queue.push(pm);
+    }
+  };
+
+  /**
+   * Receive a message from a connected frame.
+   */
+  $.SeamlessConnection.prototype.receive = function(type, callback) {
+    if (typeof type === 'function') {
+      callback = type;
+      type = 'seamless_data';
     }
 
-    // Set the options and initialize.
-    this.options = options;
-    this.init();
-  }
-};
+    // Store the this pointer.
+    var _self = this;
 
-/**
- * Return the value of a parameter.
- *
- * @param {string} name The name of the parameter to get.
- * @return {string} The value of the parameter.
- */
-allplayers.app.getParam = function(name) {
-  name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
-  var regexS = '[\\?&]' + name + '=([^&#]*)';
-  var regex = new RegExp(regexS);
-  var results = regex.exec(window.location.search);
-  if (results == null) {
-    return '';
-  }
-  else {
-    return decodeURIComponent(results[1].replace(/\+/g, ' '));
-  }
-};
+    // Listen for events.
+    $.pm.bind(type, function(data, event) {
 
-/**
- * Initialize this app code.
- */
-allplayers.app.prototype.init = function() {
-  document.proxy = this;
-};
+      // Only handle data if the connection id's match.
+      if (data.__id && (data.__id === _self.id)) {
+        return callback(data, event);
+      }
+      else {
+
+        // Do not handle this event.
+        return false;
+      }
+    });
+  };
+
+  /**
+   * Sets this connection as active.
+   *
+   * @param active
+   */
+  $.SeamlessConnection.prototype.setActive = function(active) {
+    this.active = active;
+
+    // Empty the send queue if we have one.
+    if (this.queue.length > 0) {
+      for(var i in this.queue) {
+        this.send(this.queue[i]);
+      }
+      this.queue = [];
+      this.queue.length = 0;
+    }
+  };
+})(window, document, jQuery);
+(function(window, document, $, undefined) {
+
+  // Make sure we have the $.pm module loaded.
+  if (!$.hasOwnProperty('pm')) {
+    console.log('You must install the jQuery.pm module to use seamless.js.');
+    return;
+  }
+
+  /**
+   * Create the seamless.js class on the jQuery object.
+   */
+  $.seamless = {
+
+    /**
+     * The options for the client seamless.js library.
+     */
+    options: {
+
+      /** The URL of the parent. */
+      url: '',
+
+      /** The HTML container of the body content. */
+      container: 'body',
+
+      /** The time interval to update the iframe. */
+      update: 200,
+
+      /** Allow styles to be injected. */
+      allowStyleInjection: false,
+
+      /** Called when an update is triggered to the parent. */
+      onUpdate: null,
+
+      /** Called wehn the parent connects with this iframe. */
+      onConnect: null
+    },
+
+    /**
+     * Connect this child with the parent.
+     *
+     * @param url
+     */
+    connect: function(options) {
+
+      // Set the options.
+      options = options || {};
+      for (var name in options) {
+        if (this.options.hasOwnProperty(name)) {
+          this.options[name] = options[name];
+        }
+      }
+      options = this.options;
+
+      // The connection object.
+      var connection = new $.SeamlessConnection(
+        window.parent,
+        options.url
+      );
+
+      // Parent connections are always active.
+      connection.setActive(true);
+
+      // See if this page should not be iframed.
+      var noiframe = $.SeamlessBase.getParam('noiframe').toString();
+      if (noiframe === '1' || noiframe.toLowerCase() === 'true') {
+        connection.send({
+          type: 'seamless_noiframe',
+          data: {
+            href: window.location.href
+          }
+        });
+      }
+      else {
+
+        // The update function.
+        var sendingUpdate = false;
+        var container = options.container;
+        var height = 0;
+        var heightTimer = 0;
+
+        // Update the parent iframe container.
+        var update = function() {
+
+          // Clear the timer if it exists.
+          if (heightTimer) {
+            clearTimeout(heightTimer);
+          }
+
+          // Get the new height of the child.
+          var newHeight = $(container).outerHeight(true);
+          newHeight = (newHeight > 100) ? newHeight : 100;
+
+          // If the height are different.
+          if (!sendingUpdate && (height !== newHeight)) {
+
+            // Sending the update.
+            sendingUpdate = true;
+
+            // The data to send to the parent.
+            var data = { height: newHeight };
+
+            // If they wish to update.
+            if (options.onUpdate) {
+              options.onUpdate(data);
+            }
+
+            // Send the update to the parent.
+            connection.send({
+              type: 'seamless_update',
+              data: data,
+              success: function(data) {
+
+                // Set the height.
+                height = data.height;
+
+                // No longer sending the update.
+                sendingUpdate = false;
+              }
+            });
+          }
+
+          // Update again after 500ms.
+          heightTimer = setTimeout(update, options.update);
+        };
+
+        /**
+         * Send a message that we are ready.
+         */
+        var sendReady = function() {
+
+          // Only send if the connection ID hasn't been established.
+          if (!connection.id) {
+
+            // Send a ready signal to our parent page.
+            connection.send({
+              type: 'seamless_ready',
+              data: {}
+            });
+
+            // Check again after 200ms.
+            setTimeout(sendReady, 200);
+          }
+        };
+
+        /**
+         * Inject styles into this page.
+         *
+         * @param styles
+         */
+        var injectStyles = function(styles) {
+
+          // See if they wish to inject styles into this page.
+          if (options.allowStyleInjection && (styles.length > 0)) {
+
+            // Inject the styles.
+            styles = (typeof styles == 'string') ? styles : styles.join('');
+
+            // Keep them from escaping the styles tag.
+            styles = styles.replace(/[<>]/g, '');
+
+            // See if there are new styles to inject.
+            var injectedStyles = $('style#injected-styles');
+            if (injectedStyles.length > 0) {
+              injectedStyles.html(styles);
+            }
+            else {
+
+              // Inject the styles.
+              $('head').append($(document.createElement('style')).attr({
+                type: 'text/css',
+                id: 'injected-styles'
+              }).append(styles));
+            }
+          }
+        };
+
+        // Listen for inject styles command.
+        $.pm.bind('seamless_styles', function(data) {
+          injectStyles(data);
+          update();
+        });
+
+        // Listen for the connect event.
+        $.pm.bind('seamless_connect', function(data, event) {
+
+          // Set the connection ID.
+          connection.id = data.id;
+
+          // If they wish to get event when the iframe connects.
+          if (options.onConnect) {
+            options.onConnect(data);
+          }
+
+          // Inject styles if they wish.
+          injectStyles(data.styles);
+
+          // Call the update.
+          update();
+
+          // Return the data to finish the connection.
+          return data;
+        });
+
+        // Say that we are ready.
+        sendReady();
+      }
+
+      // Return the connection.
+      return connection;
+    }
+  };
+})(window, document, jQuery);
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {};
+(function(window, document, allplayers, undefined) {
+  /*
+   * Copyright (c) 2010 Nick Galbreath
+   * http://code.google.com/p/stringencoders/source/browse/#svn/trunk/javascript
+   *
+   * Permission is hereby granted, free of charge, to any person
+   * obtaining a copy of this software and associated documentation
+   * files (the "Software"), to deal in the Software without
+   * restriction, including without limitation the rights to use,
+   * copy, modify, merge, publish, distribute, sublicense, and/or sell
+   * copies of the Software, and to permit persons to whom the
+   * Software is furnished to do so, subject to the following
+   * conditions:
+   *
+   * The above copyright notice and this permission notice shall be
+   * included in all copies or substantial portions of the Software.
+   *
+   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   * OTHER DEALINGS IN THE SOFTWARE.
+   */
+
+  /* base64 encode/decode compatible with window.btoa/atob
+   *
+   * window.atob/btoa is a Firefox extension to convert binary data (the "b")
+   * to base64 (ascii, the "a").
+   *
+   * It is also found in Safari and Chrome.  It is not available in IE.
+   *
+   * if (!window.btoa) window.btoa = base64.encode
+   * if (!window.atob) window.atob = base64.decode
+   *
+   * The original spec's for atob/btoa are a bit lacking
+   * https://developer.mozilla.org/en/DOM/window.atob
+   * https://developer.mozilla.org/en/DOM/window.btoa
+   *
+   * window.btoa and base64.encode takes a string where charCodeAt is [0,255]
+   * If any character is not [0,255], then an DOMException(5) is thrown.
+   *
+   * window.atob and base64.decode take a base64-encoded string
+   * If the input length is not a multiple of 4, or contains invalid characters
+   *   then an DOMException(5) is thrown.
+   */
+  var base64 = {};
+  base64.PADCHAR = '=';
+  base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789+/';
+
+  base64.makeDOMException = function() {
+    // sadly in FF,Safari,Chrome you can't make a DOMException
+    var e;
+
+    try {
+      return new DOMException(DOMException.INVALID_CHARACTER_ERR);
+    } catch (caught) {
+      // not available, just passback a duck-typed equiv
+      // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error
+      // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/prototype
+      var ex = new Error('DOM Exception 5');
+
+      // ex.number and ex.description is IE-specific.
+      ex.code = ex.number = 5;
+      ex.name = ex.description = 'INVALID_CHARACTER_ERR';
+
+      // Safari/Chrome output format
+      ex.toString = function() {
+        return 'Error: ' + ex.name + ': ' + ex.message;
+      };
+      return ex;
+    }
+  };
+
+  base64.getbyte64 = function(s, i) {
+    // This is oddly fast, except on Chrome/V8.
+    //  Minimal or no improvement in performance by using a
+    //   object with properties mapping chars to value (eg. 'A': 0)
+    var idx = base64.ALPHA.indexOf(s.charAt(i));
+    if (idx === -1) {
+      throw base64.makeDOMException();
+    }
+    return idx;
+  };
+
+  base64.decode = function(s) {
+    // convert to string
+    s = '' + s;
+    var getbyte64 = base64.getbyte64;
+    var pads, i, b10;
+    var imax = s.length;
+    if (imax === 0) {
+      return s;
+    }
+
+    if (imax % 4 !== 0) {
+      throw base64.makeDOMException();
+    }
+
+    pads = 0;
+    if (s.charAt(imax - 1) === base64.PADCHAR) {
+      pads = 1;
+      if (s.charAt(imax - 2) === base64.PADCHAR) {
+        pads = 2;
+      }
+      // either way, we want to ignore this last block
+      imax -= 4;
+    }
+
+    var x = [];
+    for (i = 0; i < imax; i += 4) {
+      b10 = (getbyte64(s, i) << 18) | (getbyte64(s, i + 1) << 12) |
+        (getbyte64(s, i + 2) << 6) | getbyte64(s, i + 3);
+      x.push(String.fromCharCode(b10 >> 16, (b10 >> 8) & 0xff, b10 & 0xff));
+    }
+
+    switch (pads) {
+      case 1:
+        b10 = (getbyte64(s, i) << 18);
+        b10 |= (getbyte64(s, i + 1) << 12);
+        b10 |= (getbyte64(s, i + 2) << 6);
+        x.push(String.fromCharCode(b10 >> 16, (b10 >> 8) & 0xff));
+        break;
+      case 2:
+        b10 = (getbyte64(s, i) << 18) | (getbyte64(s, i + 1) << 12);
+        x.push(String.fromCharCode(b10 >> 16));
+        break;
+    }
+    return x.join('');
+  };
+
+  base64.getbyte = function(s, i) {
+    var x = s.charCodeAt(i);
+    if (x > 255) {
+      throw base64.makeDOMException();
+    }
+    return x;
+  };
+
+  base64.encode = function(s) {
+    if (arguments.length !== 1) {
+      throw new SyntaxError('Not enough arguments');
+    }
+    var padchar = base64.PADCHAR;
+    var alpha = base64.ALPHA;
+    var getbyte = base64.getbyte;
+
+    var i, b10;
+    var x = [];
+
+    // convert to string
+    s = '' + s;
+
+    var imax = s.length - s.length % 3;
+
+    if (s.length === 0) {
+      return s;
+    }
+    for (i = 0; i < imax; i += 3) {
+      b10 = (getbyte(s, i) << 16);
+      b10 |= (getbyte(s, i + 1) << 8);
+      b10 |= getbyte(s, i + 2);
+      x.push(alpha.charAt(b10 >> 18));
+      x.push(alpha.charAt((b10 >> 12) & 0x3F));
+      x.push(alpha.charAt((b10 >> 6) & 0x3f));
+      x.push(alpha.charAt(b10 & 0x3f));
+    }
+    switch (s.length - imax) {
+      case 1:
+        b10 = getbyte(s, i) << 16;
+        x.push(alpha.charAt(b10 >> 18) + alpha.charAt((b10 >> 12) & 0x3F) +
+          padchar + padchar);
+        break;
+      case 2:
+        b10 = (getbyte(s, i) << 16) | (getbyte(s, i + 1) << 8);
+        x.push(alpha.charAt(b10 >> 18) + alpha.charAt((b10 >> 12) & 0x3F) +
+          alpha.charAt((b10 >> 6) & 0x3f) + padchar);
+        break;
+    }
+    return x.join('');
+  };
+
+  allplayers.base64 = base64;
+}(window, document, window.allplayers));
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {};
+(function(window, document, allplayers, undefined) {
+
+  /**
+   * Create the app class.
+   *
+   * @param {object} options The options for this app library.
+   * @param {object} defaults The default params for this libarary.
+   * @this The allplayers.app object.
+   */
+  allplayers.app = function(options, defaults) {
+    if (defaults) {
+
+      // Keep track of the self pointer.
+      var self = this;
+
+      // Set the defaults.
+      options = options || {};
+      for (var name in defaults) {
+        if (!options.hasOwnProperty(name)) {
+          options[name] = defaults[name];
+        }
+      }
+
+      // Set the options and initialize.
+      this.options = options;
+      this.init();
+    }
+  };
+
+  /**
+   * Initialize this app code.
+   */
+  allplayers.app.prototype.init = function() {};
+
+}(window, document, window.allplayers));
 var allplayers = allplayers || {app: {}};
 
 (function(window, document, allplayers, $, undefined) {
@@ -502,7 +1021,7 @@ var allplayers = allplayers || {app: {}};
   allplayers.app.client = function(options) {
     allplayers.app.call(this, options, {
       getContainer: function() {
-        return $();
+        return 'body';
       }
     });
   };
@@ -521,141 +1040,61 @@ var allplayers = allplayers || {app: {}};
     // Call the parent.
     allplayers.app.prototype.init.call(this);
 
-    // Get the ehost from the parent window.
-    this.ehost = allplayers.app.getParam('ehost');
+    // Get the container.
+    var container = this.options.getContainer();
 
-    this.container = this.options.getContainer();
-    this.height = 0;
-    this.heightTimer = null;
-    this.queue = {};
+    // Connect to the parent.
+    $.seamless.connect({
+
+      /**
+       * Set the url to what was passed in from the parent.
+       */
+      url: allplayers.base64.decode($.SeamlessBase.getParam('ehost')),
+
+      /**
+       * Set the bounding container.
+       */
+      container: container,
+
+      /**
+       * Called when an update is triggered to the parent.
+       *
+       * @param object data
+       *   The data that is sent to the parent from the child page.
+       */
+      onUpdate: function(data) {
+
+        // Change all links to reference platform instead of www.
+        $('a[href^="https://www."]', container).each(function() {
+
+          // Replace the href with platform
+          var href = $(this).attr('href');
+          $(this).attr({
+            'href': href.replace(
+              /https:\/\/www.(.*?).allplayers.com/,
+              'https://platform.$1.allplayers.com'
+            )
+          });
+        });
+      }
+    });
+
+    // Keep track of the self pointer.
+    var self = this;
     this.reg = null;
     this.checkout = null;
     this.type = 'registration';
 
-    // Keep track of the self pointer.
-    var self = this;
-
-    // Bind to the document resize event.
-    var throttle = null;
-    $(document).bind('DOMSubtreeModified', function() {
-      if (throttle) {
-        clearTimeout(throttle);
-      }
-      throttle = setTimeout(function() {
-        self.resize();
-      }, 500);
-    });
-
-    // Add the chrome message response.
-    $.pm.bind('chromeMsgResp', function(data) {
-      if (data.hasOwnProperty('guid') &&
-        self.queue.hasOwnProperty(data.guid)) {
-        self.queue[data.guid](data.response);
-      }
-    });
-
     // Get the registration data.
-    $.pm.bind('getRegistration', function(data) {
+    $.seamless.receive('getRegistration', function(data) {
       self.reg = data;
       self.type = 'registration';
     });
 
     // Get the checkout data.
-    $.pm.bind('getCheckout', function(data) {
+    $.seamless.receive('getCheckout', function(data) {
       self.checkout = data;
       self.type = 'checkout';
     });
-
-    // Trigger the resizing events.
-    this.resize();
-
-    // Client is now ready.
-    $.pm({
-      target: window.parent,
-      url: this.ehost,
-      type: 'clientReady'
-    });
-  };
-
-  /**
-   * Allow to send a chrome extension message and handle the response.
-   *
-   * @param {object} msg The message to send to the extension.
-   * @param {function} callback Callback called when the response is received.
-   */
-  allplayers.app.client.prototype.sendMessage = function(msg, callback) {
-    var s4 = function() {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16).substring(1);
-    };
-    var guid = function() {
-      return s4() + s4() + s4();
-    };
-
-    // Add a message id.
-    msg.guid = guid();
-    this.proxy.post({event: {
-      name: 'chromeMsg',
-      data: msg
-    }});
-
-    // Add the callback to the queue.
-    this.queue[msg.guid] = callback;
-  };
-
-  /**
-   * Initialize the allplayer app library.
-   */
-  allplayers.app.client.prototype.resize = function() {
-
-    // Change all links to reference platform instead of www.
-    $('a[href^="https://www."]', this.container).each(function() {
-
-      // Replace the href with platform
-      var href = $(this).attr('href');
-      $(this).attr({
-        'href': href.replace(
-          /https:\/\/www.(.*?).allplayers.com/,
-          'https://platform.$1.allplayers.com'
-        )
-      });
-    });
-
-    // Function to send the resize event.
-    var self = this;
-    var checkHeight = function() {
-
-      // Get the new height of the container.
-      var newHeight = self.container.outerHeight(true);
-      if (self.height !== newHeight) {
-
-        // Set the height.
-        self.height = newHeight;
-
-        $.pm({
-          target: window.parent,
-          url: self.ehost,
-          type: 'init',
-          data: {
-            height: newHeight,
-            id: window.location.hash
-          },
-          success: function(data) {
-            self.height = data.height;
-          }
-        });
-      }
-
-      // Clear the timer if it exists.
-      if (self.heightTimer) {
-        clearTimeout(self.heightTimer);
-      }
-
-      // Try again in 500 ms.
-      self.heightTimer = setTimeout(checkHeight, 500);
-    };
-
-    // Check the height of the iframe.
-    checkHeight();
   };
 }(window, document, window.allplayers, jQuery));
