@@ -208,10 +208,10 @@ var allplayers = allplayers || {app: {}};
      *   If this product is a valid product.
      */
     var productValid = function(product) {
-      return product['product_uuid'] &&
-        product['price'] &&
-        product['quantity'] &&
-        product['title'];
+      return product.product_uuid &&
+        product.price &&
+        product.quantity &&
+        product.title;
     };
 
     /**
@@ -238,16 +238,16 @@ var allplayers = allplayers || {app: {}};
      */
     var productUpdateTotal = function(product) {
       // Add raw price if not already there.
-      if (!product['price_raw']) {
-        product['price_raw'] = accounting.unformat(product['price']) * 100;
+      if (!product.price_raw) {
+        product.price_raw = accounting.unformat(product.price) * 100;
       }
 
       // Format the price.
-      product['price'] = accounting.formatMoney(product['price']);
+      product.price = accounting.formatMoney(product.price);
 
       // Calculate the total price.
-      product['total'] = accounting.formatMoney(
-        product['price_raw'] * product['quantity'] / 100
+      product.total = accounting.formatMoney(
+        product.price_raw * product.quantity / 100
       );
 
       return product;
@@ -272,14 +272,14 @@ var allplayers = allplayers || {app: {}};
         // Check if the adhoc product has already been added.
         for (var i = 0; i < products.length; i++) {
           if (
-            products[i]['title'] == product['title'] &&
-            products[i]['price_raw'] == product['price_raw']
+            products[i].title == product.title &&
+            products[i].price_raw == product.price_raw
           ) {
             // The product was found so increase the quantity and total price.
             newProduct = false;
-            products[i]['quantity'] += product['quantity'];
-            products[i]['total'] = accounting.formatMoney(
-              products[i]['price_raw'] * products[i]['quantity'] /
+            products[i].quantity += product.quantity;
+            products[i].total = accounting.formatMoney(
+              products[i].price_raw * products[i].quantity /
               100
             );
             product = products[i];
@@ -288,7 +288,7 @@ var allplayers = allplayers || {app: {}};
         }
       }
       else {
-        products = new Array();
+        products = [];
       }
 
       // If a new adhoc product, add it to the list.
@@ -323,7 +323,7 @@ var allplayers = allplayers || {app: {}};
       for (var i = 0; i < adhocProducts.length; i++) {
         orderTotal += adhocProducts[i].price_raw;
       }
-      for (var i = 0; i < existingProducts.length; i++) {
+      for (i = 0; i < existingProducts.length; i++) {
         orderTotal += existingProducts[i].price_raw;
       }
 
@@ -359,14 +359,14 @@ var allplayers = allplayers || {app: {}};
       var newProduct = true;
 
       // Check if the product is existing or adhoc.
-      if (product['product_uuid']) {
+      if (product.product_uuid) {
         // If the product is already listed in the table, update the quantity
         // and total.
-        if ($('tr#adhoc-product-' + product['product_uuid']).length > 0) {
-          $('tr#adhoc-product-' + product['product_uuid'] + ' .quantity')
-            .text(product['quantity']);
-          $('tr#adhoc-product-' + product['product_uuid'] + ' .total')
-            .text(product['total']);
+        if ($('tr#adhoc-product-' + product.product_uuid).length > 0) {
+          $('tr#adhoc-product-' + product.product_uuid + ' .quantity')
+            .text(product.quantity);
+          $('tr#adhoc-product-' + product.product_uuid + ' .total')
+            .text(product.total);
           newProduct = false;
         }
       }
@@ -378,12 +378,12 @@ var allplayers = allplayers || {app: {}};
           if (
             title &&
             price &&
-            title.indexOf(product['title']) !== -1 &&
-            price.indexOf(product['price']) !== -1
+            title.indexOf(product.title) !== -1 &&
+            price.indexOf(product.price) !== -1
           ) {
             // Update quantity and total and exit the each loop.
-            $(this).find('.quantity').text(product['quantity']);
-            $(this).find('.total').text(product['total']);
+            $(this).find('.quantity').text(product.quantity);
+            $(this).find('.total').text(product.total);
             newProduct = false;
             return false;
           }
@@ -393,12 +393,12 @@ var allplayers = allplayers || {app: {}};
       // Add the product to the table if it's a new product.
       if (newProduct) {
         $('.views-table tbody').append(
-          '<tr id="adhoc-product-' + product['product_uuid'] + '">' +
-            '<td class="title">' + product['title'] + '</td>' +
+          '<tr id="adhoc-product-' + product.product_uuid + '">' +
+            '<td class="title">' + product.title + '</td>' +
             '<td class="seller"></td>' +
-            '<td class="price">' + product['price'] + '</td>' +
-            '<td class="quantity">' + product['quantity'] + '</td>' +
-            '<td class="total">' + product['total'] + '</td>' +
+            '<td class="price">' + product.price + '</td>' +
+            '<td class="quantity">' + product.quantity + '</td>' +
+            '<td class="total">' + product.total + '</td>' +
           '</tr>'
         );
       }
@@ -406,7 +406,7 @@ var allplayers = allplayers || {app: {}};
       // Update the order total.
       var componentTotal = $('td.component-total');
       var total = componentTotal.text();
-      total = accounting.unformat(total) + (product['price_raw'] / 100);
+      total = accounting.unformat(total) + (product.price_raw / 100);
       total = accounting.formatMoney(total);
       componentTotal.text(total);
     };
@@ -415,26 +415,26 @@ var allplayers = allplayers || {app: {}};
     $.pm.bind('addProduct', function(data) {
 
       // If the product is existing.
-      if (data && data['product_uuid']) {
-        (new allplayers.product({uuid: data['product_uuid']})).getProduct(
-          data['product_uuid'],
+      if (data && data.product_uuid) {
+        (new allplayers.product({uuid: data.product_uuid})).getProduct(
+          data.product_uuid,
           function(result) {
             // Check if the UUIDs match.
-            if (result.uuid == data['product_uuid']) {
-              var uuid = data['product_uuid'];
+            if (result.uuid == data.product_uuid) {
+              var uuid = data.product_uuid;
               var product = productInput(uuid).val();
-              data['title'] = result.title;
+              data.title = result.title;
 
               // If a product was already found.
               if (product) {
 
                 // Update the quantity.
                 product = JSON.parse(product);
-                product['quantity'] = parseInt(product['quantity']);
-                product['quantity'] += parseInt(data['quantity']);
+                product.quantity = parseInt(product.quantity);
+                product.quantity += parseInt(data.quantity);
                 productInput(uuid).val(JSON.stringify(product));
                 var productCol = '#add-product-display-' + uuid;
-                $(productCol + ' td:last').text(product['quantity']);
+                $(productCol + ' td:last').text(product.quantity);
               }
 
               // Make sure the product is valid.
@@ -444,10 +444,10 @@ var allplayers = allplayers || {app: {}};
                 // isn't supplied, use the price  assigned to the product in
                 // store.
                 if (
-                  data['price'] == 'undefined' ||
+                  data.price == 'undefined' ||
                   (result.type == 'product' && result.price_raw > 0)
                 ) {
-                  data['price'] = result.price_raw / 100;
+                  data.price = result.price_raw / 100;
                 }
                 data = productUpdateTotal(data);
 
@@ -463,7 +463,7 @@ var allplayers = allplayers || {app: {}};
                 $('#edit-next').val('Continue');
 
                 // Add the products table if not already.
-                if ($('#add-products-table').length == 0) {
+                if ($('#add-products-table').length === 0) {
                   $('<table>').attr({
                     id: 'add-products-table',
                     class: 'sticky-table'
@@ -485,9 +485,9 @@ var allplayers = allplayers || {app: {}};
                 // Add the product to the table.
                 $('#add-products-table tbody').append(
                   '<tr id="add-product-display-' + uuid + '">' +
-                    '<td>' + data['title'] + '</td>' +
-                    '<td>' + data['price'] + '</td>' +
-                    '<td>' + data['quantity'] + '</td>' +
+                    '<td>' + data.title + '</td>' +
+                    '<td>' + data.price + '</td>' +
+                    '<td>' + data.quantity + '</td>' +
                   '</tr>'
                 );
               }
@@ -502,7 +502,7 @@ var allplayers = allplayers || {app: {}};
       else {
         // Update the product total price.
         data = productUpdateTotal(data);
-        data['title'] += ' (Adhoc)';
+        data.title += ' (Adhoc)';
 
         // Create the input for the new product.
         $('<input>').attr({
@@ -516,7 +516,7 @@ var allplayers = allplayers || {app: {}};
         $('#edit-next').val('Continue');
 
         // Add the products table if not already.
-        if ($('#add-products-table').length == 0) {
+        if ($('#add-products-table').length === 0) {
           $('<table>').attr({
             id: 'add-products-table',
             class: 'sticky-table'
@@ -538,9 +538,9 @@ var allplayers = allplayers || {app: {}};
         // Add the product to the table.
         $('#add-products-table tbody').append(
           '<tr>' +
-            '<td>' + data['title'] + '</td>' +
-            '<td>' + data['price'] + '</td>' +
-            '<td>' + data['quantity'] + '</td>' +
+            '<td>' + data.title + '</td>' +
+            '<td>' + data.price + '</td>' +
+            '<td>' + data.quantity + '</td>' +
           '</tr>'
         );
       }
@@ -550,14 +550,14 @@ var allplayers = allplayers || {app: {}};
     $.pm.bind('addCheckoutProduct', function(data) {
 
       // If the product is existing.
-      if (data && data['product_uuid']) {
-        (new allplayers.product({uuid: data['product_uuid']})).getProduct(
-          data['product_uuid'],
+      if (data && data.product_uuid) {
+        (new allplayers.product({uuid: data.product_uuid})).getProduct(
+          data.product_uuid,
           function(result) {
             // Check if the UUIDs match.
-            if (result && result.uuid == data['product_uuid']) {
+            if (result && result.uuid == data.product_uuid) {
               // The product exists.
-              var uuid = data['product_uuid'];
+              var uuid = data.product_uuid;
               var product = productInput(uuid).val();
               var existingProducts = $('#add-existing-products-' +
                 self.options.checkout.order_id).val();
@@ -567,11 +567,11 @@ var allplayers = allplayers || {app: {}};
 
                 // Update the quantity.
                 product = JSON.parse(product);
-                product['quantity'] = parseInt(product['quantity']);
-                product['quantity'] += parseInt(data['quantity']);
+                product.quantity = parseInt(product.quantity);
+                product.quantity += parseInt(data.quantity);
                 productInput(uuid).val(JSON.stringify(product));
                 var productCol = '#adhoc-product-' + uuid;
-                $(productCol + ' td.quantity').text(product['quantity']);
+                $(productCol + ' td.quantity').text(product.quantity);
               }
 
               // Make sure the product is valid.
@@ -581,13 +581,13 @@ var allplayers = allplayers || {app: {}};
                 // isn't supplied, use the price  assigned to the product in
                 // store.
                 if (
-                  data['price'] == 'undefined' ||
+                  data.price == 'undefined' ||
                   (result.type == 'product' && result.price_raw > 0)
                 ) {
-                  data['price'] = result.price_raw / 100;
-                  data['price_raw'] = result.price_raw;
+                  data.price = result.price_raw / 100;
+                  data.price_raw = result.price_raw;
                 }
-                data['title'] = result.title;
+                data.title = result.title;
                 data = productUpdateTotal(data);
               }
               existingProducts = addCheckoutProducts(existingProducts, data);
@@ -604,7 +604,7 @@ var allplayers = allplayers || {app: {}};
       else {
         // Update the product total price.
         data = productUpdateTotal(data);
-        data['title'] += ' (Adhoc)';
+        data.title += ' (Adhoc)';
 
         // Add the product info to the list of adhoc products to create.
         var adhocProducts = $('#add-adhoc-products-' +
@@ -618,7 +618,7 @@ var allplayers = allplayers || {app: {}};
 
     // The remove product message.
     $.pm.bind('removeProduct', function(data) {
-      var uuid = data['product_uuid'];
+      var uuid = data.product_uuid;
       var product = productInput(uuid).val();
       if (product) {
 

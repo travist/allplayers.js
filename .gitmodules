@@ -1,0 +1,12 @@
+[submodule "lib/seamless.js"]
+	path = lib/seamless.js
+	url = https://github.com/travist/seamless.js.git
+[submodule "lib/treeselect"]
+	path = lib/treeselect
+	url = https://github.com/travist/jquery.treeselect.js.git
+[submodule "lib/postmessage"]
+	path = lib/postmessage
+	url = https://github.com/daepark/postmessage.git
+[submodule "drupal.api.js"]
+	path = drupal.api.js
+	url = https://github.com/travist/drupal.api.js.git

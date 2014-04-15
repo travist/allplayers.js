@@ -57,11 +57,11 @@ window.allplayers = window.allplayers || {};
 
   base64.makeDOMException = function() {
     // sadly in FF,Safari,Chrome you can't make a DOMException
-    var e, tmp;
+    var e;
 
     try {
       return new DOMException(DOMException.INVALID_CHARACTER_ERR);
-    } catch (tmp) {
+    } catch (caught) {
       // not available, just passback a duck-typed equiv
       // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error
       // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Global_Objects/Error/prototype
@@ -223,11 +223,10 @@ allplayers.embed = function(options, defaults) {
  * @return {string} The value of the parameter.
  */
 allplayers.embed.getParam = function(name) {
-  name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
-  var regexS = '[\\?&]' + name + '=([^&#]*)';
+  var regexS = '[?&]' + name + '=([^&#]*)';
   var regex = new RegExp(regexS);
   var results = regex.exec(window.location.search);
-  if (results == null) {
+  if (results === null) {
     return '';
   }
   else {
