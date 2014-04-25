@@ -180,28 +180,72 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // The fallback text.
     var fallbackShown = false;
-    var fallback = '<a href="#" onclick="';
-    fallback += 'window.openAPEmbeddedWindow_' + id + '(event)">Click here</a>';
-    fallback += ' to open in a separate window.';
+    var fallbackLink = '<a class="apci-fallback-link" href="#" onclick="';
+    fallbackLink += 'window.openAPEmbeddedWindow_' + id + '(event)">Click here</a>';
+    fallbackLink += ' to open in a separate window.';
+
+    var fallbackStyles = $('#apci-fallback-styles');
+    if (!fallbackStyles.length) {
+
+      // Create the fallback styles.
+      fallbackStyles = $(document.createElement('style')).attr({
+        'id': 'apci-fallback-styles',
+        'type': 'text/css'
+      }).html(
+        '.apci-fallback.apply-fallback-styles {' +
+          'padding: 15px;' +
+          'border: 1px solid transparent;' +
+          'border-radius: 4px;' +
+          'color: #3a87ad;' +
+          'background-color: #d9edf7;' +
+          'border-color: #bce8f1;' +
+        '}' +
+        '.apci-fallback em { padding: 5px; }' +
+        '.apci-fallback.apply-fallback-styles .apci-fallback-link {' +
+          'display: inline-block;' +
+          'color: #333;' +
+          'border: 1px solid #ccc;' +
+          'text-decoration: none;' +
+          'background-color: #fff;' +
+          'padding: 5px 10px;' +
+          'font-size: 12px;' +
+          'line-height: 1.5;' +
+          'border-radius: 6px;' +
+          'font-weight: 400;' +
+          'cursor: pointer;' +
+          '-webkit-user-select: none;' +
+          '-moz-user-select: none;' +
+          '-ms-user-select: none;' +
+          'user-select: none;' +
+        '}' +
+        '.apci-fallback.apply-fallback-styles .apci-fallback-link:hover {' +
+          'background-color:#ebebeb;' +
+          'border-color:#adadad;' +
+        '}'
+      );
+
+      // Add the styles.
+      this.context.before(fallbackStyles);
+    }
 
     // Returns the fallback markup.
     var getFallback = function(msg, info) {
-      var markup = '<div class="apci-fallback" ';
+      var fallback = $(document.createElement('div')).attr({
+        'class': 'apci-fallback'
+      });
+
+      // Apply the styles if we need to.
       if (info) {
-        var divStyles = [
-          'padding: 15px',
-          'border: 1px solid transparent',
-          'border-radius: 4px',
-          'color: #3a87ad',
-          'background-color: #d9edf7',
-          'border-color: #bce8f1'
-        ];
-        markup += 'style="' + divStyles.join(';') + '"';
+        fallback.addClass('apply-fallback-styles');
       }
-      markup += '>';
-      markup += '<em style="padding: 5px;">' + msg + ' ' + fallback + '</em>';
-      markup += '</div>';
-      return markup;
+
+      // Create an emphasis element.
+      var em = $(document.createElement('em'));
+      em.html(msg + ' ' + fallbackLink);
+      fallback.append(em);
+
+      // Return the fallback.
+      return fallback;
     };
 
     // Function to display the fallback only once.
@@ -273,6 +317,14 @@ window.allplayers = window.allplayers || {embed: {}};
         type: 'chromeMsg',
         data: data
       });
+    });
+
+    // The init message.
+    $.pm.bind('iframe_error', function(data, e) {
+      iframe.hide();
+      self.isLoading = false;
+      loading.remove();
+      displayFallback('Your browser requires this page to be opened in a separate window.');
     });
 
     // The init message.

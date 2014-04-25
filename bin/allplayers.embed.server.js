@@ -721,6 +721,17 @@ allplayers.embed.server.prototype.init = function() {
   this.heightTimer = null;
   this.queue = {};
 
+  // Perform a cookie test.
+  document.cookie="cookieTest=1";
+  if (document.cookie.indexOf("cookieTest") === -1) {
+    $.pm({
+      target: window.parent,
+      url: this.ehost,
+      type: 'iframe_error'
+    });
+    return;
+  }
+
   // Keep track of the self pointer.
   var self = this;
 
