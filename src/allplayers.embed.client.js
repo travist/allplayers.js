@@ -64,49 +64,17 @@ window.allplayers = window.allplayers || {embed: {}};
       this.baseURL = this.options.base;
     }
 
-    // Say we are loading.
-    this.isLoading = true;
-
     // Get the ID from this context.
     var id = this.context.attr('id');
 
-    // Set the spinner if it isn't set.
-    if (!this.options.spinner) {
-      this.options.spinner = this.options.base;
-      this.options.spinner += '/sites/all/themes/basic_foundation';
-      this.options.spinner += '/images/loader.gif';
-    }
-
-    // Say that the plugin isn't ready.
-    this.pluginReady = false;
-
-    // Add the loading and iframe.
-    var loading = $(document.createElement('div')).css({
-      background: 'url(' + this.options.spinner + ') no-repeat 10px 13px',
-      padding: '10px 10px 10px 60px',
-      width: '100%'
-    });
-
-    // Add the loading text.
-    loading.append(this.options.loading);
-
-    // Add the iframe.
+    // Set the iframe id.
     var iframeId = id + '_iframe';
-
-    // Define our own isEmptyObject function.
-    var isEmptyObject = function(obj) {
-      var name;
-      for (name in obj) {
-        return false;
-      }
-      return true;
-    };
 
     // Get the source for the iframe.
     var source = '';
 
     // See if they provide their own query.
-    var q = allplayers.embed.getParam('apq');
+    var q = $.SeamlessBase.getParam('apq');
     if (q) {
       source = this.options.base + '/' + q;
     }
@@ -132,7 +100,7 @@ window.allplayers = window.allplayers || {embed: {}};
     source += (source.search(/\?/) === -1) ? '?' : '&';
 
     // If they have some query options then add them here.
-    if (!isEmptyObject(this.options.query)) {
+    if (!$.SeamlessBase.isEmptyObject(this.options.query)) {
       for (var param in this.options.query) {
         source += param + '=' + encodeURIComponent(this.options.query[param]);
         source += '&';
@@ -147,163 +115,38 @@ window.allplayers = window.allplayers || {embed: {}};
     source += '&';
     source += 'ehost=' + allplayers.base64.encode(window.location.origin);
 
-    // Used for callbacks.
-    var self = this;
-
-    // Create the fallback.
-    (function(eSource) {
-      window['openAPEmbeddedWindow_' + id] = function(event) {
-        if (event.preventDefault) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        else {
-          event.returnValue = false;
-        }
-        var windowParams = [
-          'width=960',
-          'height=800',
-          'menubar=no',
-          'titlebar=no',
-          'toolbar=no',
-          'status=no',
-          'scrollbars=yes',
-          'chrome=yes'
-        ];
-        eSource += '&clearCache=true&bodyPadding=10&showHelp=1';
-        window.open(eSource, '', windowParams.join());
-      };
-    }(source));
-
-    // Add the iframe ID to the iframe source.
-    source += '#' + iframeId;
-
-    // The fallback text.
-    var fallbackShown = false;
-    var fallbackLink = '<a class="apci-fallback-link" href="#" onclick="';
-    fallbackLink += 'window.openAPEmbeddedWindow_' + id + '(event)">Click here</a>';
-    fallbackLink += ' to open in a separate window.';
-
-    var fallbackStyles = $('#apci-fallback-styles');
-    if (!fallbackStyles.length) {
-
-      // Create the fallback styles.
-      fallbackStyles = $(document.createElement('style')).attr({
-        'id': 'apci-fallback-styles',
-        'type': 'text/css'
-      }).html(
-        '.apci-fallback.apply-fallback-styles {' +
-          'padding: 15px;' +
-          'border: 1px solid transparent;' +
-          'border-radius: 4px;' +
-          'color: #3a87ad;' +
-          'background-color: #d9edf7;' +
-          'border-color: #bce8f1;' +
-        '}' +
-        '.apci-fallback em { padding: 5px; }' +
-        '.apci-fallback.apply-fallback-styles .apci-fallback-link {' +
-          'display: inline-block;' +
-          'color: #333;' +
-          'border: 1px solid #ccc;' +
-          'text-decoration: none;' +
-          'background-color: #fff;' +
-          'padding: 5px 10px;' +
-          'font-size: 12px;' +
-          'line-height: 1.5;' +
-          'border-radius: 6px;' +
-          'font-weight: 400;' +
-          'cursor: pointer;' +
-          '-webkit-user-select: none;' +
-          '-moz-user-select: none;' +
-          '-ms-user-select: none;' +
-          'user-select: none;' +
-        '}' +
-        '.apci-fallback.apply-fallback-styles .apci-fallback-link:hover {' +
-          'background-color:#ebebeb;' +
-          'border-color:#adadad;' +
-        '}'
-      );
-
-      // Add the styles.
-      this.context.before(fallbackStyles);
+    // Set the spinner if it isn't set.
+    if (!this.options.spinner) {
+      this.options.spinner = this.options.base;
+      this.options.spinner += '/sites/all/themes/basic_foundation';
+      this.options.spinner += '/images/loader.gif';
     }
 
-    // Returns the fallback markup.
-    var getFallback = function(msg, info) {
-      var fallback = $(document.createElement('div')).attr({
-        'class': 'apci-fallback'
-      });
-
-      // Apply the styles if we need to.
-      if (info) {
-        fallback.addClass('apply-fallback-styles');
-      }
-
-      // Create an emphasis element.
-      var em = $(document.createElement('em'));
-      em.html(msg + ' ' + fallbackLink);
-      fallback.append(em);
-
-      // Return the fallback.
-      return fallback;
-    };
-
-    // Function to display the fallback only once.
-    var displayFallback = function(msg) {
-      if (!fallbackShown) {
-        fallbackShown = true;
-        self.context.prepend(getFallback(msg, true));
-      }
-    };
-
-    // Create the permanent fallback.
-    this.context.after(getFallback('Having Trouble?', false));
-
-    // If any error occurs, then show the fallback text.
-    window.onerror = function(msg, url, line) {
-      msg = 'An error has been detected on this page, ';
-      msg += 'which may cause problems with the operation of this application.';
-      displayFallback(msg);
-    };
-
-    // If nothing happens after 30 seconds, then assume something went wrong.
-    setTimeout(function() {
-      if (self.isLoading) {
-        loading.remove();
-        self.isLoading = false;
-        displayFallback('An error has been detected on this page.');
-      }
-    }, 30000);
-
+    // Create the seamless iframe.
     var iframe = $(document.createElement('iframe')).attr({
       id: iframeId,
       name: iframeId,
-      scrolling: 'no',
-      seamless: 'seamless',
-      width: '100%',
-      height: '0px',
       src: source
-    }).css({
-        border: 'none',
-        overflowY: 'hidden'
-      });
+    });
 
-    // Create the loading element.
-    this.context.append(loading);
+    // Add the iframe.
     this.context.append(iframe);
 
-    var serverTarget = null;
+    // Make the iframe seamless.
+    iframe = iframe.seamless({
+      spinner: this.options.spinner,
+      fallbackText: 'Having Trouble?',
+      styles: this.options.style
+    });
 
-    // The chrome plugin is ready.
-    $.pm.bind('chromePluginReady', function() {
-      self.pluginReady = true;
+    // The complete message.
+    iframe.receive('complete', function(data) {
+      self.options.complete.call(self, data);
     });
 
     // Pass along chrome message responses.
     $.pm.bind('chromeMsgResp', function(data) {
-      $.pm({
-        target: serverTarget,
-        url: self.baseURL,
+      iframe.send({
         type: 'chromeMsgResp',
         data: data
       });
@@ -311,59 +154,10 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // Pass along the chrome messages.
     $.pm.bind('chromeMsg', function(data) {
-      $.pm({
-        target: serverTarget,
-        url: self.baseURL,
+      iframe.send({
         type: 'chromeMsg',
         data: data
       });
-    });
-
-    // The init message.
-    $.pm.bind('iframe_error', function(data, e) {
-      iframe.hide();
-      self.isLoading = false;
-      loading.remove();
-      displayFallback('Your browser requires this page to be opened in a separate window.');
-    });
-
-    // The init message.
-    $.pm.bind('init', function(data, e) {
-      serverTarget = e.source;
-      self.isLoading = false;
-      loading.remove();
-
-      // Add the custom style to the iframe.
-      if (self.options.style) {
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'addStyle',
-          data: self.options.style
-        });
-      }
-
-      // Set the height
-      iframe.height(data.height).attr('height', data.height + 'px');
-      return data;
-    });
-
-    // The complete message.
-    $.pm.bind('complete', function(data) {
-      self.options.complete.call(self, data);
-    });
-
-    // The server ready message.
-    $.pm.bind('serverReady', function(data, e) {
-
-      // Say that the chrome plugin is ready.
-      if (self.pluginReady) {
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'chromePluginReady'
-        });
-      }
     });
   };
 }(window, document, window.allplayers, jQuery));

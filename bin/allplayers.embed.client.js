@@ -436,11 +436,583 @@ var NO_JQUERY = {};
  * http://www.JSON.org/json2.js
  **/
 if (! ("JSON" in window && window.JSON)){JSON={}}(function(){function f(n){return n<10?"0"+n:n}if(typeof Date.prototype.toJSON!=="function"){Date.prototype.toJSON=function(key){return this.getUTCFullYear()+"-"+f(this.getUTCMonth()+1)+"-"+f(this.getUTCDate())+"T"+f(this.getUTCHours())+":"+f(this.getUTCMinutes())+":"+f(this.getUTCSeconds())+"Z"};String.prototype.toJSON=Number.prototype.toJSON=Boolean.prototype.toJSON=function(key){return this.valueOf()}}var cx=/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,escapable=/[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,gap,indent,meta={"\b":"\\b","\t":"\\t","\n":"\\n","\f":"\\f","\r":"\\r",'"':'\\"',"\\":"\\\\"},rep;function quote(string){escapable.lastIndex=0;return escapable.test(string)?'"'+string.replace(escapable,function(a){var c=meta[a];return typeof c==="string"?c:"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})+'"':'"'+string+'"'}function str(key,holder){var i,k,v,length,mind=gap,partial,value=holder[key];if(value&&typeof value==="object"&&typeof value.toJSON==="function"){value=value.toJSON(key)}if(typeof rep==="function"){value=rep.call(holder,key,value)}switch(typeof value){case"string":return quote(value);case"number":return isFinite(value)?String(value):"null";case"boolean":case"null":return String(value);case"object":if(!value){return"null"}gap+=indent;partial=[];if(Object.prototype.toString.apply(value)==="[object Array]"){length=value.length;for(i=0;i<length;i+=1){partial[i]=str(i,value)||"null"}v=partial.length===0?"[]":gap?"[\n"+gap+partial.join(",\n"+gap)+"\n"+mind+"]":"["+partial.join(",")+"]";gap=mind;return v}if(rep&&typeof rep==="object"){length=rep.length;for(i=0;i<length;i+=1){k=rep[i];if(typeof k==="string"){v=str(k,value);if(v){partial.push(quote(k)+(gap?": ":":")+v)}}}}else{for(k in value){if(Object.hasOwnProperty.call(value,k)){v=str(k,value);if(v){partial.push(quote(k)+(gap?": ":":")+v)}}}}v=partial.length===0?"{}":gap?"{\n"+gap+partial.join(",\n"+gap)+"\n"+mind+"}":"{"+partial.join(",")+"}";gap=mind;return v}}if(typeof JSON.stringify!=="function"){JSON.stringify=function(value,replacer,space){var i;gap="";indent="";if(typeof space==="number"){for(i=0;i<space;i+=1){indent+=" "}}else{if(typeof space==="string"){indent=space}}rep=replacer;if(replacer&&typeof replacer!=="function"&&(typeof replacer!=="object"||typeof replacer.length!=="number")){throw new Error("JSON.stringify")}return str("",{"":value})}}if(typeof JSON.parse!=="function"){JSON.parse=function(text,reviver){var j;function walk(holder,key){var k,v,value=holder[key];if(value&&typeof value==="object"){for(k in value){if(Object.hasOwnProperty.call(value,k)){v=walk(value,k);if(v!==undefined){value[k]=v}else{delete value[k]}}}}return reviver.call(holder,key,value)}cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(a){return"\\u"+("0000"+a.charCodeAt(0).toString(16)).slice(-4)})}if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,"@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,"]").replace(/(?:^|:|,)(?:\s*\[)+/g,""))){j=eval("("+text+")");return typeof reviver==="function"?walk({"":j},""):j}throw new SyntaxError("JSON.parse")}}}());
-/** The global allplayers object. */
+(function(window, document, $, undefined) {
+  // Base seamless functionality between parent and child.
+  $.SeamlessBase = {
+
+    /**
+     * Returns the value of a query parameter.
+     *
+     * @param string name
+     *   The name of the query parameter to retrieve.
+     *
+     * @param string from
+     *   The string to get the query parameter from.
+     *
+     * @returns {string}
+     *   The value of the query parameter.
+     */
+    getParam: function(name, from) {
+      from = from || window.location.search;
+      var regexS = '[?&]' + name + '=([^&#]*)';
+      var regex = new RegExp(regexS);
+      var results = regex.exec(from);
+      if (results === null) {
+        return '';
+      }
+      else {
+        return decodeURIComponent(results[1].replace(/\+/g, ' '));
+      }
+    },
+
+    /**
+     * Filters text to remove markup tags.
+     *
+     * @param text
+     * @returns {XML|string|*|void}
+     */
+    filterText: function(text) {
+      return text.replace(/[<>]/g, '');
+    },
+
+    /**
+     * Determine if an object is empty.
+     *
+     * @param object obj
+     *   The object to check to see if it is empty.
+     */
+    isEmptyObject: function(obj) {
+      var name;
+      for (name in obj) {
+        return false;
+      }
+      return true;
+    }
+  };
+})(window, document, jQuery);
+(function(window, document, $, undefined) {
+  /**
+   * Create a seamless connection between parent and child frames.
+   *
+   * @param target
+   * @param url
+   * @constructor
+   */
+  $.SeamlessConnection = function(target, url) {
+    this.id = 0;
+    this.target = target;
+    this.url = url;
+    this.active = false;
+    this.queue = [];
+  };
+
+  /**
+   * Send a message to the connected frame.
+   *
+   * @param pm
+   */
+  $.SeamlessConnection.prototype.send = function(pm) {
+
+    // Only send if the target is set.
+    if (this.active && this.target) {
+
+      // Normalize the data.
+      if (!pm.hasOwnProperty('data')) {
+        pm = {data: pm};
+      }
+
+      // Set the other parameters.
+      pm.target = this.target;
+      pm.url = this.url;
+      pm.type = pm.type || 'seamless_data';
+      pm.data = pm.data || {};
+      pm.data.__id = this.id;
+      $.pm(pm);
+    }
+    else {
+
+      // Add this to the queue.
+      this.queue.push(pm);
+    }
+  };
+
+  /**
+   * Receive a message from a connected frame.
+   */
+  $.SeamlessConnection.prototype.receive = function(type, callback) {
+    if (typeof type === 'function') {
+      callback = type;
+      type = 'seamless_data';
+    }
+
+    // Store the this pointer.
+    var _self = this;
+
+    // Listen for events.
+    $.pm.bind(type, function(data, event) {
+
+      // Only handle data if the connection id's match.
+      if (data.__id && (data.__id === _self.id)) {
+        return callback(data, event);
+      }
+      else {
+
+        // Do not handle this event.
+        return false;
+      }
+    });
+  };
+
+  /**
+   * Sets this connection as active.
+   *
+   * @param active
+   */
+  $.SeamlessConnection.prototype.setActive = function(active) {
+    this.active = active;
+
+    // Empty the send queue if we have one.
+    if (this.queue.length > 0) {
+      for(var i in this.queue) {
+        this.send(this.queue[i]);
+      }
+      this.queue = [];
+      this.queue.length = 0;
+    }
+  };
+})(window, document, jQuery);
+(function(window, document, $, undefined) {
+
+  // Make sure we have the $.pm module loaded.
+  if (!$.hasOwnProperty('pm')) {
+    console.log('You must install the jQuery.pm module to use seamless.js.');
+    return;
+  }
+
+  // If any iframe page sends this message, then reload the page.
+  $.pm.bind('seamless_noiframe', function(data) {
+    // Remove the 'noifame' query parameters.
+    data.href = data.href.replace(/noiframe\=[^&?#]+/, '');
+    window.location.replace(data.href);
+  });
+
+  // Create a way to open the iframe in a separate window.
+  window.seamlessOpenFallback = function(src, width, height, event) {
+    if (event.preventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    else {
+      event.returnValue = false;
+    }
+    window.open(src, '', [
+      'width=' + width,
+      'height=' + height,
+      'menubar=no',
+      'titlebar=no',
+      'toolbar=no',
+      'status=no',
+      'scrollbars=yes',
+      'chrome=yes'
+    ].join(','));
+  };
+
+  // Keep track of the next connection ID.
+  var seamlessFrames = [];
+  var connecting = false;
+  var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+
+  /**
+   * Creates a connection ID.
+   */
+  var getConnectionId = function() {
+    var r = [];
+    for (var i=0; i < 32; i++) {
+      r[i] = chars[0 | Math.random() * 32];
+    }
+    return r.join("");
+  };
+
+  // Call when each child is ready.
+  $.pm.bind('seamless_ready', function(data, event) {
+
+    // Only do this if we are not already connecting.
+    if (!connecting) {
+
+      // Say we are connecting.
+      connecting = true;
+
+      // Iterate through all of our iframes.
+      for (var i in seamlessFrames) {
+
+        // Say that this iframe is ready.
+        seamlessFrames[i].seamless_ready(data, event);
+      }
+
+      // Say we are no longer connecting.
+      connecting = false;
+    }
+  });
+
+  // Handle the child update message.
+  $.pm.bind('seamless_update', function(data, event) {
+
+    // Iterate through all of our iframes.
+    for (var i in seamlessFrames) {
+
+      // Get the iframe.
+      var iframe = seamlessFrames[i];
+
+      // Only process if the connection ID's match.
+      if (iframe.connection.id === data.__id) {
+
+        // Call this iframes update
+        return iframe.seamless_update(data, event);
+      }
+    }
+
+    // Return that nothing was done.
+    data.height = 0;
+    return data;
+  });
+
+  // If an error occurs.
+  $.pm.bind('seamless_error', function(data, event) {
+
+    // Iterate through all of our iframes.
+    for (var i in seamlessFrames) {
+
+      // Fallback this iframe.
+      seamlessFrames[i].seamless_error(data, event);
+    }
+  });
+
+  /**
+   * Create the seamless.js plugin.
+   */
+  $.fn.seamless = function(options) {
+
+    // The default arguments.
+    var defaults = {
+      loading: 'Loading ...',
+      spinner: 'http://www.travistidwell.com/seamless.js/src/loader.gif',
+      onConnect: null,
+      styles: [],
+      fallback: true,
+      fallbackParams: '',
+      fallbackText: '',
+      fallbackLinkText: 'Click here',
+      fallbackLinkAfter: ' to open in a separate window.',
+      fallbackStyles: [
+        'padding: 15px',
+        'border: 1px solid transparent',
+        'border-radius: 4px',
+        'color: #3a87ad',
+        'background-color: #d9edf7',
+        'border-color: #bce8f1'
+      ],
+      fallbackLinkStyles: [
+        'display: inline-block',
+        'color: #333',
+        'border: 1px solid #ccc',
+        'background-color: #fff',
+        'padding: 5px 10px',
+        'text-decoration: none',
+        'font-size: 12px',
+        'line-height: 1.5',
+        'border-radius: 6px',
+        'font-weight: 400',
+        'cursor: pointer',
+        '-webkit-user-select: none',
+        '-moz-user-select: none',
+        '-ms-user-select: none',
+        'user-select: none'
+      ],
+      fallbackLinkHoverStyles: [
+        'background-color:#ebebeb',
+        'border-color:#adadad'
+      ],
+      fallbackWindowWidth: 960,
+      fallbackWindowHeight: 800
+    };
+
+    // Set the defaults if they are not provided.
+    options = options || {};
+    for (var name in defaults) {
+      if (!options.hasOwnProperty(name)) {
+        options[name] = defaults[name];
+      }
+    }
+
+    // Only work with the first iframe object.
+    var iframe = $(this).eq(0);
+
+    // Set the seamless_options in the iframe.
+    iframe.seamless_options = options;
+
+    // Add this to the global seamless frames object.
+    seamlessFrames.push(iframe);
+
+    // Get the name of the iframe.
+    var id = iframe.attr('name') || iframe.attr('id');
+
+    // Get the iframe source.
+    var src = iframe.attr('src');
+
+    // The connection object.
+    iframe.connection = new $.SeamlessConnection(iframe[0].contentWindow, src);
+
+    // Assign the send and receive functions to the iframe.
+    iframe.send = function(pm) {
+      iframe.connection.send.call(iframe.connection, pm);
+    };
+    iframe.receive = function(type, callback) {
+      iframe.connection.receive.call(iframe.connection, type, callback);
+    };
+
+    // Add the necessary attributes.
+    iframe.attr({
+      'scrolling': 'no',
+      'seamless': 'seamless',
+      'width': '100%',
+      'height': '0px',
+      'marginheight': '0',
+      'marginwidth': '0',
+      'frameborder': '0',
+      'horizontalscrolling': 'no',
+      'verticalscrolling': 'no'
+    }).css({
+      border: 'none',
+      overflowY: 'hidden'
+    });
+
+    // Create the loading div.
+    var loading = $(document.createElement('div')).css({
+      background: 'url(' + options.spinner + ') no-repeat 10px 13px',
+      padding: '10px 10px 10px 60px',
+      width: '100%'
+    });
+
+    // We are loading.
+    var isLoading = true;
+
+    // Append the text.
+    loading.append(options.loading);
+
+    // Prepend the loading text.
+    iframe.before(loading);
+
+    // If they wish to have a fallback.
+    if (options.fallback) {
+
+      // Get the iframe src.
+      if (options.fallbackParams) {
+        src += (src.search(/\?/) === -1) ? '?' : '&';
+        src += options.fallbackParams;
+      }
+
+      var fallbackStyles = $('#seamless-fallback-styles');
+      if (!fallbackStyles.length) {
+
+        // Get styles from a setting.
+        var getStyles = function(stylesArray) {
+
+          // Join the array, and strip out markup.
+          return $.SeamlessBase.filterText(stylesArray.join(';'));
+        };
+
+        // Create the fallback styles.
+        fallbackStyles = $(document.createElement('style')).attr({
+          'id': 'seamless-fallback-styles',
+          'type': 'text/css'
+        }).html(
+          '.seamless-fallback.seamless-styles {' + getStyles(options.fallbackStyles) + '}' +
+          '.seamless-fallback em { padding: 5px; }' +
+          '.seamless-fallback-link.seamless-styles {' + getStyles(options.fallbackLinkStyles) + '}' +
+          '.seamless-fallback-link.seamless-styles:hover {' + getStyles(options.fallbackLinkHoverStyles) + '}'
+        );
+
+        // Add the styles before the iframe.
+        iframe.before(fallbackStyles);
+      }
+
+      // The arguments to pass to the onclick event.
+      var onClickArgs = [
+        '"' + src + '"',
+        options.fallbackWindowWidth,
+        options.fallbackWindowHeight
+      ];
+
+      // Create the fallback link.
+      var fallbackLink = $(document.createElement('a')).attr({
+        'class': 'seamless-fallback-link',
+        'href': '#',
+        'onclick': 'seamlessOpenFallback(' + onClickArgs.join(',') + ', event)'
+      });
+
+      // Create the fallback markup.
+      var fallback = $(document.createElement('div')).attr({
+        'class': 'seamless-fallback'
+      });
+
+      // Add the emphasis element for the text.
+      fallback.append($(document.createElement('em')));
+
+      // Set the iframe.
+      iframe.after(fallback);
+
+      /**
+       * Set the fallback message for the iframe.
+       * @param msg
+       */
+      var setFallback = function(msg, linkText, afterText, showStyles) {
+
+        // If they wish to show the styles.
+        if (showStyles) {
+          fallback.addClass('seamless-styles');
+          fallbackLink.addClass('seamless-styles');
+        }
+        else {
+          fallback.removeClass('seamless-styles');
+          fallbackLink.removeClass('seamless-styles');
+        }
+
+        // Set the text for the fallback.
+        fallback.find('em')
+          .text($.SeamlessBase.filterText(msg) + ' ')
+          .append(fallbackLink.text($.SeamlessBase.filterText(linkText)))
+          .append($.SeamlessBase.filterText(afterText));
+      };
+
+      // Set the default fallback.
+      if (options.fallbackText) {
+
+        // Create the fallback.
+        setFallback(
+          options.fallbackText,
+          options.fallbackLinkText,
+          options.fallbackLinkAfter,
+          false
+        );
+      }
+
+      // Handle all errors with a fallback message.
+      $(window).error(function() {
+        var msg = 'An error has been detected on this page, ';
+        msg += 'which may cause problems with the operation of this application.';
+
+        // Create the fallback.
+        setFallback(
+          msg,
+          options.fallbackLinkText,
+          options.fallbackLinkAfter,
+          true
+        );
+      });
+
+      // If nothing happens after 30 seconds, then assume something went wrong.
+      setTimeout(function() {
+        if (isLoading) {
+          loading.remove();
+          isLoading = false;
+
+          // Create the fallback.
+          setFallback(
+            'An error has been detected on this page.',
+            options.fallbackLinkText,
+            options.fallbackLinkAfter,
+            true
+          );
+        }
+      }, 30000);
+    }
+
+    /**
+     * Called when the child page is ready.
+     */
+    iframe.seamless_ready = function(data, event) {
+
+      // If no connection ID is established, then set it.
+      if (!iframe.connection.id) {
+        iframe.connection.id = getConnectionId();
+      }
+
+      // Setup the connection data.
+      var connectData = {
+        id : iframe.connection.id,
+        styles: iframe.seamless_options.styles
+      };
+
+      // Set the connection target.
+      if (!iframe.connection.target) {
+        iframe.connection.target = iframe[0].contentWindow;
+      }
+
+      // Send the connection message to the child page.
+      $.pm({
+        type: 'seamless_connect',
+        target: iframe.connection.target,
+        url: iframe.connection.url,
+        data: connectData,
+        success: function(data) {
+          if (iframe.seamless_options.onConnect) {
+            iframe.seamless_options.onConnect(data);
+          }
+        }
+      });
+
+      // Trigger an event.
+      iframe.trigger('connected');
+    };
+
+    /**
+     * Called when this iframe is updated with the child.
+     *
+     * @param data
+     * @param event
+     */
+    iframe.seamless_update = function(data, event) {
+
+      // See if we are loading.
+      if (isLoading) {
+
+        // Remove the loading indicator.
+        loading.remove();
+        isLoading = false;
+        iframe.connection.setActive(true);
+      }
+
+      // If the height is greater than 0, then update.
+      if (data.height > 0) {
+
+        // Set the iframe height.
+        iframe.height(data.height).attr('height', data.height + 'px');
+      }
+
+      // Return the data.
+      return data;
+    };
+
+    /**
+     * Open this iframe in a fallback window.
+     */
+    iframe.seamless_error = function(data, event) {
+
+      // Remove the loader and hide the iframe.
+      loading.remove();
+      iframe.hide();
+      isLoading = false;
+
+      // Set the fallback text.
+      setFallback(data.msg, data.linkText, data.afterText, true);
+    };
+
+    // Return the iframe.
+    return iframe;
+  };
+})(window, document, jQuery);/** The global allplayers object. */
 window.allplayers = window.allplayers || {};
-
 (function(window, document, allplayers, undefined) {
-
   /*
    * Copyright (c) 2010 Nick Galbreath
    * http://code.google.com/p/stringencoders/source/browse/#svn/trunk/javascript
@@ -626,56 +1198,43 @@ window.allplayers = window.allplayers || {};
   };
 
   allplayers.base64 = base64;
+}(window, document, window.allplayers));
+/** The global allplayers object. */
+window.allplayers = window.allplayers || {};
+(function(window, document, allplayers, undefined) {
 
-/**
- * Create the embedded class.
- *
- * @param {object} options The options for this embed library.
- * @param {object} defaults The default params for this libarary.
- * @this The allplayers.embed object.
- */
-allplayers.embed = function(options, defaults) {
-  if (defaults) {
+  /**
+   * Create the embedded class.
+   *
+   * @param {object} options The options for this embed library.
+   * @param {object} defaults The default params for this libarary.
+   * @this The allplayers.embed object.
+   */
+  allplayers.embed = function(options, defaults) {
+    if (defaults) {
 
-    // Keep track of the self pointer.
-    var self = this;
+      // Keep track of the self pointer.
+      var self = this;
 
-    // Set the defaults.
-    options = options || {};
-    for (var name in defaults) {
-      if (!options.hasOwnProperty(name)) {
-        options[name] = defaults[name];
+      // Set the defaults.
+      options = options || {};
+      for (var name in defaults) {
+        if (!options.hasOwnProperty(name)) {
+          options[name] = defaults[name];
+        }
       }
+
+      // Set the options and initialize.
+      this.options = options;
+      this.init();
     }
+  };
 
-    // Set the options and initialize.
-    this.options = options;
-    this.init();
-  }
-};
+  /**
+   * Initialize this embed code.
+   */
+  allplayers.embed.prototype.init = function() {};
 
-/**
- * Return the value of a parameter.
- *
- * @param {string} name The name of the parameter to get.
- * @return {string} The value of the parameter.
- */
-allplayers.embed.getParam = function(name) {
-  var regexS = '[?&]' + name + '=([^&#]*)';
-  var regex = new RegExp(regexS);
-  var results = regex.exec(window.location.search);
-  if (results === null) {
-    return '';
-  }
-  else {
-    return decodeURIComponent(results[1].replace(/\+/g, ' '));
-  }
-};
-
-/**
- * Initialize this embed code.
- */
-allplayers.embed.prototype.init = function() {};
 }(window, document, window.allplayers));
 /** The global allplayers object. */
 window.allplayers = window.allplayers || {embed: {}};
@@ -743,49 +1302,17 @@ window.allplayers = window.allplayers || {embed: {}};
       this.baseURL = this.options.base;
     }
 
-    // Say we are loading.
-    this.isLoading = true;
-
     // Get the ID from this context.
     var id = this.context.attr('id');
 
-    // Set the spinner if it isn't set.
-    if (!this.options.spinner) {
-      this.options.spinner = this.options.base;
-      this.options.spinner += '/sites/all/themes/basic_foundation';
-      this.options.spinner += '/images/loader.gif';
-    }
-
-    // Say that the plugin isn't ready.
-    this.pluginReady = false;
-
-    // Add the loading and iframe.
-    var loading = $(document.createElement('div')).css({
-      background: 'url(' + this.options.spinner + ') no-repeat 10px 13px',
-      padding: '10px 10px 10px 60px',
-      width: '100%'
-    });
-
-    // Add the loading text.
-    loading.append(this.options.loading);
-
-    // Add the iframe.
+    // Set the iframe id.
     var iframeId = id + '_iframe';
-
-    // Define our own isEmptyObject function.
-    var isEmptyObject = function(obj) {
-      var name;
-      for (name in obj) {
-        return false;
-      }
-      return true;
-    };
 
     // Get the source for the iframe.
     var source = '';
 
     // See if they provide their own query.
-    var q = allplayers.embed.getParam('apq');
+    var q = $.SeamlessBase.getParam('apq');
     if (q) {
       source = this.options.base + '/' + q;
     }
@@ -811,7 +1338,7 @@ window.allplayers = window.allplayers || {embed: {}};
     source += (source.search(/\?/) === -1) ? '?' : '&';
 
     // If they have some query options then add them here.
-    if (!isEmptyObject(this.options.query)) {
+    if (!$.SeamlessBase.isEmptyObject(this.options.query)) {
       for (var param in this.options.query) {
         source += param + '=' + encodeURIComponent(this.options.query[param]);
         source += '&';
@@ -826,163 +1353,38 @@ window.allplayers = window.allplayers || {embed: {}};
     source += '&';
     source += 'ehost=' + allplayers.base64.encode(window.location.origin);
 
-    // Used for callbacks.
-    var self = this;
-
-    // Create the fallback.
-    (function(eSource) {
-      window['openAPEmbeddedWindow_' + id] = function(event) {
-        if (event.preventDefault) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        else {
-          event.returnValue = false;
-        }
-        var windowParams = [
-          'width=960',
-          'height=800',
-          'menubar=no',
-          'titlebar=no',
-          'toolbar=no',
-          'status=no',
-          'scrollbars=yes',
-          'chrome=yes'
-        ];
-        eSource += '&clearCache=true&bodyPadding=10&showHelp=1';
-        window.open(eSource, '', windowParams.join());
-      };
-    }(source));
-
-    // Add the iframe ID to the iframe source.
-    source += '#' + iframeId;
-
-    // The fallback text.
-    var fallbackShown = false;
-    var fallbackLink = '<a class="apci-fallback-link" href="#" onclick="';
-    fallbackLink += 'window.openAPEmbeddedWindow_' + id + '(event)">Click here</a>';
-    fallbackLink += ' to open in a separate window.';
-
-    var fallbackStyles = $('#apci-fallback-styles');
-    if (!fallbackStyles.length) {
-
-      // Create the fallback styles.
-      fallbackStyles = $(document.createElement('style')).attr({
-        'id': 'apci-fallback-styles',
-        'type': 'text/css'
-      }).html(
-        '.apci-fallback.apply-fallback-styles {' +
-          'padding: 15px;' +
-          'border: 1px solid transparent;' +
-          'border-radius: 4px;' +
-          'color: #3a87ad;' +
-          'background-color: #d9edf7;' +
-          'border-color: #bce8f1;' +
-        '}' +
-        '.apci-fallback em { padding: 5px; }' +
-        '.apci-fallback.apply-fallback-styles .apci-fallback-link {' +
-          'display: inline-block;' +
-          'color: #333;' +
-          'border: 1px solid #ccc;' +
-          'text-decoration: none;' +
-          'background-color: #fff;' +
-          'padding: 5px 10px;' +
-          'font-size: 12px;' +
-          'line-height: 1.5;' +
-          'border-radius: 6px;' +
-          'font-weight: 400;' +
-          'cursor: pointer;' +
-          '-webkit-user-select: none;' +
-          '-moz-user-select: none;' +
-          '-ms-user-select: none;' +
-          'user-select: none;' +
-        '}' +
-        '.apci-fallback.apply-fallback-styles .apci-fallback-link:hover {' +
-          'background-color:#ebebeb;' +
-          'border-color:#adadad;' +
-        '}'
-      );
-
-      // Add the styles.
-      this.context.before(fallbackStyles);
+    // Set the spinner if it isn't set.
+    if (!this.options.spinner) {
+      this.options.spinner = this.options.base;
+      this.options.spinner += '/sites/all/themes/basic_foundation';
+      this.options.spinner += '/images/loader.gif';
     }
 
-    // Returns the fallback markup.
-    var getFallback = function(msg, info) {
-      var fallback = $(document.createElement('div')).attr({
-        'class': 'apci-fallback'
-      });
-
-      // Apply the styles if we need to.
-      if (info) {
-        fallback.addClass('apply-fallback-styles');
-      }
-
-      // Create an emphasis element.
-      var em = $(document.createElement('em'));
-      em.html(msg + ' ' + fallbackLink);
-      fallback.append(em);
-
-      // Return the fallback.
-      return fallback;
-    };
-
-    // Function to display the fallback only once.
-    var displayFallback = function(msg) {
-      if (!fallbackShown) {
-        fallbackShown = true;
-        self.context.prepend(getFallback(msg, true));
-      }
-    };
-
-    // Create the permanent fallback.
-    this.context.after(getFallback('Having Trouble?', false));
-
-    // If any error occurs, then show the fallback text.
-    window.onerror = function(msg, url, line) {
-      msg = 'An error has been detected on this page, ';
-      msg += 'which may cause problems with the operation of this application.';
-      displayFallback(msg);
-    };
-
-    // If nothing happens after 30 seconds, then assume something went wrong.
-    setTimeout(function() {
-      if (self.isLoading) {
-        loading.remove();
-        self.isLoading = false;
-        displayFallback('An error has been detected on this page.');
-      }
-    }, 30000);
-
+    // Create the seamless iframe.
     var iframe = $(document.createElement('iframe')).attr({
       id: iframeId,
       name: iframeId,
-      scrolling: 'no',
-      seamless: 'seamless',
-      width: '100%',
-      height: '0px',
       src: source
-    }).css({
-        border: 'none',
-        overflowY: 'hidden'
-      });
+    });
 
-    // Create the loading element.
-    this.context.append(loading);
+    // Add the iframe.
     this.context.append(iframe);
 
-    var serverTarget = null;
+    // Make the iframe seamless.
+    iframe = iframe.seamless({
+      spinner: this.options.spinner,
+      fallbackText: 'Having Trouble?',
+      styles: this.options.style
+    });
 
-    // The chrome plugin is ready.
-    $.pm.bind('chromePluginReady', function() {
-      self.pluginReady = true;
+    // The complete message.
+    iframe.receive('complete', function(data) {
+      self.options.complete.call(self, data);
     });
 
     // Pass along chrome message responses.
     $.pm.bind('chromeMsgResp', function(data) {
-      $.pm({
-        target: serverTarget,
-        url: self.baseURL,
+      iframe.send({
         type: 'chromeMsgResp',
         data: data
       });
@@ -990,59 +1392,10 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // Pass along the chrome messages.
     $.pm.bind('chromeMsg', function(data) {
-      $.pm({
-        target: serverTarget,
-        url: self.baseURL,
+      iframe.send({
         type: 'chromeMsg',
         data: data
       });
-    });
-
-    // The init message.
-    $.pm.bind('iframe_error', function(data, e) {
-      iframe.hide();
-      self.isLoading = false;
-      loading.remove();
-      displayFallback('Your browser requires this page to be opened in a separate window.');
-    });
-
-    // The init message.
-    $.pm.bind('init', function(data, e) {
-      serverTarget = e.source;
-      self.isLoading = false;
-      loading.remove();
-
-      // Add the custom style to the iframe.
-      if (self.options.style) {
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'addStyle',
-          data: self.options.style
-        });
-      }
-
-      // Set the height
-      iframe.height(data.height).attr('height', data.height + 'px');
-      return data;
-    });
-
-    // The complete message.
-    $.pm.bind('complete', function(data) {
-      self.options.complete.call(self, data);
-    });
-
-    // The server ready message.
-    $.pm.bind('serverReady', function(data, e) {
-
-      // Say that the chrome plugin is ready.
-      if (self.pluginReady) {
-        $.pm({
-          target: e.source,
-          url: self.baseURL,
-          type: 'chromePluginReady'
-        });
-      }
     });
   };
 }(window, document, window.allplayers, jQuery));
