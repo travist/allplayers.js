@@ -136,6 +136,7 @@ window.allplayers = window.allplayers || {embed: {}};
     iframe = iframe.seamless({
       spinner: this.options.spinner,
       fallbackText: 'Having Trouble?',
+      fallbackParams: 'clearCache=true&bodyPadding=10&showHelp=1',
       styles: this.options.style
     });
 
