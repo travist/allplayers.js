@@ -49,6 +49,11 @@ window.allplayers = window.allplayers || {embed: {}};
       container: container,
 
       /**
+       * Require cookies.
+       */
+      requireCookies: true,
+
+      /**
        * Called when an update is triggered to the parent.
        *
        * @param object data

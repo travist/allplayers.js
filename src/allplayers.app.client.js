@@ -46,6 +46,11 @@ var allplayers = allplayers || {app: {}};
       container: container,
 
       /**
+       * Require cookies.
+       */
+      requireCookies: true,
+
+      /**
        * Called when an update is triggered to the parent.
        *
        * @param object data
