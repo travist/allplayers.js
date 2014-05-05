@@ -15,7 +15,14 @@
       jQuery(function() {
         drupal.endpoint = 'https://www.allplayers.com/api/v1/rest';
         $(".group_finder").group_finder({
-          uuid: "f1024e1f-044e-11e3-9d8d-22000a929134"
+          depth: 2,
+          inputName: "",
+          input_placeholder: "Search for your group",
+          root_uuid: "a22af7fd-ff1a-11e2-9d8d-22000a929134",
+          showRoot: true,
+          show_register_link: true,
+          show_url_link: false,
+          uuid: "a22af7fd-ff1a-11e2-9d8d-22000a929134"
         });
       });
     </script>
