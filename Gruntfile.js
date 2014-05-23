@@ -44,25 +44,29 @@ module.exports = function(grunt) {
   ];
 
   var embedServerFiles = [
-    'lib/postmessage/postmessage.js',
+    'lib/seamless.js/build/seamless.child.js',
+    'src/allplayers.base64.js',
     'src/allplayers.embed.js',
     'src/allplayers.embed.server.js'
   ];
 
   var embedClientFiles = [
-    'lib/postmessage/postmessage.js',
+    'lib/seamless.js/build/seamless.parent.js',
+    'src/allplayers.base64.js',
     'src/allplayers.embed.js',
     'src/allplayers.embed.client.js'
   ];
 
   var appServerFiles = [
-    'lib/postmessage/postmessage.js',
+    'lib/seamless.js/build/seamless.parent.js',
+    'src/allplayers.base64.js',
     'src/allplayers.app.js',
     'src/allplayers.app.server.js'
   ];
 
   var appClientFiles = [
-    'lib/postmessage/postmessage.js',
+    'lib/seamless.js/build/seamless.child.js',
+    'src/allplayers.base64.js',
     'src/allplayers.app.js',
     'src/allplayers.app.client.js'
   ];
