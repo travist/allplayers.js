@@ -79,7 +79,7 @@ var allplayers = allplayers || {app: {}};
     var source = '';
 
     // See if they provide their own query.
-    var q = allplayers.app.getParam('apq');
+    var q = $.SeamlessBase.getParam('apq');
     if (q) {
       source = this.options.base + '/' + q;
     }
