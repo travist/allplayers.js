@@ -54,6 +54,11 @@ window.allplayers = window.allplayers || {embed: {}};
       requireCookies: true,
 
       /**
+       * Allow style injection.
+       */
+      allowStyleInjection: true,
+
+      /**
        * Called when an update is triggered to the parent.
        *
        * @param object data
