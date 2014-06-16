@@ -383,7 +383,7 @@ var allplayers = allplayers || {app: {}};
                 product.quantity += parseInt(data.quantity);
                 productInput(uuid).val(JSON.stringify(product));
                 var productCol = '#add-product-display-' + uuid;
-                $(productCol + ' td:last').text(product.quantity);
+                $(productCol + ' input.product-quantity').val(product.quantity);
               }
 
               // Make sure the product is valid.
@@ -425,6 +425,7 @@ var allplayers = allplayers || {app: {}};
                         '<th>Added Products</th>' +
                         '<th>Price</th>' +
                         '<th>Quantity</th>' +
+                        '<th></th>' +
                       '</tr>' +
                     '</thead>' +
                     '<tbody></tbody>'
@@ -436,7 +437,8 @@ var allplayers = allplayers || {app: {}};
                   '<tr id="add-product-display-' + uuid + '">' +
                     '<td>' + data.title + '</td>' +
                     '<td>' + data.price + '</td>' +
-                    '<td>' + data.quantity + '</td>' +
+                    '<td><input type="text" class="product-quantity" value="' + data.quantity + '" /></td>' +
+                    '<td><input type="button" class="remove-product text-button" value="Remove" /></td>' +
                   '</tr>'
                 );
               }
@@ -568,13 +570,41 @@ var allplayers = allplayers || {app: {}};
     // The remove product message.
     iframe.receive('removeProduct', function(data) {
       var uuid = data.product_uuid;
+      removeProduct(uuid);
+    });
+    
+    $('#add-products-table input.product-quantity').live('change', function() {
+      var uuid = $(this).parent().parent().attr('id').replace('add-product-display-', '');
+      var product = JSON.parse(productInput(uuid).val());
+      var quantity = $(this).val();
+      if (quantity != product.quantity) {
+        if (!isNaN(quantity)) {
+          product.quantity = parseInt(quantity);
+          product = productUpdateTotal(product);
+          productInput(uuid).val(JSON.stringify(product));
+          if (product.quantity != quantity) {
+            $(this).val(product.quantity);
+          }
+        }
+        else {
+          $(this).val(product.quantity);
+        }
+      }
+    });
+    
+    $('#add-products-table input.remove-product').live('click', function(e) {
+      e.preventDefault();
+      var uuid = $(this).parent().parent().attr('id').replace('add-product-display-', '');
+      removeProduct(uuid);
+    });
+    
+    function removeProduct(uuid) {
       var product = productInput(uuid).val();
       if (product) {
-
         // Remove the input and table field.
         productInput(uuid).remove();
         $('#add-product-display-' + uuid).remove();
       }
-    });
+    }
   };
 }(window, document, window.allplayers, jQuery));
