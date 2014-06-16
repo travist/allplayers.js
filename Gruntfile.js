@@ -71,6 +71,10 @@ module.exports = function(grunt) {
     'src/allplayers.app.client.js'
   ];
 
+  var apiClientFiles = [
+    'src/allplayers.api.batch.js'
+  ];
+
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -79,7 +83,7 @@ module.exports = function(grunt) {
     },
     concat: {
       options: {
-        separator: '',
+        separator: ''
       },
       build: {
         files: {
@@ -88,8 +92,9 @@ module.exports = function(grunt) {
           'bin/allplayers.embed.server.js': embedServerFiles,
           'bin/allplayers.app.client.js': appClientFiles,
           'bin/allplayers.app.server.js': appServerFiles,
+          'bin/allplayers.api.client.js': apiClientFiles
         }
-      },
+      }
     },
     uglify: {
       options: {
@@ -103,6 +108,7 @@ module.exports = function(grunt) {
           'bin/allplayers.embed.server.min.js': embedServerFiles,
           'bin/allplayers.app.client.min.js': appClientFiles,
           'bin/allplayers.app.server.min.js': appServerFiles,
+          'bin/allplayers.api.client.min.js': apiClientFiles,
           'bin/allplayers.loader.js': ['src/allplayers.loader.js']
         }
       }
