@@ -7,6 +7,7 @@ Building
 To build this library you must first install ```node.js```.  Once you have node.js installed, you can clone this repo in a directory and then type...
 
 ```
+git submodule update --init --recursive
 npm install
 ```
 
