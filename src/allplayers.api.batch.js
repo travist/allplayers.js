@@ -26,7 +26,7 @@ allplayers.api.batch = {
        *
        * @var {function}
        */
-      error: function(){},
+      error: function() {},
 
       /**
        * This will keep track of how the users are called into the batch.
@@ -37,6 +37,9 @@ allplayers.api.batch = {
 
       /**
        * Create a batch reference to iterate through each user.
+       *
+       * @param {string} name
+       *   The name of the variable that should be send in the request.
        */
       eachUser: function (name) {
         return {
@@ -47,6 +50,9 @@ allplayers.api.batch = {
 
       /**
        * Create a batch reference to a single variable for all users.
+       *
+       * @param {string} name
+       *   The name of the variable that should be sent in the request.
        */
       allUsers: function (name) {
         var users = {name: name};
@@ -62,6 +68,7 @@ allplayers.api.batch = {
        * Add a new item to the batch.
        *
        * @param {object} task
+       *   A single batch task to append to the batch.
        */
       add: function (task) {
         this.batch.push(task);
@@ -70,8 +77,6 @@ allplayers.api.batch = {
       /**
        * Send batch data to the endpoint for processing.
        *
-       * @param {object} batchData
-       *   The batch list.
        * @param {function} callback
        *   A callback to run when the batch is returned.
        */
@@ -103,11 +108,11 @@ allplayers.api.batch = {
        *   Whether the list is reverse.
        * @param {object} filter
        *   The kendo filter properties in case we need to search.
-       * @param group_uuid
+       * @param {srting} group_uuid
        *   The uuid of the top level group.
        */
       setUsers: function (users, reversed, filter, group_uuid) {
-        // If its a reversed list we need to get all the remaining users
+        // If it's a reversed list we need to get all the remaining users.
         if (reversed) {
           this.batch.push({
             method: 'GET',
