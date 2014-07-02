@@ -111,7 +111,7 @@ allplayers.api.batch = {
        * @param {srting} group_uuid
        *   The uuid of the top level group.
        */
-      setUsers: function (users, reversed, filter, group_uuid) {
+      setUsers: function (users, reversed, filter, groups, group_uuid) {
         // If it's a reversed list we need to get all the remaining users.
         if (reversed) {
           this.batch.push({
@@ -121,7 +121,8 @@ allplayers.api.batch = {
             query: {
               exclude: users.length > 0 ? users : [],
               uuidOnly: true,
-              filter: filter
+              filter: filter,
+              groups: groups
             }
           });
 
