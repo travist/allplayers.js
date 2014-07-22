@@ -1128,9 +1128,13 @@ window.allplayers = window.allplayers || {};
    *   then an DOMException(5) is thrown.
    */
   var base64 = {};
-  base64.PADCHAR = '=';
+
+  // Changed "=" to "," to make it URL compatible.
+  base64.PADCHAR = ',';
   base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789+/';
+
+  // Changed "+/" to "-_" to make it URL compatible.
+  base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789-_';
 
   base64.makeDOMException = function() {
     // sadly in FF,Safari,Chrome you can't make a DOMException
@@ -1664,6 +1668,13 @@ var allplayers = allplayers || {app: {}};
       total = accounting.formatMoney(total);
       componentTotal.text(total);
     };
+
+    // Give them the ability to change the next button.
+    iframe.receive('setNext', function(data) {
+      if (data && data.text) {
+        $('#edit-next').val(data.text);
+      }
+    });
 
     // The addProduct action.
     iframe.receive('addProduct', function(data) {

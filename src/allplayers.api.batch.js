@@ -90,7 +90,8 @@ allplayers.api.batch = {
           },
           data: {
             batch: this.batch,
-            'x-token': this.token
+            'x-token': this.token,
+            'group': this.group
           },
           success: callback,
           error: function (jqXHR, textStatus, errorThrown) {

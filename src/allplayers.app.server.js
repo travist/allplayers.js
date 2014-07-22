@@ -360,6 +360,13 @@ var allplayers = allplayers || {app: {}};
       componentTotal.text(total);
     };
 
+    // Give them the ability to change the next button.
+    iframe.receive('setNext', function(data) {
+      if (data && data.text) {
+        $('#edit-next').val(data.text);
+      }
+    });
+
     // The addProduct action.
     iframe.receive('addProduct', function(data) {
 

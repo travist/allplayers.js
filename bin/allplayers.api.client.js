@@ -110,9 +110,9 @@ allplayers.api.batch = {
        * @param {object} filter
        *   The kendo filter properties in case we need to search.
        * @param {string} group_uuid
-       *   The uuid of the top level.
+       *   The uuid of the top level group.
        * @param {string} form_uuid
-       *   The uuid of the form to filter by.
+       *   The uuid of the form to filter.
        */
       setUsers: function (users, reversed, filter, groups, group_uuid, form_uuid) {
         // If it's a reversed list we need to get all the remaining users.
