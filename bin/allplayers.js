@@ -2895,7 +2895,9 @@ var allplayers = allplayers || {};
       this.checked = state;
 
       // Set the checked state for this input.
-      this.input.eq(0)[0].checked = state;
+      if (this.input.length > 0) {
+        this.input.eq(0)[0].checked = state;
+      }
 
       // Trigger the change event.
       this.input.change();
