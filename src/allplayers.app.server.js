@@ -360,6 +360,18 @@ var allplayers = allplayers || {app: {}};
       componentTotal.text(total);
     };
 
+    // Give them the ability to change the next button.
+    iframe.receive('setNext', function(data) {
+      if (data) {
+        if (data.text) {
+          $('#edit-next').val(data.text);
+        }
+        else {
+          $('#edit-next').hide();
+        }
+      }
+    });
+
     // The addProduct action.
     iframe.receive('addProduct', function(data) {
 
@@ -408,39 +420,43 @@ var allplayers = allplayers || {app: {}};
                   value: JSON.stringify(data)
                 }).appendTo('form#og-registration-register-app');
 
-                // Change the next button value.
-                $('#edit-next').val('Continue');
+                // Make sure this is a visible product being added.
+                if (!data.hidden) {
 
-                // Add the products table if not already.
-                if ($('#add-products-table').length === 0) {
-                  $('<table>').attr({
-                    id: 'add-products-table',
-                    class: 'sticky-table'
-                  }).appendTo('#add-products');
+                  // Change the next button value.
+                  $('#edit-next').val('Continue');
 
-                  // Create the products table.
-                  $('#add-products-table').append(
-                    '<thead>' +
-                      '<tr>' +
-                        '<th>Added Products</th>' +
-                        '<th>Price</th>' +
-                        '<th>Quantity</th>' +
-                        '<th></th>' +
-                      '</tr>' +
-                    '</thead>' +
-                    '<tbody></tbody>'
+                  // Add the products table if not already.
+                  if ($('#add-products-table').length === 0) {
+                    $('<table>').attr({
+                      id: 'add-products-table',
+                      class: 'sticky-table'
+                    }).appendTo('#add-products');
+
+                    // Create the products table.
+                    $('#add-products-table').append(
+                      '<thead>' +
+                        '<tr>' +
+                          '<th>Added Products</th>' +
+                          '<th>Price</th>' +
+                          '<th>Quantity</th>' +
+                          '<th></th>' +
+                        '</tr>' +
+                      '</thead>' +
+                      '<tbody></tbody>'
+                    );
+                  }
+
+                  // Add the product to the table.
+                  $('#add-products-table tbody').append(
+                    '<tr id="add-product-display-' + uuid + '">' +
+                      '<td>' + data.title + '</td>' +
+                      '<td>' + data.price + '</td>' +
+                      '<td><input type="text" class="product-quantity" value="' + data.quantity + '" /></td>' +
+                      '<td><input type="button" class="remove-product text-button" value="Remove" /></td>' +
+                    '</tr>'
                   );
                 }
-
-                // Add the product to the table.
-                $('#add-products-table tbody').append(
-                  '<tr id="add-product-display-' + uuid + '">' +
-                    '<td>' + data.title + '</td>' +
-                    '<td>' + data.price + '</td>' +
-                    '<td><input type="text" class="product-quantity" value="' + data.quantity + '" /></td>' +
-                    '<td><input type="button" class="remove-product text-button" value="Remove" /></td>' +
-                  '</tr>'
-                );
               }
             }
             else {
@@ -463,37 +479,41 @@ var allplayers = allplayers || {app: {}};
           value: JSON.stringify(data)
         }).appendTo('form#og-registration-register-app');
 
-        // Change the next button value.
-        $('#edit-next').val('Continue');
+        // If they wish to show this in the product table.
+        if (!data.hidden) {
 
-        // Add the products table if not already.
-        if ($('#add-products-table').length === 0) {
-          $('<table>').attr({
-            id: 'add-products-table',
-            class: 'sticky-table'
-          }).appendTo('#add-products');
+          // Change the next button value.
+          $('#edit-next').val('Continue');
 
-          // Create the products table.
-          $('#add-products-table').append(
-            '<thead>' +
-              '<tr>' +
-                '<th>Added Products</th>' +
-                '<th>Price</th>' +
-                '<th>Quantity</th>' +
-              '</tr>' +
-            '</thead>' +
-            '<tbody></tbody>'
+          // Add the products table if not already.
+          if ($('#add-products-table').length === 0) {
+            $('<table>').attr({
+              id: 'add-products-table',
+              class: 'sticky-table'
+            }).appendTo('#add-products');
+
+            // Create the products table.
+            $('#add-products-table').append(
+              '<thead>' +
+                '<tr>' +
+                  '<th>Added Products</th>' +
+                  '<th>Price</th>' +
+                  '<th>Quantity</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody></tbody>'
+            );
+          }
+
+          // Add the product to the table.
+          $('#add-products-table tbody').append(
+            '<tr>' +
+              '<td>' + data.title + '</td>' +
+              '<td>' + data.price + '</td>' +
+              '<td>' + data.quantity + '</td>' +
+            '</tr>'
           );
         }
-
-        // Add the product to the table.
-        $('#add-products-table tbody').append(
-          '<tr>' +
-            '<td>' + data.title + '</td>' +
-            '<td>' + data.price + '</td>' +
-            '<td>' + data.quantity + '</td>' +
-          '</tr>'
-        );
       }
     });
 

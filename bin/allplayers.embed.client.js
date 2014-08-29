@@ -1128,9 +1128,13 @@ window.allplayers = window.allplayers || {};
    *   then an DOMException(5) is thrown.
    */
   var base64 = {};
-  base64.PADCHAR = '=';
+
+  // Changed "=" to "," to make it URL compatible.
+  base64.PADCHAR = ',';
   base64.ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789+/';
+
+  // Changed "+/" to "-_" to make it URL compatible.
+  base64.ALPHA += 'abcdefghijklmnopqrstuvwxyz0123456789-_';
 
   base64.makeDOMException = function() {
     // sadly in FF,Safari,Chrome you can't make a DOMException

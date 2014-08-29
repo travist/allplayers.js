@@ -2895,7 +2895,9 @@ var allplayers = allplayers || {};
       this.checked = state;
 
       // Set the checked state for this input.
-      this.input.eq(0)[0].checked = state;
+      if (this.input.length > 0) {
+        this.input.eq(0)[0].checked = state;
+      }
 
       // Trigger the change event.
       this.input.change();
@@ -3113,14 +3115,23 @@ var allplayers = allplayers || {};
           // Make sure the child is a valid object in the list.
           if (this.children.hasOwnProperty(i)) {
 
+            // Set the child.
+            var child = this.children[i];
+
             // Alternate the odd state.
             odd = !odd;
 
+            // Get the checked value.
+            var isChecked = this.checked;
+            if (child.hasOwnProperty('checked')) {
+              isChecked = child.checked;
+            }
+
             // Create a new TreeNode for this child.
-            this.children[i] = new TreeNode($.extend(this.children[i], {
+            this.children[i] = new TreeNode($.extend(child, {
               level: this.level + 1,
               odd: odd,
-              checked: this.checked,
+              checked: isChecked,
               exclude: this.exclude
             }));
 
