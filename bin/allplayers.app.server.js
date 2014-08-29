@@ -1671,8 +1671,13 @@ var allplayers = allplayers || {app: {}};
 
     // Give them the ability to change the next button.
     iframe.receive('setNext', function(data) {
-      if (data && data.text) {
-        $('#edit-next').val(data.text);
+      if (data) {
+        if (data.text) {
+          $('#edit-next').val(data.text);
+        }
+        else {
+          $('#edit-next').hide();
+        }
       }
     });
 
