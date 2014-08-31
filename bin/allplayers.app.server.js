@@ -1669,17 +1669,131 @@ var allplayers = allplayers || {app: {}};
       componentTotal.text(total);
     };
 
+    /**
+     * Set the next button text.
+     *
+     * @param string text
+     *   The next button text to set.
+     */
+    var setNextText = function(text) {
+      $('.actions-wrapper').show();
+      $('#edit-next-text').val(text);
+      $('.next-button input').val(text);
+    };
+
     // Give them the ability to change the next button.
     iframe.receive('setNext', function(data) {
       if (data) {
         if (data.text) {
-          $('#edit-next').val(data.text);
+          setNextText(data.text);
         }
         else {
-          $('#edit-next').hide();
+          $('.actions-wrapper').hide();
         }
       }
     });
+
+    // Get the totals added to the cart.
+    var getTotals = function() {
+      var quantity = 0;
+      var total = 0;
+      $('input[name="add-product[]"]').each(function() {
+        var product = JSON.parse($(this).attr('value'));
+        var productQuantity = parseInt(product.quantity, 10);
+        var productPrice = parseInt(product.price_raw, 10);
+        quantity += productQuantity;
+        total += (productPrice * productQuantity);
+      });
+
+      // Return the results.
+      return {
+        quantity: quantity,
+        total: parseFloat(total / 100).toFixed(2)
+      };
+    };
+
+    // Ensure we have a products table present.
+    var ensureProductsTable = function() {
+      if ($('#add-products-table').length === 0) {
+        $('<table>').attr({
+          id: 'add-products-table',
+          class: 'sticky-table'
+        }).appendTo('#add-products');
+
+        // Create the products table.
+        $('#add-products-table').append(
+          '<thead>' +
+            '<tr>' +
+              '<th>Added Products</th>' +
+              '<th>Price</th>' +
+              '<th>Quantity</th>' +
+              '<th></th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody></tbody>' +
+          '<tfoot>' +
+            '<tr>' +
+              '<td style="text-align: right;">Total:</td>' +
+              '<td id="price-total"></td>' +
+              '<td id="quantity-total"></td>' +
+              '<td>&nbsp;</td>' +
+            '</tr>' +
+          '</tfoot>'
+        );
+      }
+    };
+
+    // Add a new product.
+    var addProduct = function(product) {
+
+      // Create the input for the new product.
+      $('<input>').attr({
+        type: 'hidden',
+        product: product.hasOwnProperty('product_uuid') ? product.product_uuid : '',
+        name: 'add-product[]',
+        value: JSON.stringify(product)
+      }).appendTo('form#og-registration-register-app');
+
+      // Make sure this is a visible product being added.
+      if (!product.hidden) {
+
+        // Change the next button value.
+        setNextText(product.next ? product.next : 'Continue');
+
+        // Add the products table if not already.
+        ensureProductsTable();
+
+        var disabledText = '';
+        if (product.readonly) {
+          disabledText = 'disabled';
+        }
+
+        // Create the row.
+        var row = $(document.createElement('tr'));
+        row.append(
+          '<td>' + product.title + '</td>' +
+          '<td>' + product.price + '</td>' +
+          '<td><input type="text" class="product-quantity" value="' + product.quantity + '" ' + disabledText + '></td>'
+        );
+
+        // Add an attribute and remove button if this is not an ad-hoc product.
+        if (product.hasOwnProperty('product_uuid')) {
+          row.attr('id', 'add-product-display-' + product.product_uuid).append(
+            '<td><input type="button" class="remove-product text-button" value="Remove" /></td>'
+          );
+        }
+
+        // Add the product to the table.
+        $('#add-products-table tbody').append(row);
+      }
+    };
+
+    // Update the totals.
+    var updateTotals = function() {
+      var totals = getTotals();
+      $('#price-total').text('$' + totals.total);
+      $('#quantity-total').text(totals.quantity);
+    };
 
     // The addProduct action.
     iframe.receive('addProduct', function(data) {
@@ -1720,53 +1834,11 @@ var allplayers = allplayers || {app: {}};
                   data.price = result.price_raw / 100;
                 }
                 data = productUpdateTotal(data);
-
-                // Create the input for the new product.
-                $('<input>').attr({
-                  type: 'hidden',
-                  product: uuid,
-                  name: 'add-product[]',
-                  value: JSON.stringify(data)
-                }).appendTo('form#og-registration-register-app');
-
-                // Make sure this is a visible product being added.
-                if (!data.hidden) {
-
-                  // Change the next button value.
-                  $('#edit-next').val('Continue');
-
-                  // Add the products table if not already.
-                  if ($('#add-products-table').length === 0) {
-                    $('<table>').attr({
-                      id: 'add-products-table',
-                      class: 'sticky-table'
-                    }).appendTo('#add-products');
-
-                    // Create the products table.
-                    $('#add-products-table').append(
-                      '<thead>' +
-                        '<tr>' +
-                          '<th>Added Products</th>' +
-                          '<th>Price</th>' +
-                          '<th>Quantity</th>' +
-                          '<th></th>' +
-                        '</tr>' +
-                      '</thead>' +
-                      '<tbody></tbody>'
-                    );
-                  }
-
-                  // Add the product to the table.
-                  $('#add-products-table tbody').append(
-                    '<tr id="add-product-display-' + uuid + '">' +
-                      '<td>' + data.title + '</td>' +
-                      '<td>' + data.price + '</td>' +
-                      '<td><input type="text" class="product-quantity" value="' + data.quantity + '" /></td>' +
-                      '<td><input type="button" class="remove-product text-button" value="Remove" /></td>' +
-                    '</tr>'
-                  );
-                }
+                addProduct(data);
               }
+
+              // Update the totals.
+              updateTotals();
             }
             else {
               alert('There was an error adding the product.');
@@ -1779,50 +1851,8 @@ var allplayers = allplayers || {app: {}};
         // Update the product total price.
         data = productUpdateTotal(data);
         data.title += ' (Adhoc)';
-
-        // Create the input for the new product.
-        $('<input>').attr({
-          type: 'hidden',
-          product: '',
-          name: 'add-product[]',
-          value: JSON.stringify(data)
-        }).appendTo('form#og-registration-register-app');
-
-        // If they wish to show this in the product table.
-        if (!data.hidden) {
-
-          // Change the next button value.
-          $('#edit-next').val('Continue');
-
-          // Add the products table if not already.
-          if ($('#add-products-table').length === 0) {
-            $('<table>').attr({
-              id: 'add-products-table',
-              class: 'sticky-table'
-            }).appendTo('#add-products');
-
-            // Create the products table.
-            $('#add-products-table').append(
-              '<thead>' +
-                '<tr>' +
-                  '<th>Added Products</th>' +
-                  '<th>Price</th>' +
-                  '<th>Quantity</th>' +
-                '</tr>' +
-              '</thead>' +
-              '<tbody></tbody>'
-            );
-          }
-
-          // Add the product to the table.
-          $('#add-products-table tbody').append(
-            '<tr>' +
-              '<td>' + data.title + '</td>' +
-              '<td>' + data.price + '</td>' +
-              '<td>' + data.quantity + '</td>' +
-            '</tr>'
-          );
-        }
+        addProduct(data);
+        updateTotals();
       }
     });
 
@@ -1933,6 +1963,15 @@ var allplayers = allplayers || {app: {}};
         // Remove the input and table field.
         productInput(uuid).remove();
         $('#add-product-display-' + uuid).remove();
+
+        // Let the child page know.
+        iframe.send({
+          type: 'removeProduct',
+          data: JSON.parse(product)
+        });
+
+        // Update the totals.
+        updateTotals();
       }
     }
   };
