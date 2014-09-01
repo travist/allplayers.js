@@ -141,6 +141,7 @@ window.allplayers = window.allplayers || {embed: {}};
     });
 
     // The complete message.
+    var self = this;
     iframeConnection.receive('complete', function(data) {
       self.options.complete.call(self, data);
     });

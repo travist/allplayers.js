@@ -1207,7 +1207,7 @@ var allplayers = allplayers || {app: {}};
     this.reg = null;
     this.checkout = null;
     this.type = 'registration';
-    this.parent = parentFrame;
+    this.parentFrame = parentFrame;
 
     // Get the registration data.
     parentFrame.receive('getRegistration', function(data) {

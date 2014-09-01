@@ -35,6 +35,9 @@ window.allplayers = window.allplayers || {embed: {}};
     // Get the container.
     var container = this.options.getContainer();
 
+    // Assign the self variable.
+    var self = this;
+
     // Connect to the parent.
     var parentFrame = $.seamless.connect({
 
@@ -77,13 +80,21 @@ window.allplayers = window.allplayers || {embed: {}};
             )
           });
         });
+      },
+
+      /**
+       * Called when we have connected with the parent.
+       */
+      onConnect: function() {
+
+        // If we are on the complete page, then say so...
+        if (self.options.isComplete()) {
+
+          // Send the message to say we are complete.
+          parentFrame.send({ type: 'complete', data: {} });
+        }
       }
     });
-
-    // If we are on the complete page, then say so...
-    if (this.options.isComplete()) {
-      parentFrame.send({ type: 'complete', data: {} });
-    }
 
     // Pass along the chrome messages.
     $.pm.bind('chromeMsg', function(data) {
