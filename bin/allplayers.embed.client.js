@@ -1442,7 +1442,7 @@ window.allplayers = window.allplayers || {embed: {}};
     this.context.append(iframe);
 
     // Make the iframe seamless.
-    iframe = iframe.seamless({
+    var iframeConnection = iframe.seamless({
       spinner: this.options.spinner,
       fallbackText: 'Having Trouble?',
       fallbackParams: 'clearCache=true&bodyPadding=10&showHelp=1',
@@ -1450,13 +1450,13 @@ window.allplayers = window.allplayers || {embed: {}};
     });
 
     // The complete message.
-    iframe.receive('complete', function(data) {
+    iframeConnection.receive('complete', function(data) {
       self.options.complete.call(self, data);
     });
 
     // Pass along chrome message responses.
     $.pm.bind('chromeMsgResp', function(data) {
-      iframe.send({
+      iframeConnection.send({
         type: 'chromeMsgResp',
         data: data
       });
@@ -1464,7 +1464,7 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // Pass along the chrome messages.
     $.pm.bind('chromeMsg', function(data) {
-      iframe.send({
+      iframeConnection.send({
         type: 'chromeMsg',
         data: data
       });

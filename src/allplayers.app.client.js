@@ -33,7 +33,7 @@ var allplayers = allplayers || {app: {}};
     var container = this.options.getContainer();
 
     // Connect to the parent.
-    var parent = $.seamless.connect({
+    var parentFrame = $.seamless.connect({
 
       /**
        * Set the url to what was passed in from the parent.
@@ -78,16 +78,16 @@ var allplayers = allplayers || {app: {}};
     this.reg = null;
     this.checkout = null;
     this.type = 'registration';
-    this.parent = parent;
+    this.parent = parentFrame;
 
     // Get the registration data.
-    parent.receive('getRegistration', function(data) {
+    parentFrame.receive('getRegistration', function(data) {
       self.reg = data;
       self.type = 'registration';
     });
 
     // Get the checkout data.
-    parent.receive('getCheckout', function(data) {
+    parentFrame.receive('getCheckout', function(data) {
       self.checkout = data;
       self.type = 'checkout';
     });
