@@ -2053,8 +2053,13 @@ allplayers.product.prototype.set = function(object) {
  * @param {function} callback The callback function to get the product.
  */
 allplayers.product.prototype.getProduct = function(uuid, callback) {
-  // Get the product.
-  this.uri = 'https://' + window.location.host.replace('www', 'store');
+  // Get the store URI.
+  if (window.location.host.match(/^(platform|www)/)) {
+    this.uri = window.location.protocol + '//' + window.location.host.replace(/^(platform|www)/, 'store');
+  }
+  else {
+    this.uri = window.location.protocol + '//store.' + window.location.host;
+  }
   this.uri += '/api/v1/rest/products';
   this.api.get(this, uuid, '', callback);
 };
