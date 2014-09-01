@@ -1436,20 +1436,20 @@ var allplayers = allplayers || {app: {}};
     this.context.append(iframe);
 
     // Make the iframe seamless.
-    iframe = iframe.seamless({
+    var iframeConnection = iframe.seamless({
       spinner: this.options.spinner,
       styles: this.options.style,
       onConnect: function(data) {
         if (self.options.type == 'registration') {
           // Send them the registration object.
-          iframe.send({
+          iframeConnection.send({
             type: 'getRegistration',
             data: self.options.reg
           });
         }
         else if (self.options.type == 'checkout') {
           // Send them the checkout object.
-          iframe.send({
+          iframeConnection.send({
             type: 'getCheckout',
             data: self.options.checkout
           });
@@ -1595,7 +1595,7 @@ var allplayers = allplayers || {app: {}};
       }
 
       // Tell the client to process the checkout.
-      iframe.send({
+      iframeConnection.send({
         type: 'processCheckout',
         data: {
           checkout: checkout,
@@ -1682,7 +1682,7 @@ var allplayers = allplayers || {app: {}};
     };
 
     // Give them the ability to change the next button.
-    iframe.receive('setNext', function(data) {
+    iframeConnection.receive('setNext', function(data) {
       if (data) {
         if (data.text) {
           setNextText(data.text);
@@ -1843,7 +1843,7 @@ var allplayers = allplayers || {app: {}};
     };
 
     // The addProduct action.
-    iframe.receive('addProduct', function(data) {
+    iframeConnection.receive('addProduct', function(data) {
 
       // If the product is existing.
       if (data && data.product_uuid) {
@@ -1924,7 +1924,7 @@ var allplayers = allplayers || {app: {}};
     });
 
     // The addCheckoutProduct action.
-    iframe.receive('addCheckoutProduct', function(data) {
+    iframeConnection.receive('addCheckoutProduct', function(data) {
 
       // If the product is existing.
       if (data && data.product_uuid) {
@@ -1994,7 +1994,7 @@ var allplayers = allplayers || {app: {}};
     });
 
     // The remove product message.
-    iframe.receive('removeProduct', function(data) {
+    iframeConnection.receive('removeProduct', function(data) {
       var uuid = data.product_uuid;
       removeProduct(uuid);
     });
@@ -2032,7 +2032,7 @@ var allplayers = allplayers || {app: {}};
         $('#add-product-display-' + uuid).remove();
 
         // Let the child page know.
-        iframe.send({
+        iframeConnection.send({
           type: 'removeProduct',
           data: JSON.parse(product)
         });

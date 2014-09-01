@@ -36,7 +36,7 @@ window.allplayers = window.allplayers || {embed: {}};
     var container = this.options.getContainer();
 
     // Connect to the parent.
-    $.seamless.connect({
+    var parentFrame = $.seamless.connect({
 
       /**
        * Set the url to what was passed in from the client.
@@ -82,12 +82,12 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // If we are on the complete page, then say so...
     if (this.options.isComplete()) {
-      $.seamless.send({ type: 'complete', data: {} });
+      parentFrame.send({ type: 'complete', data: {} });
     }
 
     // Pass along the chrome messages.
     $.pm.bind('chromeMsg', function(data) {
-      $.seamless.send({
+      parentFrame.send({
         type: 'chromeMsg',
         data: data
       });
@@ -95,7 +95,7 @@ window.allplayers = window.allplayers || {embed: {}};
 
     // Pass along the chrome repsponse messages.
     $.pm.bind('chromeMsgResp', function(data) {
-      $.seamless.send({
+      parentFrame.send({
         type: 'chromeMsgResp',
         data: data
       });
