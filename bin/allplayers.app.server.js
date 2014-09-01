@@ -1795,56 +1795,123 @@ var allplayers = allplayers || {app: {}};
       $('#quantity-total').text(totals.quantity);
     };
 
+    // Called to show an error to the user.
+    var showError = function() {
+
+      // Don't show the loader.
+      setLoading(false);
+
+      // Show an error.
+      $('#add-products').prepend($(document.createElement('div')).attr({
+        'class': 'alert-box alert'
+      }).append('There was an error adding your products.  Please try again later'));
+    };
+
+    var loadingTimer = 0;
+
+    // Called to show a loader for the products.
+    var setLoading = function(loading) {
+
+      // Clear the loader.
+      clearTimeout(loadingTimer);
+
+      // Remove previous loaders.
+      $('#add-products .products-loading').remove();
+
+      // If we are loading, then let them know.
+      if (loading) {
+
+        // Create our loader elemenet.
+        var loader = $(document.createElement('div')).attr({
+          'class': 'alert-box products-loading'
+        }).append(
+          $(document.createElement('div')).css({
+            background: 'url(/sites/all/libraries/allplayers.js/lib/seamless.js/src/loader.gif) no-repeat 10px 32px',
+            padding: '10px 10px 10px 70px',
+            width: '100%'
+          }).append('<h4>Adding products to cart...</h4>')
+        );
+
+        // Prepend our loader to the products section.
+        $('#add-products').prepend(loader);
+
+        // Make sure they don't wait to long.
+        loadingTimer = setTimeout(function() {
+          showError();
+        }, 20000);
+      }
+    };
+
     // The addProduct action.
     iframe.receive('addProduct', function(data) {
 
       // If the product is existing.
       if (data && data.product_uuid) {
-        (new allplayers.product({uuid: data.product_uuid})).getProduct(
-          data.product_uuid,
-          function(result) {
-            // Check if the UUIDs match.
-            if (result.uuid == data.product_uuid) {
-              var uuid = data.product_uuid;
-              var product = productInput(uuid).val();
-              data.title = result.title;
 
-              // If a product was already found.
-              if (product) {
+        // Say we are loading.
+        setLoading(true);
 
-                // Update the quantity.
-                product = JSON.parse(product);
-                product.quantity = parseInt(product.quantity);
-                product.quantity += parseInt(data.quantity);
-                productInput(uuid).val(JSON.stringify(product));
-                var productCol = '#add-product-display-' + uuid;
-                $(productCol + ' input.product-quantity').val(product.quantity);
-              }
+        try {
+          var errorText = '';
 
-              // Make sure the product is valid.
-              else if (productValid(data)) {
+          // Retrieve the product.
+          (new allplayers.product({uuid: data.product_uuid})).getProduct(
+            data.product_uuid,
+            function(result) {
 
-                // If it is a product with a value greater than $0, or price
-                // isn't supplied, use the price  assigned to the product in
-                // store.
-                if (
-                  data.price == 'undefined' ||
-                  (result.type == 'product' && result.price_raw > 0)
-                ) {
-                  data.price = result.price_raw / 100;
+              // Check if the UUIDs match.
+              if (result.uuid == data.product_uuid) {
+                var uuid = data.product_uuid;
+                var product = productInput(uuid).val();
+                data.title = result.title;
+
+                // If a product was already found.
+                if (product) {
+
+                  // Update the quantity.
+                  product = JSON.parse(product);
+                  product.quantity = parseInt(product.quantity);
+                  product.quantity += parseInt(data.quantity);
+                  productInput(uuid).val(JSON.stringify(product));
+                  var productCol = '#add-product-display-' + uuid;
+                  $(productCol + ' input.product-quantity').val(product.quantity);
                 }
-                data = productUpdateTotal(data);
-                addProduct(data);
-              }
 
-              // Update the totals.
-              updateTotals();
+                // Make sure the product is valid.
+                else if (productValid(data)) {
+
+                  // If it is a product with a value greater than $0, or price
+                  // isn't supplied, use the price  assigned to the product in
+                  // store.
+                  if (
+                    data.price == 'undefined' ||
+                    (result.type == 'product' && result.price_raw > 0)
+                  ) {
+                    data.price = result.price_raw / 100;
+                  }
+                  data = productUpdateTotal(data);
+                  addProduct(data);
+                }
+
+                // Update the totals.
+                updateTotals();
+
+                // Say we are no longer loading.
+                setLoading(false);
+              }
+              else {
+
+                // Show an error.
+                showError();
+              }
             }
-            else {
-              alert('There was an error adding the product.');
-            }
-          }
-        );
+          );
+        }
+        catch (err) {
+
+          // Show an error.
+          showError();
+        }
       }
       // The product is an adhoc product.
       else {
