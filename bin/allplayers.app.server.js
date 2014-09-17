@@ -1746,13 +1746,19 @@ var allplayers = allplayers || {app: {}};
     // Add a new product.
     var addProduct = function(product) {
 
+      // Get the form we are appending to.
+      var form = $('form#og-registration-register-app');
+      if (!form.length) {
+        form = $('form#og-registration-register-before-app');
+      }
+
       // Create the input for the new product.
       $('<input>').attr({
         type: 'hidden',
         product: product.hasOwnProperty('product_uuid') ? product.product_uuid : '',
         name: 'add-product[]',
         value: JSON.stringify(product)
-      }).appendTo('form#og-registration-register-app');
+      }).appendTo(form);
 
       // Make sure this is a visible product being added.
       if (!product.hidden) {
