@@ -1716,8 +1716,8 @@ var allplayers = allplayers || {app: {}};
     var ensureProductsTable = function() {
       if ($('#add-products-table').length === 0) {
         $('<table>').attr({
-          id: 'add-products-table',
-          class: 'sticky-table'
+          'id': 'add-products-table',
+          'class': 'sticky-table'
         }).appendTo('#add-products');
 
         // Create the products table.
